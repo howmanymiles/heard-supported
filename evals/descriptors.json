@@ -532,10 +532,11 @@
       },
       {
        "letter": "b",
-       "text": "Needs any one or more of the following – (i) to use an aid or appliance to be able to manage medication; ... (ii) supervision, prompting or assistance to be able to manage medication .... (iii) supervision, prompting or assistance to be able to monitor a health condition.",
+       "text": "Needs any one or more of the following – (i) to use an aid or appliance to be able to manage medication; (ii) supervision, prompting or assistance to be able to manage medication; (iii) supervision, prompting or assistance to be able to monitor a health condition.",
        "points": 1,
        "verified": true,
-       "note": "\"...\" is reproduced exactly as shown on legislation.gov.uk and marks words omitted by amendment (S.I. 2017/194 or S.I. 2024/374)."
+       "note": "\"...\" is reproduced exactly as shown on legislation.gov.uk and marks words omitted by amendment (S.I. 2017/194 or S.I. 2024/374).",
+       "text_note": "legislation.gov.uk prints \"...\" where amendments removed words; the joining words here follow the PIP assessment guide, part 2 (GOV.UK)."
       },
       {
        "letter": "c",
