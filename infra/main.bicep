@@ -26,6 +26,10 @@ param modelVersion string
 @description('Model format: OpenAI for Azure OpenAI models; other families use their own publisher name.')
 param modelFormat string = 'OpenAI'
 
+@description('App Service plan size. F1 (free) works for light development use when the subscription has no Basic quota yet.')
+@allowed(['F1', 'B1', 'B2', 'P0v3'])
+param appSku string = 'B1'
+
 @description('Model deployment type. DataZoneStandard keeps processing in the EU; Standard keeps it in aiLocation. GlobalStandard is for synthetic data only.')
 @allowed(['DataZoneStandard', 'Standard', 'GlobalStandard'])
 param modelSku string = 'DataZoneStandard'
@@ -207,7 +211,7 @@ resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
   location: location
   tags: tags
   kind: 'linux'
-  sku: { name: 'B1', tier: 'Basic' }
+  sku: { name: appSku }
   properties: { reserved: true }
 }
 
@@ -225,7 +229,7 @@ resource web 'Microsoft.Web/sites@2023-12-01' = {
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       http20Enabled: true
-      alwaysOn: true
+      alwaysOn: appSku != 'F1' // not available on the free plan
       appSettings: [
         { name: 'DATABASE_URL', value: '@Microsoft.KeyVault(SecretUri=${secretDbUrl.properties.secretUri})' }
         { name: 'AZURE_AD_CLIENT_SECRET', value: '@Microsoft.KeyVault(SecretUri=${secretEntra.properties.secretUri})' }

@@ -65,6 +65,7 @@ jobs:
               modelName="${{ vars.MODEL_NAME }}" \
               modelVersion="${{ vars.MODEL_VERSION }}" \
               modelFormat="${{ vars.MODEL_FORMAT }}" \
+              appSku="${{ vars.APP_SKU || 'B1' }}" \
               modelSku="${{ vars.MODEL_SKU || 'DataZoneStandard' }}" \
               modelCapacity="${{ vars.MODEL_CAPACITY || '20' }}" \
               entraClientId="${{ vars.ENTRA_CLIENT_ID }}" \
