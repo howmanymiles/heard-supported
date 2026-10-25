@@ -4,7 +4,8 @@ import { activityList } from '@hs/core';
 import { requireMe } from '@/lib/auth';
 import { getMr, buildComparison, type ChoiceRow } from '@/lib/mr';
 import { descriptorsFor } from '@/lib/score';
-import { UploadForm, AssessForm, MrDatesForm, DraftForm, SaveDraftForm } from '../../../forms';
+import { UploadForm, AssessForm, MrDatesForm, DraftForm, SaveDraftForm, AiSubmissionForm } from '../../../forms';
+import { SubmissionReview } from '../review';
 import { choiceAction, confirmAllAction, loadSyntheticMrAction } from '../../../actions';
 import { CaseTabs } from '../tabs';
 import { WcaComparisonView } from './wca-view';
@@ -143,8 +144,9 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
         <h2 className="eyebrow">Reconsideration request</h2>
         {ready
           ? <>
-              <p className="soft small">Built from the confirmed DWP descriptors, your decisions and the evidence you accepted. Nothing in it is written by the AI. Edit it before sending.</p>
-              <DraftForm caseId={id} hasDraft={!!cs.mr_draft} />
+              <p className="soft small"><b>Draft the request</b> builds it from the confirmed DWP position, your decisions and accepted evidence: no AI. <b>Write the letter with AI</b> drafts it in prose from the same facts only, with every sentence checked (quotations and numbers must come from the evidence cited, no case law, only listed regulations); anything that fails is removed. Either replaces the text below. Edit before sending.</p>
+              <div className="row"><DraftForm caseId={id} hasDraft={!!cs.mr_draft} /><AiSubmissionForm caseId={id} stage="mr" /></div>
+              <SubmissionReview review={cs.submission_review} stage="mr" />
             </>
           : <p className="soft">{isPip ? 'Confirm the DWP descriptor for all 12 activities to draft the request.' : 'Confirm every DWP finding (17 Schedule 6 activities, Schedule 7 and both substantial-risk paragraphs) to draft the request.'}</p>}
         {cs.mr_draft && <SaveDraftForm caseId={id} draft={cs.mr_draft} />}

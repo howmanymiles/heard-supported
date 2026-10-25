@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { createCaseAction, uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, type ActionState } from './actions';
+import { createCaseAction, uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, type ActionState } from './actions';
 
 function Submit({ children, pending: pendingText, primary = true }: { children: React.ReactNode; pending: string; primary?: boolean }) {
   const { pending } = useFormStatus();
@@ -37,7 +37,7 @@ export function CreateCaseForm() {
   );
 }
 
-const KIND_LABEL: Record<string, string> = { evidence: 'Evidence', pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: 'Decision letter or notice', mr_notice: 'Mandatory reconsideration notice', dwp_bundle: 'DWP response bundle', other: 'Other' };
+const KIND_LABEL: Record<string, string> = { evidence: 'Evidence (medical, form, letters)', notes: 'Your agency’s interview notes', pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: 'Decision letter or notice', mr_notice: 'Mandatory reconsideration notice', dwp_bundle: 'DWP response bundle', other: 'Other' };
 
 export function UploadForm({ caseId, syntheticOnly, kinds = ['evidence'], label = 'Add documents' }: { caseId: string; syntheticOnly: boolean; kinds?: string[]; label?: string }) {
   const [state, action] = useActionState(uploadAction, {});
@@ -189,6 +189,17 @@ export function SaveGroundsForm({ caseId, draft }: { caseId: string; draft: stri
         <textarea name="draft" rows={24} defaultValue={draft} className="draft" key={draft} />
       </label>
       <div><Submit pending="Saving…">Save draft</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+export function AiSubmissionForm({ caseId, stage }: { caseId: string; stage: 'mr' | 'appeal' }) {
+  const [state, action] = useActionState(aiSubmissionAction, {});
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="caseId" value={caseId} /><input type="hidden" name="stage" value={stage} />
+      <div><Submit pending="Writing… this can take a minute">Write the letter with AI</Submit></div>
       <Status state={state} />
     </form>
   );

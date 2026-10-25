@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { requireMe } from '@/lib/auth';
 import { getAppeal, issuesFor, locate } from '@/lib/appeal';
 import { docTitle } from '@/lib/mr';
-import { UploadForm, ActionButton, AppealDatesForm, SaveGroundsForm } from '../../../forms';
+import { UploadForm, ActionButton, AppealDatesForm, SaveGroundsForm, AiSubmissionForm } from '../../../forms';
+import { SubmissionReview } from '../review';
 import { loadSyntheticMrAction } from '../../../actions';
 import { CaseTabs } from '../tabs';
 
@@ -97,9 +98,13 @@ export default async function AppealPage({ params }: { params: Promise<{ id: str
       </section>
 
       <section className="panel stack" aria-label="Grounds of appeal">
-        <h2 className="eyebrow">Grounds of appeal</h2>
-        <p className="soft small">For the SSCS1 (or the online appeal), built from the confirmed DWP position, your decisions and accepted evidence, with bundle page references once the bundle is read. Nothing in it is written by the AI.</p>
-        {!blocked && issues.length > 0 && <ActionButton caseId={id} which="grounds" label={cs.appeal_draft ? 'Draft again' : 'Draft the grounds'} pending="Drafting…" />}
+        <h2 className="eyebrow">Grounds and submission</h2>
+        <p className="soft small"><b>Grounds</b> are built by the app from the confirmed DWP position, your decisions and accepted evidence, with bundle pages once the bundle is read: no AI. <b>The submission letter</b> is written by the AI from the same facts only. Every sentence is checked: quotations must be word for word from the evidence they cite, numbers must come from that evidence, no case law, only listed regulations, and descriptors only as on either side. Anything that fails is removed. Your interview notes are written in your voice. Drafting either replaces the text below.</p>
+        {!blocked && issues.length > 0 && <div className="row">
+          <ActionButton caseId={id} which="grounds" label="Draft the grounds" pending="Drafting…" />
+          <AiSubmissionForm caseId={id} stage="appeal" />
+        </div>}
+        <SubmissionReview review={cs.submission_review} stage="appeal" />
         {cs.appeal_draft && <SaveGroundsForm caseId={id} draft={cs.appeal_draft} />}
       </section>
     </div>

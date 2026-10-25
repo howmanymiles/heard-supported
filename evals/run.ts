@@ -7,7 +7,7 @@
 //   node run.ts --mr         PIP cases, reading the PA4 and decision letter
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractEvidence, extractAssessor, extractWcaAssessor, extractResponseReasoning, splitTextPages, parseUkDate, type ExtractionDoc } from '@hs/core';
+import { extractEvidence, extractAssessor, extractWcaAssessor, extractResponseReasoning, draftSubmission, renderSubmission, SUBMISSION_REGULATIONS, splitTextPages, parseUkDate, type ExtractionDoc } from '@hs/core';
 import { scoreCase, scoreAssessor, scoreWcaAssessor, samePassage, type CaseFile } from './score.ts';
 
 const here = import.meta.dirname;
@@ -38,6 +38,20 @@ if (appealStage) {
       found += hits; of += a.issues.length;
       fs.writeFileSync(path.join(outDir, `${id}.json`), JSON.stringify({ hits, of: a.issues.length, result: r }, null, 2));
       console.log(`decision maker's reasoning found for ${hits}/${a.issues.length} issues; ${r.dropped.length} quotes dropped`);
+      // The submission letter, from the answer file's facts.
+      let n = 0;
+      const facts = { stage: 'appeal' as const, benefit: 'pip' as const, summary: `The decision gave ${a.mr_notice.daily_living.points} points for daily living and ${a.mr_notice.mobility.points} points for mobility.`, regulations: SUBMISSION_REGULATIONS.pip,
+        issues: a.issues.map((i: any) => ({ key: `pip:${i.activity}`, label: `Activity ${i.activity}`, dwp: `descriptor ${i.activity}${i.dm_letter}`, ours: `descriptor ${i.activity}${i.adviser_letter}`, letters: [`${i.activity}${i.dm_letter}`, `${i.activity}${i.adviser_letter}`],
+          decisionMaker: { quote: i.dm_reasoning.quote, where: 'the response' },
+          evidence: [...i.evidence.map((e: any) => ({ id: `E${++n}`, quote: e.quote, source: e.doc, where: `page ${e.page}`, agencyNotes: false, inBundle: true })),
+                     ...i.not_in_bundle.map((e: any) => ({ id: `E${++n}`, quote: e.quote, source: 'adviser’s interview notes', where: `page ${e.page}`, agencyNotes: true, inBundle: false }))] })) };
+      const sub = await draftSubmission(facts);
+      const text = renderSubmission(sub, facts, []);
+      const kept = [...sub.opening, ...sub.issues.flatMap(x => x.sentences), ...sub.closing];
+      const claims = (a.must_not_claim as string[]).filter(c => text.toLowerCase().includes(c.toLowerCase().slice(0, 30)));
+      fs.writeFileSync(path.join(outDir, `${id}-submission.json`), JSON.stringify({ kept: kept.length, dropped: sub.dropped, mustNotClaimHits: claims, text }, null, 2));
+      console.log(`  submission: ${kept.length} sentences kept (${kept.filter(k => k.argument).length} argument), ${sub.dropped.length} dropped by the checks (${[...new Set(sub.dropped.map(d => d.reason))].join(', ') || 'none'}); must-not-claim hits: ${claims.length}`);
+      if (claims.length) failed++;
     } catch (e) { failed++; console.log(`FAILED: ${(e as Error).message}`); }
   }
   console.log(`\nReasoning found ${found}/${of}. Results: ${path.relative(process.cwd(), outDir)}`);

@@ -42,8 +42,9 @@ export async function loadSyntheticAction(form: FormData) {
     const path = `${me.agencyId}/${caseId}/${docId}`;
     const bytes = new TextEncoder().encode(d.text);
     await putDocument(path, bytes, 'text/markdown');
-    await asAgency(me.agencyId, c => c.query('insert into documents (id, agency_id, case_id, name, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8)',
-      [docId, me.agencyId, caseId, d.name, 'text/markdown', bytes.length, path, me.userId]));
+    const kind = / notes\.md$/.test(d.name) ? 'notes' : 'evidence'; // the fictional adviser interview notes
+    await asAgency(me.agencyId, c => c.query('insert into documents (id, agency_id, case_id, name, kind, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      [docId, me.agencyId, caseId, d.name, kind, 'text/markdown', bytes.length, path, me.userId]));
   }
   await asAgency(me.agencyId, c => audit(c, me.agencyId, me.userId, caseId, `Loaded synthetic test case ${sc.id}`));
   redirect(`/cases/${caseId}`);
@@ -258,4 +259,16 @@ export async function saveGroundsAction(_: ActionState, form: FormData): Promise
   await saveAppealDraft(me, caseId, String(form.get('draft') ?? ''));
   revalidatePath(`/cases/${caseId}/appeal`);
   return { ok: 'Draft saved.' };
+}
+
+export async function aiSubmissionAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const stage = form.get('stage') === 'appeal' ? 'appeal' : 'mr';
+  try {
+    const { writeSubmission } = await import('@/lib/submission');
+    const r = await writeSubmission(me, caseId, stage);
+    revalidatePath(`/cases/${caseId}/${stage}`);
+    return { ok: `Letter drafted: ${r.kept} sentences${r.dropped.length ? `; ${r.dropped.length} dropped because they failed the checks` : ''}. ${r.argument.length ? `${r.argument.length} sentences of argument have no citation: check them below.` : ''}` };
+  } catch (e) { return { error: msg(e) }; }
 }

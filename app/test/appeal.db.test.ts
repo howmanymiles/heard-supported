@@ -39,7 +39,7 @@ before(async () => {
   const u = (await db.pool().query("insert into users (agency_id, entra_oid, name, role) values ($1, $2, 'Adviser', 'adviser') returning id", [ag, `ap-oid-${Date.now()}`])).rows[0].id;
   me = { agencyId: ag, userId: u, role: 'adviser', name: 'Adviser' };
   caseId = await cases.createCase(me, `TEST-PIP-03-${Date.now().toString(36).toUpperCase()}`, 'pip');
-  const all = [...sc.docs.map((d: any) => ({ ...d, kind: 'evidence', key: d.name.split(' ')[1].replace('.md', '') })), ...sc.mrDocs.map((d: any) => ({ ...d, key: d.kind })), ...sc.appealDocs.map((d: any) => ({ ...d, key: d.kind }))];
+  const all = [...sc.docs.map((d: any) => ({ ...d, kind: / notes\.md$/.test(d.name) ? 'notes' : 'evidence', key: d.name.split(' ')[1].replace('.md', '') })), ...sc.mrDocs.map((d: any) => ({ ...d, key: d.kind })), ...sc.appealDocs.map((d: any) => ({ ...d, key: d.kind }))];
   for (const d of all) {
     docId[d.key] = await db.asAgency(me.agencyId, async c => {
       const id = (await c.query("insert into documents (agency_id, case_id, name, kind, content_type, size_bytes, blob_path, read_status, page_count) values ($1, $2, $3, $4, 'text/markdown', $5, 'none', 'read', 0) returning id", [me.agencyId, caseId, d.name, d.kind, d.text.length])).rows[0].id;
@@ -116,4 +116,41 @@ test('the caseload shows the appeal deadline until the appeal is sent', { skip }
   const d = nextDeadline({ decisionDate: row.decision_date, mrRequestDate: row.mr_request_date, mrNoticeDate: row.mr_notice_date, appealSentDate: row.appeal_sent_date }, '2026-09-20');
   assert.deepEqual([d!.kind, d!.due, d!.status, d!.daysLeft], ['appeal', '2026-10-09', 'in_time', 19]);
   await assert.rejects(ap.saveAppealDates(me, caseId, '2026-09-09', '2026-09-01', ''), /before the MR notice/);
+});
+
+test('the AI-drafted submission keeps checked sentences, references bundle pages and drops inventions', { skip }, async () => {
+  const sub = await import('../src/lib/submission.ts');
+  const a = (await ap.getAppeal(me, caseId))!;
+  const built = sub.buildFacts(a, 'appeal');
+  assert.ok(!('blocked' in built));
+  const { facts } = built as Exclude<typeof built, { blocked: string }>;
+  const mob = facts.issues.find(i => i.key === 'pip:12')!;
+  const walk = mob.evidence.find(e => e.quote.startsWith('Walk abandoned'))!;
+  const notes = mob.evidence.find(e => e.agencyNotes && e.quote.startsWith('stops'))!;
+  assert.match(walk.where, /^bundle page \d+$/);
+  assert.equal(notes.inBundle, false);
+  answers.push({
+    opening: [{ text: 'I represent the appellant in this appeal.', cites: [] }],
+    issues: [{ key: 'pip:12', sentences: [
+      { text: `The physiotherapy walk test was abandoned at 18 metres [${walk.id}].`, cites: [walk.id] },
+      { text: 'The decision maker describes the test as "a single snapshot", but it is the only measured evidence of her walking.', cites: [] },
+      { text: `At interview, the appellant told me she "stops at next door's wall to lean and get breath" [${notes.id}].`, cites: [notes.id] },
+      { text: 'She can walk 5 metres on a bad day.', cites: [walk.id] },
+      { text: 'This is supported by CSPIP/123/2017.', cites: [] },
+    ] }],
+    closing: [{ text: 'I ask the tribunal to allow the appeal.', cites: [] }],
+  });
+  const review = await sub.writeSubmission(me, caseId, 'appeal');
+  assert.deepEqual(review.dropped.map(d => d.reason), ['number_not_in_facts', 'case_law']);
+  assert.equal(review.argument.length, 3);
+  const after = (await ap.getAppeal(me, caseId))!;
+  const text = after.case.appeal_draft as string;
+  assert.match(text, /^Submission on behalf of the appellant: Personal Independence Payment/);
+  assert.match(text, /as reconsidered on 9 September 2026\./);
+  assert.match(text, new RegExp(`abandoned at 18 metres \\(PIP-03 physio, ${walk.where}\\)\\.`));
+  assert.match(text, /\(adviser’s interview notes, page 1\)\./);
+  assert.match(text, /Not in the DWP bundle, enclosed or set out above: adviser’s interview notes\./);
+  assert.match(text, /Daily living 1: Preparing food\n\[The draft for this issue did not pass the checks\. Write it by hand\.\]/);
+  assert.doesNotMatch(text, /5 metres|CSPIP/);
+  assert.deepEqual(after.case.submission_review.dropped.length, 2);
 });

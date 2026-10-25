@@ -48,7 +48,7 @@ await saveDecision(me, caseId, 'pip', 'pip:12', 'b', 5);
 const wsc = (synthetic as any[]).find(s => s.id === 'WCA-02');
 const wcaId = await createCase(me, 'TEST-WCA-02-SEED', 'uc-wca');
 const wids: Record<string, string> = {};
-for (const d of [...wsc.mrDocs, ...wsc.docs.map((x: any) => ({ ...x, kind: 'evidence' }))]) {
+for (const d of [...wsc.mrDocs, ...wsc.docs.map((x: any) => ({ ...x, kind: / notes\.md$/.test(x.name) ? 'notes' : 'evidence' }))]) {
   wids[d.kind === 'evidence' ? d.name : d.kind] = await asAgency(ag, async c => {
     const pages = splitTextPages(d.text);
     const id = (await c.query("insert into documents (agency_id, case_id, name, kind, content_type, size_bytes, blob_path, read_status, page_count, low_confidence_lines) values ($1, $2, $3, $4, 'text/markdown', $5, 'none', 'read', $6, 0) returning id", [ag, wcaId, d.name, d.kind, d.text.length, pages.length])).rows[0].id;
@@ -84,7 +84,7 @@ const appeal = JSON.parse(fs.readFileSync(new URL('../../evals/cases/PIP-03/appe
 const s3 = (synthetic as any[]).find(s => s.id === 'PIP-03');
 const apId = await createCase(me, 'TEST-PIP-03-SEED', 'pip');
 const aid: Record<string, string> = {};
-for (const d of [...s3.docs.map((x: any) => ({ ...x, kind: 'evidence', key: x.name.split(' ')[1].replace('.md', '') })), ...s3.mrDocs.map((x: any) => ({ ...x, key: x.kind })), ...s3.appealDocs.map((x: any) => ({ ...x, key: x.kind }))]) {
+for (const d of [...s3.docs.map((x: any) => ({ ...x, kind: / notes\.md$/.test(x.name) ? 'notes' : 'evidence', key: x.name.split(' ')[1].replace('.md', '') })), ...s3.mrDocs.map((x: any) => ({ ...x, key: x.kind })), ...s3.appealDocs.map((x: any) => ({ ...x, key: x.kind }))]) {
   aid[d.key] = await asAgency(ag, async c => {
     const pages = splitTextPages(d.text);
     const id = (await c.query("insert into documents (agency_id, case_id, name, kind, content_type, size_bytes, blob_path, read_status, page_count, low_confidence_lines) values ($1, $2, $3, $4, 'text/markdown', $5, 'none', 'read', $6, 0) returning id", [ag, apId, d.name, d.kind, d.text.length, pages.length])).rows[0].id;

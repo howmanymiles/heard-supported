@@ -166,3 +166,43 @@ test('response reasoning: only verified quotes for the disputed items are kept',
   assert.deepEqual(Object.keys(r.reasoning), ['pip:12']);
   assert.deepEqual(r.dropped.map(d => d.reason), ['not_verbatim']);
 });
+
+test('submission checks: invented numbers, misquotes, case law, wrong descriptors and unknown regulations are dropped', async () => {
+  const { resolveSubmission, renderSubmission, SUBMISSION_REGULATIONS } = await import('../src/submission.ts');
+  const facts = {
+    stage: 'appeal' as const, benefit: 'pip' as const, summary: 'The decision gave 4 points for mobility. The appellant says 12.',
+    regulations: SUBMISSION_REGULATIONS.pip,
+    issues: [{
+      key: 'pip:12', label: 'Mobility 2: Moving around', dwp: 'descriptor 12b (4 points)', ours: 'descriptor 12e (12 points)', letters: ['12b', '12e'],
+      decisionMaker: { quote: 'the walk test is a single snapshot', where: 'bundle page 3' },
+      evidence: [
+        { id: 'E1', quote: 'Walk abandoned at 18 metres when patient stopped due to breathlessness.', source: 'physio report', where: 'bundle page 12', agencyNotes: false, inBundle: true },
+        { id: 'E2', quote: 'stops at next door’s wall to lean and get breath', source: 'adviser’s notes', where: 'page 1', agencyNotes: true, inBundle: false },
+      ],
+    }],
+  };
+  const r = resolveSubmission({
+    opening: [{ text: 'I represent the appellant in this appeal.', cites: [] }],
+    issues: [{ key: 'pip:12', sentences: [
+      { text: 'The measured walk test was abandoned at 18 metres [E1].', cites: ['E1'] },                       // kept
+      { text: 'The decision maker calls the test "a single snapshot", but it is the only measured evidence.', cites: [] }, // kept, argument
+      { text: 'She can only walk 15 metres on bad days.', cites: ['E1'] },                                    // invented number
+      { text: 'The report says "she could barely walk".', cites: ['E1'] },                                    // misquote
+      { text: 'This follows CPIP/1234/2016.', cites: [] },                                                    // case law
+      { text: 'Descriptor 12f applies.', cites: [] },                                                         // not either side's descriptor
+      { text: 'Under regulation 12 the walk must be repeated.', cites: [] },                                  // unlisted regulation
+      { text: 'Under regulation 4(2A) she must be able to walk repeatedly.', cites: ['E1'] },                  // kept
+      { text: 'At interview, the appellant told me she stops at next door’s wall.', cites: ['E2'] },      // kept, agency notes
+      { text: 'Her GP agrees.', cites: ['E9'] },                                                              // unknown citation
+    ] }],
+    closing: [{ text: 'I ask the tribunal to award 12 points for mobility.', cites: [] }],
+  }, facts);
+  assert.deepEqual(r.dropped.map(d => d.reason), ['number_not_in_facts', 'quote_not_in_cited_evidence', 'case_law', 'descriptor_not_in_facts', 'regulation_not_listed', 'unknown_citation']);
+  const kept = r.issues[0].sentences;
+  assert.equal(kept.length, 4);
+  assert.equal(kept[1].argument, true);
+  const text = renderSubmission(r, facts, ['Submission', 'Reference: X']);
+  assert.match(text, /The measured walk test was abandoned at 18 metres \(physio report, bundle page 12\)\./);
+  assert.match(text, /Not in the DWP bundle, enclosed or set out above: adviser’s notes\./);
+  assert.doesNotMatch(text, /\[E1\]/);
+});

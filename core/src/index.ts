@@ -11,3 +11,4 @@ export * from './deadlines.ts';
 export * from './assessor-wca.ts';
 export * from './bundle.ts';
 export * from './response.ts';
+export * from './submission.ts';

@@ -6,8 +6,8 @@ import type { Me } from './auth.ts';
 
 export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number;
   decision_date: string | null; mr_request_date: string | null; mr_notice_date: string | null; appeal_sent_date: string | null };
-export type DocKind = 'evidence' | 'pa4' | 'uc85' | 'uc85a' | 'decision' | 'mr_notice' | 'dwp_bundle' | 'other';
-export const DOC_KINDS: DocKind[] = ['evidence', 'pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle', 'other'];
+export type DocKind = 'evidence' | 'notes' | 'pa4' | 'uc85' | 'uc85a' | 'decision' | 'mr_notice' | 'dwp_bundle' | 'other';
+export const DOC_KINDS: DocKind[] = ['evidence', 'notes', 'pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle', 'other'];
 /** Papers that record the DWP's position rather than the client's evidence. */
 export const PAPER_KINDS: DocKind[] = ['pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle'];
 export type DocRow = { id: string; name: string; kind: DocKind; content_type: string; size_bytes: number; read_status: string; page_count: number | null; low_confidence_lines: number | null; created_at: Date };
@@ -135,7 +135,7 @@ export async function readPages(me: Me, caseId: string, kinds: DocKind[]) {
 export async function readAndReview(me: Me, caseId: string) {
   const { case: cs, docs } = (await getCase(me, caseId)) ?? {};
   if (!cs) throw new Error('Case not found.');
-  const evidenceKinds: DocKind[] = ['evidence', 'other'];
+  const evidenceKinds: DocKind[] = ['evidence', 'notes', 'other'];
   await readUnread(me, caseId, docs!.filter(d => evidenceKinds.includes(d.kind)));
   const input = await readPages(me, caseId, evidenceKinds);
   if (!input.length) return;

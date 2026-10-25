@@ -17,6 +17,7 @@ const RATE: Record<string, string> = { none: 'no award', standard: 'the standard
 export type Issue = {
   key: string; label: string;
   dwp: string; ours: string;                    // one line each, for the grounds
+  refs: string[];                               // descriptor references on either side, e.g. "12b", "13(c)"
   assessorReason: Quote | null;                 // from the PA4 / UC85 / UC85A
   evidence: Array<{ doc: string; page: number; quote: string }>;
 };
@@ -44,6 +45,7 @@ export function issuesFor(a: NonNullable<Awaited<ReturnType<typeof getAppeal>>>)
         key: `pip:${ch.activity}`, label: labels[`pip:${ch.activity}`],
         dwp: `The decision maker applied descriptor ${ch.activity}${ch.assessor.letter} (${ch.assessor.points} points).`,
         ours: `The appellant says descriptor ${ch.activity}${ch.adviser!.letter} applies (${ch.adviser!.points} points): "${ch.adviser!.text}"`,
+        refs: [`${ch.activity}${ch.assessor.letter}`, `${ch.activity}${ch.adviser!.letter}`],
         assessorReason: ch.justification ? { docId: ch.justification.doc, page: ch.justification.page, quote: ch.justification.quote } : null,
         evidence: ch.evidence,
       })),
@@ -63,6 +65,7 @@ export function issuesFor(a: NonNullable<Awaited<ReturnType<typeof getAppeal>>>)
       ours: r.key.startsWith('sch6:') ? `The appellant says descriptor ${r.key.split(':')[1]}(${r.adviser}) applies (${r.adviserPoints} points): "${r.adviserText}"`
         : r.key === 'sch7' ? `The appellant says ${r.adviserText}`
           : `The appellant says there would be a substantial risk to the physical or mental health of any person if the appellant were found not to have ${r.key === 'sch8:4' ? 'limited capability for work' : 'limited capability for work-related activity'}.`,
+      refs: r.key.startsWith('sch6:') ? [`${r.key.split(':')[1]}(${r.dwp})`, `${r.key.split(':')[1]}(${r.adviser})`] : r.key === 'sch7' ? [r.dwp, ...(r.adviser ?? '').split(/,\s*/)].filter(x => x && x !== 'none') : [],
       assessorReason: r.justification, evidence: r.evidence,
     })),
     summary: `The decision maker found ${OUTCOME_LABEL[c.dwpOutcome]} (${c.dwp.lcw.totalPoints} points). The appellant says they score ${c.adviser.lcw.totalPoints} points and has ${OUTCOME_LABEL[c.adviserOutcome]}.`,
