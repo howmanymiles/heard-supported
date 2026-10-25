@@ -17,9 +17,9 @@ export default function Terms() {
       </section>
 
       <section className="stack">
-        <h2>The AI can be wrong</h2>
-        <p>Parts of Heard &amp; Supported use an AI model. It can miss evidence, choose the wrong passage, misread a scan or handwriting, or suggest something that doesn’t fit the client’s case. We check that every quote it suggests appears word for word in the document, but we can’t check that it is relevant or rightly understood. That is the adviser’s job.</p>
-        <p>Scores, descriptors, estimated award values, deadlines and drafted wording are aids to the adviser’s judgement, not conclusions. Before relying on anything, or sending anything, the adviser must check it against the papers and the law.</p>
+        <h2>How the AI works, and its limits</h2>
+        <p>The AI doesn’t bring in outside knowledge. It works only from two sources: your client’s papers, and our library of the descriptors, regulations and case law. Every passage it points to is checked word for word against the document it came from, and the descriptors and rules are applied by our code, not by the AI.</p>
+        <p>It can still miss something, point to a passage that doesn’t help, or work from a scan it misread. So its suggestions, the scores and estimated awards, the deadlines and the drafted wording are there to support the adviser’s judgement. The adviser checks them against the papers before relying on them or sending anything.</p>
       </section>
 
       <section className="stack">
