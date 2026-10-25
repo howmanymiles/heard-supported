@@ -47,7 +47,7 @@ export default async function Team() {
               <td>{admin && p.id !== me.userId ? <RoleForm userId={p.id} name={p.name ?? p.email} role={p.role} /> : ROLES[p.role as keyof typeof ROLES]}</td>
               <td>{manage && offices.length ? <UserOfficeForm userId={p.id} name={p.name ?? 'this person'} officeId={p.office_id} offices={offices} /> : (officeName[p.office_id] ?? <span className="soft">No office set</span>)}</td>
               <td className="mono">{p.open_cases}</td>
-              <td>{day(p.last_sign_in_at)}</td>
+              <td>{day(p.last_sign_in_at)}{p.last_sign_in_at && <><br /><span className="soft small">{p.last_sign_in_mfa ? 'With a second step' : p.last_sign_in_mfa === false ? 'Password only' : ''}</span></>}</td>
               {admin && <td>{p.id !== me.userId && <DeactivateButton userId={p.id} name={p.name ?? p.email} />}</td>}
             </tr>
           ))}</tbody>

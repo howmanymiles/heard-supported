@@ -31,6 +31,8 @@ export const SIGN_IN_PROBLEMS: Record<string, string> = {
   used: 'This invitation has already been used. Ask your agency’s admin for a new one.',
   expired: 'This invitation has expired. Ask your agency’s admin for a new one.',
   agency_pending: 'Your agency’s account is not active yet.',
+  mfa_required: 'Heard & Supported needs a sign-in with a second step, such as the Microsoft Authenticator app or a code by text. Ask your IT team to turn on multi-factor sign-in for your account, then sign in again.',
+  expired_session: 'You were signed out because the session ended: after 30 minutes without activity, or 8 hours after signing in. Sign in again to carry on.',
   wrong_account: 'You signed in with a different account from the one the invitation was sent to. Sign out of Microsoft, then open the invitation again and sign in with the invited account.',
   denied: 'You can’t sign in to Heard & Supported with this account.',
 };
@@ -180,7 +182,7 @@ export async function resolveSignIn(id: Identity, inviteToken: string | null): P
 
 /** On every request: the person's current role and agency, so removing access or changing a role takes effect at once. */
 export async function currentUser(userId: string) {
-  return (await pool().query(`select u.id, u.agency_id, u.role, u.name from users u join agencies a on a.id = u.agency_id where u.id = $1 and u.active and a.status = 'active'`, [userId])).rows[0] ?? null;
+  return (await pool().query(`select u.id, u.agency_id, u.role, u.name, u.last_active_at from users u join agencies a on a.id = u.agency_id where u.id = $1 and u.active and a.status = 'active'`, [userId])).rows[0] ?? null;
 }
 
 // ---------- people ----------
@@ -219,7 +221,7 @@ export async function reactivate(me: Me, userId: string) {
 
 export async function listPeople(me: Me) {
   // In the agency's scope: the open-case counts come from cases, which row-level security guards.
-  return asAgency(me.agencyId, async c => (await c.query(`select u.id, u.name, u.email, u.role, u.office_id, u.active, u.last_sign_in_at,
+  return asAgency(me.agencyId, async c => (await c.query(`select u.id, u.name, u.email, u.role, u.office_id, u.active, u.last_sign_in_at, u.last_sign_in_mfa,
       (select count(*)::int from cases x where x.adviser_id = u.id and x.closed_at is null) as open_cases
     from users u where u.agency_id = $1 order by u.active desc, u.name`, [me.agencyId])).rows);
 }
