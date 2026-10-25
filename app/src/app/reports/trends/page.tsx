@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireMe } from '@/lib/auth';
-import { outcomeData, monthlyTrends, trendAndAreaData, SMALL } from '@/lib/outcomes';
+import { listOffices } from '@/lib/offices';
+import { outcomeData, monthlyTrends, trendAndOfficeData, SMALL } from '@/lib/outcomes';
 import { Bars, Line } from '../charts';
 
 export const dynamic = 'force-dynamic';
@@ -20,8 +21,11 @@ export default async function Trends({ searchParams }: { searchParams: Promise<R
   const sp = await searchParams;
   const d = lastYear(new Date().toISOString().slice(0, 10));
   const ok = (x?: string) => (x && /^\d{4}-\d{2}-\d{2}$/.test(x) ? x : null);
+  const offices = await listOffices(me);
+  const office = offices.find(o => o.id === sp.office)?.id ?? null;
+  const officeName = offices.find(o => o.id === office)?.name;
   const from = ok(sp.from) ?? d.from, to = ok(sp.to) ?? d.to;
-  const [{ rows }, { opened }] = await Promise.all([outcomeData(me, from, to), trendAndAreaData(me, from, to)]);
+  const [{ rows }, { opened }] = await Promise.all([outcomeData(me, from, to, office), trendAndOfficeData(me, from, to, office)]);
   const months = monthlyTrends(rows, opened, from, to);
   const ratePts = (k: 'mr' | 'appeal' | 'overall') => months.map(m => ({ label: m.month, value: m[k].decided ? m[k].rate : null,
     tip: `${monthName(m.month)}: ${m[k].decided ? `${m[k].overturned} of ${m[k].decided} overturned (${m[k].rate}%)` : 'no results'}${m[k].decided && m[k].decided < SMALL ? ' · few results' : ''}` }));
@@ -29,10 +33,11 @@ export default async function Trends({ searchParams }: { searchParams: Promise<R
   return (
     <div className="stack-lg">
       <p className="crumbs"><Link href="/reports">← Reports</Link></p>
-      <div className="head"><h1>Trends</h1><p className="soft">Month by month, by the date of each result. Hover over a month for its figures; the table below has them all.</p></div>
+      <div className="head"><h1>Trends{officeName ? ` · ${officeName}` : ''}</h1><p className="soft">Month by month, by the date of each result. Hover over a month for its figures; the table below has them all.</p></div>
       <form className="panel row" method="get" aria-label="Period">
         <label className="field small-field">From<input type="date" name="from" defaultValue={from} /></label>
         <label className="field small-field">To<input type="date" name="to" defaultValue={to} /></label>
+        <label className="field small-field">Office<select name="office" defaultValue={office ?? ''}><option value="">All offices</option>{offices.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
         <div style={{ alignSelf: 'flex-end' }}><button className="btn" type="submit">Show</button></div>
       </form>
 

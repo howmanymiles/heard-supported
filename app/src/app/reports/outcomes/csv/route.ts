@@ -12,7 +12,8 @@ export async function GET(req: Request) {
   const from = ok(u.searchParams.get('from')), to = ok(u.searchParams.get('to'));
   if (!from || !to) return new Response('Give a from and to date.', { status: 400 });
   const withNames = u.searchParams.get('names') === '1';
-  const { rows, issues } = await outcomeData(me, from, to);
+  const office = u.searchParams.get('office');
+  const { rows, issues } = await outcomeData(me, from, to, office && /^[0-9a-f-]{36}$/.test(office) ? office : null);
   const body = outcomesCsv(summariseOutcomes(rows, issues, from, to).cases, withNames);
   await asAgency(me.agencyId, c => audit(c, me.agencyId, me.userId, null, `Outcomes exported ${from} to ${to}${withNames ? ', with client names' : ''}`));
   return new Response(body, { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="outcomes-${from}-to-${to}.csv"`, 'cache-control': 'no-store' } });

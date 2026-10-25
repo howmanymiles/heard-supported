@@ -22,10 +22,10 @@ export const CONSENT_STATEMENT = {
 export const CONSENT_METHODS = { in_person: 'In person', phone: 'By phone', video: 'By video call', written: 'In writing' } as const;
 
 export type ConsentInput = { method: string; givenOn: string; storeData: boolean; aiProcessing: boolean; actOnBehalf: boolean; confirmed: boolean };
-export type ClaimantInput = { name: string; preferredName?: string | null; dateOfBirth?: string | null; agencyRef?: string | null; postcode?: string | null };
+export type ClaimantInput = { name: string; preferredName?: string | null; dateOfBirth?: string | null; agencyRef?: string | null };
 export type ConsentRow = { id: string; statement_version: string; method: string; given_on: string; store_data: boolean; ai_processing: boolean; act_on_behalf: boolean;
   recorded_by_name: string | null; recorded_at: Date; withdrawn_at: Date | null; withdrawn_note: string | null };
-export type ClaimantRow = { id: string; name: string; preferred_name: string | null; date_of_birth: string | null; agency_ref: string | null; postcode_district?: string | null; created_at: Date;
+export type ClaimantRow = { id: string; name: string; preferred_name: string | null; date_of_birth: string | null; agency_ref: string | null; created_at: Date;
   open_cases?: number; ai_ok?: boolean; consent_active?: boolean };
 
 const iso = (d: string | null | undefined, what: string) => {
@@ -44,21 +44,12 @@ function checkConsent(k: ConsentInput, today: string) {
   return given;
 }
 
-/** The postcode district (outward code) from a full or part postcode: "g41 2ab" gives "G41". The rest is not kept. */
-export function postcodeDistrict(input: string | null | undefined): string | null {
-  const t = (input ?? '').toUpperCase().replace(/\s+/g, ' ').trim();
-  if (!t) return null;
-  const m = t.match(/^([A-Z]{1,2}[0-9][A-Z0-9]?)(?: ?[0-9][A-Z]{2})?$/) ?? t.replace(/ /g, '').match(/^([A-Z]{1,2}[0-9][A-Z0-9]?)[0-9][A-Z]{2}$/);
-  if (!m) throw new Error('Enter a UK postcode, or just its first half (for example G41).');
-  return m[1];
-}
-
 function checkClaimant(p: ClaimantInput, today: string) {
   const name = p.name.trim().replace(/\s+/g, ' ').slice(0, 120);
   if (name.length < 2) throw new Error('Enter your client’s name.');
   const dob = iso(p.dateOfBirth, 'date of birth');
   if (dob && dob > today) throw new Error('The date of birth cannot be in the future.');
-  return { name, preferred: p.preferredName?.trim().slice(0, 60) || null, dob, ref: p.agencyRef?.trim().slice(0, 40) || null, district: postcodeDistrict(p.postcode) };
+  return { name, preferred: p.preferredName?.trim().slice(0, 60) || null, dob, ref: p.agencyRef?.trim().slice(0, 40) || null };
 }
 
 async function insertConsent(c: PoolClient, me: Me, claimantId: string, k: ConsentInput, given: string) {
@@ -73,8 +64,8 @@ export async function createClaimant(me: Me, p: ClaimantInput, k: ConsentInput, 
   const given = checkConsent(k, today);
   const x = checkClaimant(p, today);
   return asAgency(me.agencyId, async c => {
-    const id = (await c.query('insert into claimants (agency_id, name, preferred_name, date_of_birth, agency_ref, postcode_district, created_by) values ($1, $2, $3, $4, $5, $6, $7) returning id',
-      [me.agencyId, x.name, x.preferred, x.dob, x.ref, x.district, me.userId])).rows[0].id;
+    const id = (await c.query('insert into claimants (agency_id, name, preferred_name, date_of_birth, agency_ref, created_by) values ($1, $2, $3, $4, $5, $6) returning id',
+      [me.agencyId, x.name, x.preferred, x.dob, x.ref, me.userId])).rows[0].id;
     await insertConsent(c, me, id, k, given);
     await audit(c, me.agencyId, me.userId, null, 'Client record created');
     return id;
@@ -84,7 +75,7 @@ export async function createClaimant(me: Me, p: ClaimantInput, k: ConsentInput, 
 export async function updateClaimant(me: Me, id: string, p: ClaimantInput, today = new Date().toISOString().slice(0, 10)) {
   const x = checkClaimant(p, today);
   await asAgency(me.agencyId, async c => {
-    const r = await c.query('update claimants set name = $2, preferred_name = $3, date_of_birth = $4, agency_ref = $5, postcode_district = $6 where id = $1', [id, x.name, x.preferred, x.dob, x.ref, x.district]);
+    const r = await c.query('update claimants set name = $2, preferred_name = $3, date_of_birth = $4, agency_ref = $5 where id = $1', [id, x.name, x.preferred, x.dob, x.ref]);
     if (!r.rowCount) throw new Error('Client not found.');
     await audit(c, me.agencyId, me.userId, null, 'Client details changed');
   });
@@ -127,7 +118,7 @@ export async function listClaimants(me: Me, q?: string): Promise<ClaimantRow[]> 
 
 export async function getClaimant(me: Me, id: string) {
   return asAgency(me.agencyId, async c => {
-    const k = (await c.query("select id, name, preferred_name, to_char(date_of_birth, 'YYYY-MM-DD') as date_of_birth, agency_ref, postcode_district, created_at from claimants where id = $1", [id])).rows[0] as ClaimantRow | undefined;
+    const k = (await c.query("select id, name, preferred_name, to_char(date_of_birth, 'YYYY-MM-DD') as date_of_birth, agency_ref, created_at from claimants where id = $1", [id])).rows[0] as ClaimantRow | undefined;
     if (!k) return null;
     const consents = (await c.query(`select n.id, n.statement_version, n.method, to_char(n.given_on, 'YYYY-MM-DD') as given_on, n.store_data, n.ai_processing, n.act_on_behalf,
       u.name as recorded_by_name, n.recorded_at, n.withdrawn_at, n.withdrawn_note

@@ -20,7 +20,8 @@ export async function assignCase(me: Me, caseId: string, userId: string) {
   const u = (await pool().query('select id, name from users where id = $1 and agency_id = $2', [userId, me.agencyId])).rows[0];
   if (!u) throw new Error('That person is not in your agency.');
   await asAgency(me.agencyId, async c => {
-    const r = await c.query('update cases set adviser_id = $2 where id = $1', [caseId, userId]);
+    // The case goes to the new adviser's office, unless it is closed (its results stay where they were won).
+    const r = await c.query('update cases set adviser_id = $2, office_id = case when closed_at is null then (select office_id from users where id = $2) else office_id end where id = $1', [caseId, userId]);
     if (!r.rowCount) throw new Error('Case not found.');
     await audit(c, me.agencyId, me.userId, caseId, `Case assigned to ${u.name ?? 'an adviser'}`);
   });

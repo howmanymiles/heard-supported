@@ -4,6 +4,7 @@ import { asAgency, audit } from './db.ts';
 import { putDocument, getDocument } from './storage.ts';
 import type { Me } from './auth.ts';
 import { aiGate, storeGate } from './claimants.ts';
+import { officeOfUser } from './offices.ts';
 
 export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number;
   decision_date: string | null; mr_request_date: string | null; mr_notice_date: string | null; appeal_sent_date: string | null;
@@ -45,8 +46,9 @@ export async function createCase(me: Me, ref: string, benefit: Benefit, claimant
   if (!/^[A-Za-z0-9][A-Za-z0-9 _\-\/]*$/.test(clean)) throw new Error('Use letters, numbers, spaces, hyphens or slashes for the case reference. Don’t use the client’s name.');
   return asAgency(me.agencyId, async c => {
     if (claimantId) await storeGate(c, null, claimantId);
-    const r = await c.query('insert into cases (agency_id, ref, benefit, adviser_id, dataset_version, claimant_id) values ($1, $2, $3, $4, $5, $6) returning id',
-      [me.agencyId, clean, benefit, me.userId, datasetVersion(benefit), claimantId]);
+    const office = await officeOfUser(c, me.agencyId, me.userId);
+    const r = await c.query('insert into cases (agency_id, ref, benefit, adviser_id, dataset_version, claimant_id, office_id) values ($1, $2, $3, $4, $5, $6, $7) returning id',
+      [me.agencyId, clean, benefit, me.userId, datasetVersion(benefit), claimantId, office]);
     await audit(c, me.agencyId, me.userId, r.rows[0].id, 'Case created');
     return r.rows[0].id;
   });

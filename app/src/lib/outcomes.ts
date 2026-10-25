@@ -12,7 +12,7 @@ const APPEAL_DECIDED = ['allowed', 'allowed_in_part', 'dismissed', 'lapsed_revis
 const APPEAL_OVERTURN = ['allowed', 'allowed_in_part', 'lapsed_revised'];
 
 export type OutcomeRow = {
-  id: string; ref: string; client: string | null; district?: string | null; benefit: 'pip' | 'uc-wca'; adviser: string | null;
+  id: string; ref: string; client: string | null; office?: string | null; benefit: 'pip' | 'uc-wca'; adviser: string | null;
   mr_request_date: string | null; mr_outcome: string | null; mr_outcome_date: string | null;
   appeal_sent_date: string | null; appeal_outcome: string | null; appeal_outcome_date: string | null;
   award_before: Award | null; award_after: Award | null; uc_lcwra_rate: string | null; lcw_legacy: boolean;
@@ -41,16 +41,16 @@ export async function issueResultsFor(me: Me, caseId: string): Promise<IssueRow[
 }
 
 /** Cases with a reconsideration or appeal result dated in the period, and their issue results. */
-export async function outcomeData(me: Me, from: string, to: string): Promise<{ rows: OutcomeRow[]; issues: IssueRow[] }> {
+export async function outcomeData(me: Me, from: string, to: string, officeId: string | null = null): Promise<{ rows: OutcomeRow[]; issues: IssueRow[] }> {
   return asAgency(me.agencyId, async c => {
     const rows = (await c.query(`
-      select c.id, c.ref, k.name as client, k.postcode_district as district, c.benefit, u.name as adviser,
+      select c.id, c.ref, k.name as client, o.name as office, c.benefit, u.name as adviser,
         to_char(c.mr_request_date, 'YYYY-MM-DD') as mr_request_date, c.mr_outcome, to_char(c.mr_outcome_date, 'YYYY-MM-DD') as mr_outcome_date,
         to_char(c.appeal_sent_date, 'YYYY-MM-DD') as appeal_sent_date, c.appeal_outcome, to_char(c.appeal_outcome_date, 'YYYY-MM-DD') as appeal_outcome_date,
         c.award_before, c.award_after, c.uc_lcwra_rate, c.lcw_legacy
-      from cases c left join users u on u.id = c.adviser_id left join claimants k on k.id = c.claimant_id
-      where (c.mr_outcome is not null and c.mr_outcome_date between $1 and $2) or (c.appeal_outcome is not null and c.appeal_outcome_date between $1 and $2)
-      order by coalesce(c.appeal_outcome_date, c.mr_outcome_date) desc`, [from, to])).rows as OutcomeRow[];
+      from cases c left join users u on u.id = c.adviser_id left join claimants k on k.id = c.claimant_id left join offices o on o.id = c.office_id
+      where ($3::uuid is null or c.office_id = $3) and ((c.mr_outcome is not null and c.mr_outcome_date between $1 and $2) or (c.appeal_outcome is not null and c.appeal_outcome_date between $1 and $2))
+      order by coalesce(c.appeal_outcome_date, c.mr_outcome_date) desc`, [from, to, officeId])).rows as OutcomeRow[];
     const issues = rows.length ? (await c.query('select case_id, issue_key, label, result, stage from issue_results where case_id = any($1)', [rows.map(r => r.id)])).rows as IssueRow[] : [];
     return { rows, issues };
   });
@@ -134,9 +134,9 @@ const csvCell = (v: unknown) => { const s = v === null || v === undefined ? '' :
 
 /** One row per case, for funders' returns and the agency's own analysis. Client names are left out unless asked for. */
 export function outcomesCsv(cases: OutcomeCase[], withNames = false): string {
-  const head = ['Reference', ...(withNames ? ['Client'] : []), 'Benefit', 'Adviser', 'MR requested', 'MR result', 'MR result date', 'Days to MR result',
+  const head = ['Reference', ...(withNames ? ['Client'] : []), 'Benefit', 'Office', 'Adviser', 'MR requested', 'MR result', 'MR result date', 'Days to MR result',
     'Appeal sent', 'Appeal result', 'Appeal result date', 'Days to appeal result', 'Overturned at', 'Award before', 'Award after', 'Change', 'Yearly value gained (GBP)', 'Rates year'];
-  const lines = cases.map(c => [c.ref, ...(withNames ? [c.client] : []), c.benefit === 'pip' ? 'PIP' : 'UC WCA', c.adviser, c.mr_request_date, c.mr_outcome && MR_OUTCOMES[c.mr_outcome as keyof typeof MR_OUTCOMES], c.mr_outcome_date, c.mrDays,
+  const lines = cases.map(c => [c.ref, ...(withNames ? [c.client] : []), c.benefit === 'pip' ? 'PIP' : 'UC WCA', c.office, c.adviser, c.mr_request_date, c.mr_outcome && MR_OUTCOMES[c.mr_outcome as keyof typeof MR_OUTCOMES], c.mr_outcome_date, c.mrDays,
     c.appeal_sent_date, c.appeal_outcome && APPEAL_OUTCOMES[c.appeal_outcome as keyof typeof APPEAL_OUTCOMES], c.appeal_outcome_date, c.appealDays, c.stageWon === 'mr' ? 'Reconsideration' : c.stageWon === 'appeal' ? 'Appeal' : '', AWARD(c.benefit, c.award_before), AWARD(c.benefit, c.award_after), c.change ?? '', c.gain, c.gainYear].map(csvCell).join(','));
   return [head.map(csvCell).join(','), ...lines].join('\r\n') + '\r\n';
 }
@@ -174,44 +174,40 @@ export function monthlyTrends(rows: OutcomeRow[], opened: Record<string, number>
   return [...by.values()].map(x => { for (const t of [x.mr, x.appeal, x.overall]) t.rate = rate(t.overturned, t.decided); x.money = Math.round(x.money * 100) / 100; return x; });
 }
 
-export type AreaRow = { key: string; open: number; cases: number; mr: Tally; appeal: Tally; overall: Tally; money: number; small: boolean };
+export type OfficeFigures = { key: string; open: number; cases: number; mr: Tally; appeal: Tally; overall: Tally; money: number; small: boolean };
+export const NO_OFFICE = 'No office set';
 
-/** Postcode area: the letters at the start of the district ("G41" is in "G"). */
-export const postcodeArea = (district: string) => district.match(/^[A-Z]+/)![0];
-
-/** Pure: results by the client's postcode district, or by postcode area. Cases without a postcode are kept, as “Not recorded”. */
-export function byArea(rows: OutcomeRow[], openByDistrict: Record<string, number>, from: string, to: string, level: 'district' | 'area' = 'district'): AreaRow[] {
-  const keyOf = (d: string | null | undefined) => (!d ? 'Not recorded' : level === 'area' ? postcodeArea(d) : d);
-  const m = new Map<string, AreaRow>();
+/** Pure: results by the office each case belongs to. */
+export function byOffice(rows: OutcomeRow[], openByOffice: Record<string, number>, from: string, to: string): OfficeFigures[] {
+  const m = new Map<string, OfficeFigures>();
   const get = (k: string) => m.get(k) ?? (m.set(k, { key: k, open: 0, cases: 0, mr: tally(), appeal: tally(), overall: tally(), money: 0, small: false }), m.get(k)!);
-  for (const [d, n] of Object.entries(openByDistrict)) get(keyOf(d === '' ? null : d)).open += n;
-  const s = summariseOutcomes(rows, [], from, to);
-  for (const c of s.cases) {
-    const x = get(keyOf(c.district)); x.cases++;
-    if (c.mr_outcome && inPeriod(c.mr_outcome_date, from, to)) { x.mr.decided++; if (MR_OVERTURN.includes(c.mr_outcome)) x.mr.overturned++; }
-    if (c.appeal_outcome && APPEAL_DECIDED.includes(c.appeal_outcome) && inPeriod(c.appeal_outcome_date, from, to)) { x.appeal.decided++; if (APPEAL_OVERTURN.includes(c.appeal_outcome)) x.appeal.overturned++; }
-    if ((c.mr_outcome && inPeriod(c.mr_outcome_date, from, to)) || (c.appeal_outcome && APPEAL_DECIDED.includes(c.appeal_outcome) && inPeriod(c.appeal_outcome_date, from, to))) {
-      x.overall.decided++; if (c.stageWon) x.overall.overturned++;
-    }
+  for (const [o, n] of Object.entries(openByOffice)) get(o || NO_OFFICE).open += n;
+  for (const c of summariseOutcomes(rows, [], from, to).cases) {
+    const x = get(c.office || NO_OFFICE); x.cases++;
+    const mrIn = !!c.mr_outcome && inPeriod(c.mr_outcome_date, from, to);
+    const apIn = !!c.appeal_outcome && APPEAL_DECIDED.includes(c.appeal_outcome) && inPeriod(c.appeal_outcome_date, from, to);
+    if (mrIn) { x.mr.decided++; if (MR_OVERTURN.includes(c.mr_outcome!)) x.mr.overturned++; }
+    if (apIn) { x.appeal.decided++; if (APPEAL_OVERTURN.includes(c.appeal_outcome!)) x.appeal.overturned++; }
+    if (mrIn || apIn) { x.overall.decided++; if (c.stageWon) x.overall.overturned++; }
     if (c.gain !== null && c.stageWon) x.money += c.gain;
   }
   return [...m.values()].map(x => {
     for (const t of [x.mr, x.appeal, x.overall]) t.rate = t.decided >= SMALL ? rate(t.overturned, t.decided) : null;
     x.small = x.overall.decided < SMALL; x.money = Math.round(x.money * 100) / 100; return x;
-  }).sort((a, b) => (a.key === 'Not recorded' ? 1 : b.key === 'Not recorded' ? -1 : b.overall.decided - a.overall.decided || a.key.localeCompare(b.key)));
+  }).sort((a, b) => (a.key === NO_OFFICE ? 1 : b.key === NO_OFFICE ? -1 : a.key.localeCompare(b.key)));
 }
 
-/** Cases opened per month, and the open caseload by postcode district, for the trend and area views. */
-export async function trendAndAreaData(me: Me, from: string, to: string) {
+/** Cases opened per month (for one office, or all), and the open caseload by office. */
+export async function trendAndOfficeData(me: Me, from: string, to: string, officeId: string | null = null) {
   return asAgency(me.agencyId, async c => {
-    const opened = Object.fromEntries((await c.query("select to_char(created_at, 'YYYY-MM') m, count(*)::int n from cases where created_at::date between $1 and $2 group by 1", [from, to])).rows.map(r => [r.m, r.n]));
-    const open = Object.fromEntries((await c.query("select coalesce(k.postcode_district, '') d, count(*)::int n from cases x left join claimants k on k.id = x.claimant_id where x.closed_at is null group by 1")).rows.map(r => [r.d, r.n]));
+    const opened = Object.fromEntries((await c.query("select to_char(created_at, 'YYYY-MM') m, count(*)::int n from cases where created_at::date between $1 and $2 and ($3::uuid is null or office_id = $3) group by 1", [from, to, officeId])).rows.map(r => [r.m, r.n]));
+    const open = Object.fromEntries((await c.query("select coalesce(o.name, '') d, count(*)::int n from cases x left join offices o on o.id = x.office_id where x.closed_at is null group by 1")).rows.map(r => [r.d, r.n]));
     return { opened, open };
   });
 }
 
-export function areasCsv(rows: AreaRow[], level: 'district' | 'area'): string {
-  const head = [level === 'area' ? 'Postcode area' : 'Postcode district', 'Open cases now', 'Cases with a result', 'MR decided', 'MR overturned', 'Appeals decided', 'Appeals overturned', 'Overturned, any stage', 'Overturn rate %', 'Yearly value of overturns (GBP)'];
+export function officesCsv(rows: OfficeFigures[]): string {
+  const head = ['Office', 'Open cases now', 'Cases with a result', 'MR decided', 'MR overturned', 'Appeals decided', 'Appeals overturned', 'Overturned, any stage', 'Overturn rate %', 'Yearly value of overturns (GBP)'];
   return [head, ...rows.map(r => [r.key, r.open, r.cases, r.mr.decided, r.mr.overturned, r.appeal.decided, r.appeal.overturned, r.overall.overturned, r.overall.rate ?? (r.overall.decided ? `fewer than ${SMALL} results` : ''), r.money])]
     .map(l => l.map(csvCell).join(',')).join('\r\n') + '\r\n';
 }

@@ -8,12 +8,13 @@ let db: typeof import('../src/lib/db.ts');
 let cases: typeof import('../src/lib/cases.ts');
 let cw: typeof import('../src/lib/casework.ts');
 let oc: typeof import('../src/lib/outcomes.ts');
+let of: typeof import('../src/lib/offices.ts');
 let me: any, other: any;
 
 before(async () => {
   if (!url) return;
   process.env.DATABASE_URL = url;
-  db = await import('../src/lib/db.ts'); cases = await import('../src/lib/cases.ts'); cw = await import('../src/lib/casework.ts'); oc = await import('../src/lib/outcomes.ts');
+  db = await import('../src/lib/db.ts'); cases = await import('../src/lib/cases.ts'); cw = await import('../src/lib/casework.ts'); oc = await import('../src/lib/outcomes.ts'); of = await import('../src/lib/offices.ts');
   const { migrate } = await import('../src/lib/migrate.ts');
   process.chdir(new URL('..', import.meta.url).pathname);
   await migrate();
@@ -64,8 +65,8 @@ test('overturn rates, gains, time taken and disputed points', { skip }, async ()
   assert.equal(s.cases.find(x => x.id === b)!.stageWon, 'mr');
 
   const csv = oc.outcomesCsv(s.cases);
-  assert.ok(csv.startsWith('Reference,Benefit,Adviser'));
-  assert.ok(csv.includes(`OC-${t}-B,UC WCA,Adviser me,2026-06-01,Revised in full,2026-07-11,40,`));
+  assert.ok(csv.startsWith('Reference,Benefit,Office,Adviser'));
+  assert.ok(csv.includes(`OC-${t}-B,UC WCA,,Adviser me,2026-06-01,Revised in full,2026-07-11,40,`));
   assert.ok(!csv.includes('Client'));
   assert.ok(oc.outcomesCsv(s.cases, true).startsWith('Reference,Client,'));
   assert.equal((await oc.outcomeData(other, '2026-04-01', '2027-03-31')).rows.length, 0);
@@ -76,4 +77,32 @@ test('CSV cells that look like formulas are made safe', { skip }, () => {
     appeal_sent_date: null, appeal_outcome: null, appeal_outcome_date: null, award_before: null, award_after: null, uc_lcwra_rate: null, lcw_legacy: false,
     stageWon: null, change: null, gain: null, gainYear: null, mrDays: null, appealDays: null }]);
   assert.ok(csv.includes(`"'=HYPERLINK(""x"")"`) && csv.includes(`"'+bad"`));
+});
+
+test('offices: cases take the adviser’s office, move with open cases, and filter the figures', { skip }, async () => {
+  const t = Date.now();
+  const boss = { ...me, role: 'supervisor' };
+  await assert.rejects(of.addOffice(me, 'Govan'), /supervisor or admin/);
+  const govan = await of.addOffice(boss, `Govan ${t}`), pais = await of.addOffice(boss, `Paisley ${t}`);
+  await assert.rejects(of.addOffice(boss, `Govan ${t}`), /already an office/);
+  await of.setUserOffice(boss, me.userId, govan);
+  const open = await cases.createCase(me, `OF-${t}-1`, 'pip'), done = await cases.createCase(me, `OF-${t}-2`, 'pip');
+  await cw.saveOutcome(me, done, { ...none, mrOutcome: 'revised', mrOutcomeDate: '2026-08-01' });
+  await cw.closeCase(me, done, 'outcome', '');
+  const officeOf = async (id: string) => (await db.asAgency(me.agencyId, c => c.query('select office_id from cases where id = $1', [id]))).rows[0].office_id;
+  assert.equal(await officeOf(open), govan);
+  await of.setUserOffice(boss, me.userId, pais);                                 // the adviser moves
+  assert.equal(await officeOf(open), pais);                                       // their open case goes with them
+  assert.equal(await officeOf(done), govan);                                      // the closed result stays where it was won
+  const g = (await oc.outcomeData(me, '2026-04-01', '2027-03-31', govan)).rows;
+  assert.deepEqual(g.map(r => r.ref), [`OF-${t}-2`]);
+  assert.equal(g[0].office, `Govan ${t}`);
+  const { rows } = await oc.outcomeData(me, '2026-04-01', '2027-03-31');
+  const { open: byOpen } = await oc.trendAndOfficeData(me, '2026-04-01', '2027-03-31');
+  const figs = oc.byOffice(rows, byOpen, '2026-04-01', '2027-03-31');
+  assert.deepEqual(figs.find(f => f.key === `Govan ${t}`)!.mr, { decided: 1, overturned: 1, rate: null });   // too few to give a rate
+  assert.equal(figs.find(f => f.key === `Paisley ${t}`)!.open, 5);                    // all this adviser’s open cases, from the earlier test too
+  await assert.rejects(of.setUserOffice({ ...other, role: 'admin' }, me.userId, null), /not in your agency/);
+  assert.equal((await of.listOffices(other)).length, 0);
+  await of.setUserOffice(boss, me.userId, null);
 });

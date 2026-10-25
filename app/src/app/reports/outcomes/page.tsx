@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { requireMe } from '@/lib/auth';
+import { listOffices } from '@/lib/offices';
 import { outcomeData, summariseOutcomes } from '@/lib/outcomes';
 import { MR_OUTCOMES, APPEAL_OUTCOMES } from '@/lib/casework';
 
@@ -20,20 +21,24 @@ export default async function Outcomes({ searchParams }: { searchParams: Promise
   const sp = await searchParams;
   const fy = financialYear(new Date().toISOString().slice(0, 10));
   const ok = (d?: string) => (d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null);
+  const offices = await listOffices(me);
+  const office = offices.find(o => o.id === sp.office)?.id ?? null;
+  const officeName = offices.find(o => o.id === office)?.name;
   const from = ok(sp.from) ?? fy.from, to = ok(sp.to) ?? fy.to;
-  const { rows, issues } = await outcomeData(me, from, to);
+  const { rows, issues } = await outcomeData(me, from, to, office);
   const s = summariseOutcomes(rows, issues, from, to);
   const issueRows = Object.entries(s.byIssue).sort((a, b) => (b[1].won + b[1].part + b[1].lost) - (a[1].won + a[1].part + a[1].lost));
-  const csv = `/reports/outcomes/csv?from=${from}&to=${to}`;
+  const csv = `/reports/outcomes/csv?from=${from}&to=${to}${office ? `&office=${office}` : ''}`;
 
   return (
     <div className="stack-lg">
       <p className="crumbs"><Link href={`/reports?from=${from}&to=${to}`}>← Reports</Link></p>
-      <div className="head"><h1>Successes and overturns</h1><p className="soft">Reconsideration and appeal results dated between {long(from)} and {long(to)}.</p></div>
+      <div className="head"><h1>Successes and overturns{officeName ? ` · ${officeName}` : ''}</h1><p className="soft">Reconsideration and appeal results dated between {long(from)} and {long(to)}.</p></div>
 
       <form className="panel row" method="get" aria-label="Period">
         <label className="field small-field">From<input type="date" name="from" defaultValue={from} /></label>
         <label className="field small-field">To<input type="date" name="to" defaultValue={to} /></label>
+        <label className="field small-field">Office<select name="office" defaultValue={office ?? ''}><option value="">All offices</option>{offices.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
         <div style={{ alignSelf: 'flex-end' }}><button className="btn" type="submit">Show</button></div>
         <div style={{ alignSelf: 'flex-end', marginLeft: 'auto' }}><a className="btn" href={csv}>Download CSV</a> <a className="btn btn-quiet" href={`${csv}&names=1`}>CSV with client names</a></div>
       </form>
@@ -93,7 +98,7 @@ export default async function Outcomes({ searchParams }: { searchParams: Promise
             <thead><tr><th scope="col">Case</th><th scope="col">Client</th><th scope="col">Reconsideration</th><th scope="col">Appeal</th><th scope="col">Award before → after</th><th scope="col">Yearly value</th></tr></thead>
             <tbody>{s.cases.map(c => (
               <tr key={c.id}>
-                <td><Link className="mono" href={`/cases/${c.id}/outcome`}>{c.ref}</Link><br /><span className="soft small">{c.benefit === 'pip' ? 'PIP' : 'UC WCA'} · {c.adviser ?? 'Unassigned'}</span></td>
+                <td><Link className="mono" href={`/cases/${c.id}/outcome`}>{c.ref}</Link><br /><span className="soft small">{c.benefit === 'pip' ? 'PIP' : 'UC WCA'} · {c.adviser ?? 'Unassigned'}{c.office ? ` · ${c.office}` : ''}</span></td>
                 <td>{c.client ?? '–'}</td>
                 <td>{c.mr_outcome ? <>{MR_OUTCOMES[c.mr_outcome as keyof typeof MR_OUTCOMES]}<br /><span className="soft small">{c.mr_outcome_date}{c.mrDays !== null ? ` · ${c.mrDays} days` : ''}</span></> : '–'}</td>
                 <td>{c.appeal_outcome ? <>{APPEAL_OUTCOMES[c.appeal_outcome as keyof typeof APPEAL_OUTCOMES]}<br /><span className="soft small">{c.appeal_outcome_date}{c.appealDays !== null ? ` · ${c.appealDays} days` : ''}</span></> : '–'}</td>
