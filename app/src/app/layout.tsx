@@ -23,6 +23,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
         </header>
         <main id="main" className="wrap page">{children}</main>
+        <footer className="wrap page-foot soft small">
+          <a href="/terms">Terms of use</a>
+          <span>Help: {process.env.SUPPORT_EMAIL ? <a href={`mailto:${process.env.SUPPORT_EMAIL}`}>{process.env.SUPPORT_EMAIL}</a> : 'heardsupported.co.uk'}</span>
+          <span>The AI can be wrong. Check everything before you rely on it.</span>
+        </footer>
       </body>
     </html>
   );

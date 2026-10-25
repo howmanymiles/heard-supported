@@ -8,7 +8,7 @@ import { csp } from './lib/csp';
 // Every page needs sign-in, except sign-in itself, the sign-in problem page, invitation
 // links and agency sign-up. Sign-in attempts are limited per connection.
 
-const PUBLIC = /^\/(api\/auth|access|invite|signup)(\/|$)/;
+const PUBLIC = /^\/(api\/auth|access|invite|signup|terms)(\/|$)/;
 
 function secure(req: NextRequest, run: (headers: Headers) => NextResponse | Response | Promise<NextResponse | Response>) {
   const nonce = btoa(crypto.randomUUID());

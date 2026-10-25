@@ -136,3 +136,5 @@ textarea.draft { font-family: var(--mono); font-size: 14px; line-height: 1.55; }
 .chart-hit { fill: transparent; }
 .chart-col:hover .chart-hit { fill: var(--accent-tint); }
 .meter { display: inline-block; height: 8px; border-radius: 4px; background: var(--accent); vertical-align: middle; margin-right: 6px; }
+
+.page-foot { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; padding-top: 2rem; padding-bottom: 2rem; border-top: 1px solid var(--line, #e3e3e3); margin-top: 3rem; }
