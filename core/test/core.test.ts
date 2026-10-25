@@ -131,3 +131,38 @@ test('WCA evidence can be linked to substantial risk as well as to activities', 
   const [, pipUser] = buildMessages('pip', [{ label: 'D1', name: 'Letter', pages: [{ page: 1, text: 'x' }] }]);
   assert.doesNotMatch(pipUser.content, /sch9:4/);
 });
+
+test('next deadline: MR until requested, then appeal from the MR notice until lodged', async () => {
+  const { nextDeadline } = await import('../src/deadlines.ts');
+  const base = { decisionDate: '2026-12-07', mrRequestDate: null, mrNoticeDate: null, appealSentDate: null };
+  assert.deepEqual(nextDeadline(base, '2026-12-20'), { kind: 'mr', due: '2027-01-07', lateLimit: '2028-01-07', status: 'in_time', daysLeft: 18 });
+  assert.equal(nextDeadline({ ...base, mrRequestDate: '2026-12-21' }, '2026-12-22'), null);            // waiting for the DWP
+  const a = nextDeadline({ ...base, mrRequestDate: '2026-12-21', mrNoticeDate: '2027-02-10' }, '2027-03-15')!;
+  assert.deepEqual([a.kind, a.due, a.status], ['appeal', '2027-03-10', 'late']);
+  assert.equal(nextDeadline({ ...base, mrNoticeDate: '2027-02-10', appealSentDate: '2027-03-01' }, '2027-03-15'), null);
+  assert.equal(nextDeadline({ decisionDate: null, mrRequestDate: null, mrNoticeDate: null, appealSentDate: null }, '2027-01-01'), null);
+});
+
+test('bundle pages: printed numbers are read from footers or headers, and quotes located by them', async () => {
+  const { printedPageNumber, locateInBundle } = await import('../src/bundle.ts');
+  assert.equal(printedPageNumber('Report text\nmore\nPage 23'), 23);
+  assert.equal(printedPageNumber('- 7 -\nReport text'), 7);
+  assert.equal(printedPageNumber('Report text\n12 of 140'), 12);
+  assert.equal(printedPageNumber('Walked 18 metres.\nSaturation 88%'), null);
+  const pages = [{ page: 1, text: 'Index\nPage 1' }, { page: 2, text: 'Walk abandoned at 18 metres when patient stopped.\nPage 14' }, { page: 3, text: 'No number here, walked about 50 yards' }];
+  assert.deepEqual(locateInBundle('walk abandoned at 18 metres', pages), { pdfPage: 2, bundlePage: 14 });
+  assert.deepEqual(locateInBundle('walked about 50 yards', pages), { pdfPage: 3, bundlePage: 3 });
+  assert.equal(locateInBundle('not in the bundle at all', pages), null);
+});
+
+test('response reasoning: only verified quotes for the disputed items are kept', async () => {
+  const { resolveResponse } = await import('../src/response.ts');
+  const pages = [{ docId: 'b', page: 3, text: 'However, the walk test is a single snapshot of the appellant’s walking on one day.' }];
+  const r = resolveResponse({ items: [
+    { key: 'pip:12', reasoning: { doc: 'D1', page: 3, quote: "the walk test is a single snapshot of the appellant's walking on one day" } },
+    { key: 'pip:1', reasoning: { doc: 'D1', page: 3, quote: 'she can cook a meal from scratch most days' } },
+    { key: 'pip:9', reasoning: { doc: 'D1', page: 3, quote: 'the walk test is a single snapshot of the appellant' } },
+  ] }, [{ key: 'pip:12', label: 'Moving around' }, { key: 'pip:1', label: 'Preparing food' }], pages, { D1: 'b' });
+  assert.deepEqual(Object.keys(r.reasoning), ['pip:12']);
+  assert.deepEqual(r.dropped.map(d => d.reason), ['not_verbatim']);
+});

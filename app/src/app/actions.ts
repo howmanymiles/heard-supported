@@ -6,6 +6,7 @@ import { requireMe } from '@/lib/auth';
 import { createCase, addDocument, readAndReview, setEvidenceStatus, setGapStatus, saveDecision, DOC_KINDS, type DocKind } from '@/lib/cases';
 import { readAssessment, setAssessorChoice, confirmAllChoices, saveMrDates, saveMrDraft, getMr, buildComparison, buildMrDraft } from '@/lib/mr';
 import { activityList } from '@hs/core';
+import { getAppeal, issuesFor, locate, buildGrounds, readMrNotice, readBundle, saveAppealDates, saveAppealDraft } from '@/lib/appeal';
 import { putDocument } from '@/lib/storage';
 import { asAgency, audit } from '@/lib/db';
 import synthetic from '@/data/synthetic.json';
@@ -13,7 +14,7 @@ import { randomUUID } from 'node:crypto';
 import type { Benefit } from '@hs/core';
 
 export type ActionState = { error?: string; ok?: string };
-type Synthetic = { id: string; benefit: Benefit; title: string; docs: Array<{ name: string; text: string }>; mrDocs: Array<{ name: string; kind: DocKind; text: string }> };
+type Synthetic = { id: string; benefit: Benefit; title: string; docs: Array<{ name: string; text: string }>; mrDocs: Array<{ name: string; kind: DocKind; text: string }>; appealDocs: Array<{ name: string; kind: DocKind; text: string }> };
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Try again.');
 
@@ -112,9 +113,11 @@ export async function loadSyntheticMrAction(form: FormData) {
   const me = await requireMe();
   const caseId = String(form.get('caseId'));
   const id = String(form.get('syntheticId'));
+  const stage = form.get('stage') === 'appeal' ? 'appeal' : 'mr';
   const sc = (synthetic as Synthetic[]).find(s => s.id === id);
-  if (!sc?.mrDocs.length) return;
-  for (const d of sc.mrDocs) {
+  const papers = stage === 'appeal' ? sc?.appealDocs : sc?.mrDocs;
+  if (!sc || !papers?.length) return;
+  for (const d of papers) {
     const docId = randomUUID();
     const path = `${me.agencyId}/${caseId}/${docId}`;
     const bytes = new TextEncoder().encode(d.text);
@@ -122,8 +125,8 @@ export async function loadSyntheticMrAction(form: FormData) {
     await asAgency(me.agencyId, c => c.query('insert into documents (id, agency_id, case_id, name, kind, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
       [docId, me.agencyId, caseId, d.name, d.kind, 'text/markdown', bytes.length, path, me.userId]));
   }
-  await asAgency(me.agencyId, c => audit(c, me.agencyId, me.userId, caseId, `Loaded fictional decision papers for ${sc.id}`));
-  revalidatePath(`/cases/${caseId}/mr`);
+  await asAgency(me.agencyId, c => audit(c, me.agencyId, me.userId, caseId, `Loaded fictional ${stage === 'appeal' ? 'appeal' : 'decision'} papers for ${sc.id}`));
+  revalidatePath(`/cases/${caseId}/${stage}`);
 }
 
 export async function assessAction(_: ActionState, form: FormData): Promise<ActionState> {
@@ -199,5 +202,60 @@ export async function saveDraftAction(_: ActionState, form: FormData): Promise<A
   const caseId = String(form.get('caseId'));
   await saveMrDraft(me, caseId, String(form.get('draft') ?? ''));
   revalidatePath(`/cases/${caseId}/mr`);
+  return { ok: 'Draft saved.' };
+}
+
+// ---------- appeal ----------
+
+export async function mrNoticeAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  try {
+    const r = await readMrNotice(me, caseId);
+    revalidatePath(`/cases/${caseId}/appeal`);
+    return { ok: `MR notice read${r.date ? `, dated ${r.date}` : ' (no date found: add it below)'}. ${r.revised.length ? `Revised: ${r.revised.join(', ')}. Confirm these on the reconsideration tab.` : 'No descriptor changes found.'}` };
+  } catch (e) { return { error: msg(e) }; }
+}
+
+export async function bundleAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  try {
+    const r = await readBundle(me, caseId);
+    revalidatePath(`/cases/${caseId}/appeal`);
+    return { ok: `Bundle read. Decision maker’s reasoning found for ${r.found} of ${r.of} disputed items.` };
+  } catch (e) { return { error: msg(e) }; }
+}
+
+export async function appealDatesAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const d = (k: string) => { const v = String(form.get(k) ?? '').trim(); return v === '' ? null : v; };
+  try { await saveAppealDates(me, caseId, d('mrNoticeDate'), d('sentDate'), String(form.get('lateReason') ?? '')); }
+  catch (e) { return { error: msg(e) }; }
+  revalidatePath(`/cases/${caseId}/appeal`);
+  revalidatePath('/');
+  return { ok: 'Dates saved.' };
+}
+
+export async function groundsAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const a = await getAppeal(me, caseId);
+  if (!a) return { error: 'Case not found.' };
+  const { issues, summary, blocked } = issuesFor(a);
+  if (blocked) return { error: blocked };
+  const text = buildGrounds({ benefit: a.case.benefit, ref: a.case.ref, decisionDate: a.decisionDate, mrNoticeDate: a.mrNoticeDate, timing: a.appealTimingNow, lateReason: a.case.appeal_late_reason,
+    summary: summary!, issues, located: locate(issues, a.bundle, a.responseReasoning), hasBundle: !!a.bundle });
+  await saveAppealDraft(me, caseId, text);
+  revalidatePath(`/cases/${caseId}/appeal`);
+  return { ok: 'Grounds drafted. Edit them below and save.' };
+}
+
+export async function saveGroundsAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  await saveAppealDraft(me, caseId, String(form.get('draft') ?? ''));
+  revalidatePath(`/cases/${caseId}/appeal`);
   return { ok: 'Draft saved.' };
 }

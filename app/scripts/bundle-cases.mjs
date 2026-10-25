@@ -19,7 +19,20 @@ for (const id of fs.readdirSync(root).sort()) {
   const mrDocs = ['pa4', 'uc85', 'uc85a', 'decision']
     .filter(f => fs.existsSync(path.join(root, id, 'documents', `${f}.md`)))
     .map(f => ({ name: `${id} ${paperName[f]}.md`, kind: f, text: fs.readFileSync(path.join(root, id, 'documents', `${f}.md`), 'utf8') }));
-  out.push({ id, benefit: c.benefit, title: c.title, docs: claimDocs, mrDocs });
+  // Appeal papers: the MR notice, and the DWP response bundle assembled in the
+  // order given in appeal.json, numbered consecutively as bundles are.
+  const appealDocs = [];
+  const appealFile = path.join(root, id, 'appeal.json');
+  if (fs.existsSync(appealFile)) {
+    const a = JSON.parse(fs.readFileSync(appealFile, 'utf8'));
+    const read = f => fs.readFileSync(path.join(root, id, 'documents', `${f}.md`), 'utf8');
+    appealDocs.push({ name: `${id} MR notice.md`, kind: 'mr_notice', text: read('mr_notice') });
+    let n = 0;
+    const bundlePages = a.bundle_order.flatMap(f => read(f).split(/^--- Page \d+ ---\s*$/m).map(t => t.trim()).filter(Boolean))
+      .map(t => `${t}\n\nPage ${++n}`);
+    appealDocs.push({ name: `${id} DWP response bundle.md`, kind: 'dwp_bundle', text: bundlePages.map((t, i) => (i ? `--- Page ${i + 1} ---\n` : '') + t).join('\n\n') });
+  }
+  out.push({ id, benefit: c.benefit, title: c.title, docs: claimDocs, mrDocs, appealDocs });
 }
 const target = path.resolve(import.meta.dirname, '../src/data/synthetic.json');
 fs.mkdirSync(path.dirname(target), { recursive: true });

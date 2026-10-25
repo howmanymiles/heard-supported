@@ -7,21 +7,42 @@
 //   node run.ts --mr         PIP cases, reading the PA4 and decision letter
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractEvidence, extractAssessor, extractWcaAssessor, splitTextPages, parseUkDate, type ExtractionDoc } from '@hs/core';
-import { scoreCase, scoreAssessor, scoreWcaAssessor, type CaseFile } from './score.ts';
+import { extractEvidence, extractAssessor, extractWcaAssessor, extractResponseReasoning, splitTextPages, parseUkDate, type ExtractionDoc } from '@hs/core';
+import { scoreCase, scoreAssessor, scoreWcaAssessor, samePassage, type CaseFile } from './score.ts';
 
 const here = import.meta.dirname;
 const casesDir = path.join(here, 'cases');
 const args = process.argv.slice(2);
 const mrStage = args.includes('--mr');
+const appealStage = args.includes('--appeal');
 const named = args.filter(a => !a.startsWith('--'));
 const ids = (named.length ? named : fs.readdirSync(casesDir).sort())
-  .filter(id => !mrStage || fs.existsSync(path.join(casesDir, id, 'mr.json')));
+  .filter(id => !mrStage || fs.existsSync(path.join(casesDir, id, 'mr.json')))
+  .filter(id => !appealStage || fs.existsSync(path.join(casesDir, id, 'appeal.json')));
 if (!process.env.AI_ENDPOINT) { console.error('Set AI_ENDPOINT (and sign in with az login).'); process.exit(2); }
 
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-const outDir = path.join(here, 'results', mrStage ? `${stamp}-mr` : stamp);
+const outDir = path.join(here, 'results', mrStage ? `${stamp}-mr` : appealStage ? `${stamp}-appeal` : stamp);
 fs.mkdirSync(outDir, { recursive: true });
+
+if (appealStage) {
+  // The decision maker's reasoning on each disputed activity, found in the DWP response.
+  let found = 0, of = 0, failed = 0;
+  for (const id of ids) {
+    const a = JSON.parse(fs.readFileSync(path.join(casesDir, id, 'appeal.json'), 'utf8'));
+    const pages = splitTextPages(fs.readFileSync(path.join(casesDir, id, 'documents', 'dwp_response.md'), 'utf8'));
+    process.stdout.write(`${id} … `);
+    try {
+      const r = await extractResponseReasoning({ id: 'response', name: 'DWP response', pages }, a.issues.map((i: any) => ({ key: `pip:${i.activity}`, label: `Activity ${i.activity}` })));
+      const hits = a.issues.filter((i: any) => { const q = r.reasoning[`pip:${i.activity}`]; return q && q.page === i.dm_reasoning.page && samePassage(q.quote, i.dm_reasoning.quote); }).length;
+      found += hits; of += a.issues.length;
+      fs.writeFileSync(path.join(outDir, `${id}.json`), JSON.stringify({ hits, of: a.issues.length, result: r }, null, 2));
+      console.log(`decision maker's reasoning found for ${hits}/${a.issues.length} issues; ${r.dropped.length} quotes dropped`);
+    } catch (e) { failed++; console.log(`FAILED: ${(e as Error).message}`); }
+  }
+  console.log(`\nReasoning found ${found}/${of}. Results: ${path.relative(process.cwd(), outDir)}`);
+  process.exit(failed ? 1 : 0);
+}
 
 if (mrStage) {
   const rows: any[] = [];

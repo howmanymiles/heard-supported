@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { createCaseAction, uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, type ActionState } from './actions';
+import { createCaseAction, uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, type ActionState } from './actions';
 
 function Submit({ children, pending: pendingText, primary = true }: { children: React.ReactNode; pending: string; primary?: boolean }) {
   const { pending } = useFormStatus();
@@ -37,7 +37,7 @@ export function CreateCaseForm() {
   );
 }
 
-const KIND_LABEL: Record<string, string> = { evidence: 'Evidence', pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: 'Decision letter or notice', other: 'Other' };
+const KIND_LABEL: Record<string, string> = { evidence: 'Evidence', pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: 'Decision letter or notice', mr_notice: 'Mandatory reconsideration notice', dwp_bundle: 'DWP response bundle', other: 'Other' };
 
 export function UploadForm({ caseId, syntheticOnly, kinds = ['evidence'], label = 'Add documents' }: { caseId: string; syntheticOnly: boolean; kinds?: string[]; label?: string }) {
   const [state, action] = useActionState(uploadAction, {});
@@ -136,6 +136,56 @@ export function SaveDraftForm({ caseId, draft }: { caseId: string; draft: string
     <form action={action} className="stack">
       <input type="hidden" name="caseId" value={caseId} />
       <label className="field">Request
+        <textarea name="draft" rows={24} defaultValue={draft} className="draft" key={draft} />
+      </label>
+      <div><Submit pending="Saving…">Save draft</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+export function ActionButton({ caseId, label, pending, which }: { caseId: string; label: string; pending: string; which: 'mrNotice' | 'bundle' | 'grounds' }) {
+  const fn = which === 'mrNotice' ? mrNoticeAction : which === 'bundle' ? bundleAction : groundsAction;
+  const [state, action] = useActionState(fn, {});
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="caseId" value={caseId} />
+      <div><Submit pending={pending}>{label}</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+export function AppealDatesForm({ caseId, mrNoticeDate, sentDate, lateReason }: { caseId: string; mrNoticeDate: string | null; sentDate: string | null; lateReason: string | null }) {
+  const [state, action] = useActionState(appealDatesAction, {});
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="caseId" value={caseId} />
+      <div className="row">
+        <label className="field">Date of the MR notice
+          <input type="date" name="mrNoticeDate" defaultValue={mrNoticeDate ?? ''} />
+        </label>
+        <label className="field">Date the appeal is sent
+          <input type="date" name="sentDate" defaultValue={sentDate ?? ''} />
+          <span className="hint">Leave blank until it is sent; today is used meanwhile.</span>
+        </label>
+      </div>
+      <label className="field">Reason the appeal is late, if it is
+        <textarea name="lateReason" rows={3} defaultValue={lateReason ?? ''} />
+        <span className="hint">A late appeal within 12 months of the time limit is treated as in time unless the DWP objects or the tribunal directs otherwise (rule 22(8)).</span>
+      </label>
+      <div><Submit pending="Saving…" primary={false}>Save dates</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+export function SaveGroundsForm({ caseId, draft }: { caseId: string; draft: string }) {
+  const [state, action] = useActionState(saveGroundsAction, {});
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="caseId" value={caseId} />
+      <label className="field">Grounds
         <textarea name="draft" rows={24} defaultValue={draft} className="draft" key={draft} />
       </label>
       <div><Submit pending="Saving…">Save draft</Submit></div>

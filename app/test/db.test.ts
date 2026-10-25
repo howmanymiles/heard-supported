@@ -58,3 +58,10 @@ test('decisions store days as a share of the week, for the engine', { skip }, as
   assert.deepEqual(d.satisfied, [{ letter: 'd', daysPercent: 57 }]);
   await assert.rejects(cases.saveDecision(me.a, id, 'pip', 'pip:12', 'd', 9), /between 0 and 7/);
 });
+
+test('dates come back exactly as stored, whatever the machine time zone', { skip }, async () => {
+  const id = await cases.createCase(me.a, `TZ-${Date.now()}`, 'pip');
+  await db.asAgency(me.a.agencyId, c => c.query("update cases set decision_date = '2026-09-09' where id = $1", [id]));
+  const c = await cases.getCase(me.a, id);
+  assert.equal(c!.case.decision_date, '2026-09-09');
+});

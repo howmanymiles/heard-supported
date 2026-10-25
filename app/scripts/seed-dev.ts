@@ -78,5 +78,33 @@ await asAgency(ag, async c => {
 });
 for (const [k, l] of [['sch6:13', 'c'], ['sch6:16', 'c'], ['sch8:4', 'applies'], ['sch9:4', 'applies']]) await saveDecision(me, wcaId, 'uc-wca', k, l, null);
 
-console.log(JSON.stringify({ agencyId: ag, userId: u, caseId, wcaId }));
+// PIP-03 at appeal: decision 22 July, MR notice 9 September (dressing revised to 6b), DWP bundle in.
+import fs from 'node:fs';
+const appeal = JSON.parse(fs.readFileSync(new URL('../../evals/cases/PIP-03/appeal.json', import.meta.url), 'utf8'));
+const s3 = (synthetic as any[]).find(s => s.id === 'PIP-03');
+const apId = await createCase(me, 'TEST-PIP-03-SEED', 'pip');
+const aid: Record<string, string> = {};
+for (const d of [...s3.docs.map((x: any) => ({ ...x, kind: 'evidence', key: x.name.split(' ')[1].replace('.md', '') })), ...s3.mrDocs.map((x: any) => ({ ...x, key: x.kind })), ...s3.appealDocs.map((x: any) => ({ ...x, key: x.kind }))]) {
+  aid[d.key] = await asAgency(ag, async c => {
+    const pages = splitTextPages(d.text);
+    const id = (await c.query("insert into documents (agency_id, case_id, name, kind, content_type, size_bytes, blob_path, read_status, page_count, low_confidence_lines) values ($1, $2, $3, $4, 'text/markdown', $5, 'none', 'read', $6, 0) returning id", [ag, apId, d.name, d.kind, d.text.length, pages.length])).rows[0].id;
+    for (const p of pages) await c.query('insert into pages (document_id, agency_id, page_no, text, lines) values ($1, $2, $3, $4, $5)', [id, ag, p.page, p.text, JSON.stringify(p.text.split('\n').map((t: string) => ({ text: t, confidence: null, handwritten: false })))]);
+    return id;
+  });
+}
+const notice = splitTextPages(s3.appealDocs.find((d: any) => d.kind === 'mr_notice').text);
+const nrows = notice.flatMap(p => [...p.text.matchAll(/^\| (\d{1,2})\.? [^|]+\| ([^|]+?) \| \d+ \|$/gm)].map(m => ({ activity: Number(m[1]), quote: m[2].trim(), page: p.page })));
+const nr = resolveAssessor({ activities: nrows.map(x => ({ activity: x.activity, decision: { doc: 'N', page: x.page, quote: x.quote } })) }, notice.map(p => ({ docId: aid.mr_notice, ...p })), { N: aid.mr_notice });
+const bundle = splitTextPages(s3.appealDocs.find((d: any) => d.kind === 'dwp_bundle').text);
+const reasoning = Object.fromEntries(appeal.issues.map((i: any) => [`pip:${i.activity}`, { docId: aid.dwp_bundle, page: bundle.find(p => p.text.includes(i.dm_reasoning.quote))!.page, quote: i.dm_reasoning.quote }]));
+await asAgency(ag, async c => {
+  for (const a of nr.activities) await c.query("insert into assessor_choices (case_id, agency_id, activity, letter, source, decision_quote, confirmed) values ($1, $2, $3, $4, $5, $6, true)", [apId, ag, `pip:${a.activity}`, a.letter, a.activity === 6 ? 'mr_notice' : 'decision_letter', strip(a.decisionQuote)]);
+  await c.query("update cases set decision_date = '2026-07-22', mr_request_date = '2026-08-12', mr_notice_date = $2, stage = 'appeal', response_reasoning = $3 where id = $1", [apId, new Date(Date.now() - 20 * 86400000).toISOString().slice(0, 10), reasoning]);
+  for (const i of appeal.issues) for (const e of [...i.evidence, ...i.not_in_bundle].filter((e: any) => ['physio', 'gp', 'form', 'notes'].includes(e.doc)))
+    await c.query("insert into evidence (agency_id, case_id, document_id, page_no, quote, activities, status) values ($1, $2, $3, $4, $5, $6, 'accepted')", [ag, apId, aid[e.doc], e.page, e.quote, [`pip:${i.activity}`]]);
+});
+for (const i of appeal.issues) await saveDecision(me, apId, 'pip', `pip:${i.activity}`, i.adviser_letter, 5);
+await saveDecision(me, apId, 'pip', 'pip:6', 'b', 7);
+
+console.log(JSON.stringify({ agencyId: ag, userId: u, caseId, wcaId, apId }));
 await pool().end();

@@ -4,11 +4,12 @@ import { asAgency, audit } from './db.ts';
 import { putDocument, getDocument } from './storage.ts';
 import type { Me } from './auth.ts';
 
-export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number };
-export type DocKind = 'evidence' | 'pa4' | 'uc85' | 'uc85a' | 'decision' | 'other';
-export const DOC_KINDS: DocKind[] = ['evidence', 'pa4', 'uc85', 'uc85a', 'decision', 'other'];
+export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number;
+  decision_date: string | null; mr_request_date: string | null; mr_notice_date: string | null; appeal_sent_date: string | null };
+export type DocKind = 'evidence' | 'pa4' | 'uc85' | 'uc85a' | 'decision' | 'mr_notice' | 'dwp_bundle' | 'other';
+export const DOC_KINDS: DocKind[] = ['evidence', 'pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle', 'other'];
 /** Papers that record the DWP's position rather than the client's evidence. */
-export const PAPER_KINDS: DocKind[] = ['pa4', 'uc85', 'uc85a', 'decision'];
+export const PAPER_KINDS: DocKind[] = ['pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle'];
 export type DocRow = { id: string; name: string; kind: DocKind; content_type: string; size_bytes: number; read_status: string; page_count: number | null; low_confidence_lines: number | null; created_at: Date };
 export type EvidenceRow = { id: string; document_id: string; doc_name: string; page_no: number; quote: string; activities: string[]; note: string | null; status: string; source: string };
 export type GapRow = { id: string; activity: string; gap: string; status: string };
@@ -29,6 +30,8 @@ export const MAX_BYTES = 20 * 1024 * 1024;
 export async function listCases(me: Me): Promise<CaseRow[]> {
   return asAgency(me.agencyId, async c => (await c.query(`
     select c.id, c.ref, c.benefit, c.stage, c.status, u.name as adviser_name, c.created_at,
+      to_char(c.decision_date, 'YYYY-MM-DD') as decision_date, to_char(c.mr_request_date, 'YYYY-MM-DD') as mr_request_date,
+      to_char(c.mr_notice_date, 'YYYY-MM-DD') as mr_notice_date, to_char(c.appeal_sent_date, 'YYYY-MM-DD') as appeal_sent_date,
       (select count(*)::int from documents d where d.case_id = c.id) as documents,
       (select count(*)::int from evidence e where e.case_id = c.id and e.status = 'suggested') as suggested
     from cases c left join users u on u.id = c.adviser_id

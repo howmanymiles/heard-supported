@@ -1,4 +1,9 @@
-import { Pool, type PoolClient } from 'pg';
+import pg, { Pool, type PoolClient } from 'pg';
+
+// Keep DATE columns as 'YYYY-MM-DD' strings. By default pg turns them into
+// local-midnight Date objects, which shift by a day when converted to UTC on a
+// machine ahead of UTC (a UK machine in summer) and silently move deadlines.
+pg.types.setTypeParser(1082, (v: string) => v);
 
 const g = globalThis as unknown as { __hsPool?: Pool };
 

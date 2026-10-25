@@ -10,8 +10,8 @@ on:
       stage:
         description: "Which stage to evaluate"
         type: choice
-        options: [both, evidence, mr]
-        default: both
+        options: [all, evidence, mr, appeal]
+        default: all
 
 permissions:
   id-token: write
@@ -37,13 +37,17 @@ jobs:
           echo "AI_ENDPOINT=$AI" >> "$GITHUB_ENV"
           echo "AI_DEPLOYMENT=review-model" >> "$GITHUB_ENV"
       - name: Evidence stage
-        if: inputs.stage != 'mr'
+        if: inputs.stage == 'all' || inputs.stage == 'evidence'
         env: { CASES: "${{ inputs.cases }}" }
         run: npm run evals -w evals -- $CASES
       - name: Reconsideration stage (PA4 and decision letter)
-        if: always() && inputs.stage != 'evidence'
+        if: always() && (inputs.stage == 'all' || inputs.stage == 'mr')
         env: { CASES: "${{ inputs.cases }}" }
         run: npm run evals -w evals -- --mr $CASES
+      - name: Appeal stage (DWP response)
+        if: always() && (inputs.stage == 'all' || inputs.stage == 'appeal')
+        env: { CASES: "${{ inputs.cases }}" }
+        run: npm run evals -w evals -- --appeal $CASES
       - uses: actions/upload-artifact@v4
         if: always()
         with:
