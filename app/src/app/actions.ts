@@ -22,7 +22,7 @@ export async function loadSyntheticAction(form: FormData) {
   const me = await requireMe();
   const sc = (synthetic as Synthetic[]).find(s => s.id === form.get('id'));
   if (!sc) return;
-  const ref = `TEST-${sc.id}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  const ref = `TEST-${sc.id}`;   // kept as the agency reference; the case number is allocated
   const { fictionalClaimant } = await import('@/lib/claimants');
   const caseId = await createCase(me, ref, sc.benefit, await fictionalClaimant(me, sc.id));
   for (const d of sc.docs) {

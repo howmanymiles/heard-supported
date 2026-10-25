@@ -3,6 +3,7 @@
 import { asAgency, audit, pool } from './db.ts';
 import type { Me } from './auth.ts';
 import { annualGain, rateYear } from '@hs/core';
+import { normaliseRefSearch } from './refs.ts';
 import type { CaseRow } from './cases.ts';
 
 export const canManage = (me: Me) => me.role === 'supervisor' || me.role === 'admin';
@@ -37,10 +38,10 @@ export async function findCases(me: Me, f: CaseFilter): Promise<CaseRow[]> {
   else if (f.adviser) add('c.adviser_id = ?', f.adviser);
   if (f.stage) add('c.stage = ?', f.stage);
   if (f.benefit === 'pip' || f.benefit === 'uc-wca') add('c.benefit = ?', f.benefit);
-  if (f.q) { args.push(f.q.replace(/[%_\\]/g, m => `\\${m}`).slice(0, 40)); const n = `$${args.length}`; where.push(`(c.ref ilike '%' || ${n} || '%' or k.name ilike '%' || ${n} || '%' or k.preferred_name ilike '%' || ${n} || '%')`); }
+  if (f.q) { args.push((normaliseRefSearch(f.q) ?? f.q).replace(/[%_\\]/g, m => `\\${m}`).slice(0, 40)); const n = `$${args.length}`; where.push(`(c.ref ilike '%' || ${n} || '%' or c.external_ref ilike '%' || ${n} || '%' or k.name ilike '%' || ${n} || '%' or k.preferred_name ilike '%' || ${n} || '%')`); }
   if (f.claimant) add('c.claimant_id = ?', f.claimant);
   return asAgency(me.agencyId, async c => (await c.query(`
-    select c.id, c.ref, c.benefit, c.stage, c.status, u.name as adviser_name, c.adviser_id, c.created_at, c.claimant_id, k.name as client_name,
+    select c.id, c.ref, c.external_ref, c.benefit, c.stage, c.status, u.name as adviser_name, c.adviser_id, c.created_at, c.claimant_id, k.name as client_name,
       to_char(c.decision_date, 'YYYY-MM-DD') as decision_date, to_char(c.mr_request_date, 'YYYY-MM-DD') as mr_request_date,
       to_char(c.mr_notice_date, 'YYYY-MM-DD') as mr_notice_date, to_char(c.appeal_sent_date, 'YYYY-MM-DD') as appeal_sent_date,
       to_char(c.closed_at, 'YYYY-MM-DD') as closed_on, c.closed_reason,

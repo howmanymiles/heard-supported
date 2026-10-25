@@ -64,7 +64,7 @@ export default async function Caseload({ searchParams }: { searchParams: Promise
             <thead><tr><th scope="col">Reference</th><th scope="col">Client</th><th scope="col">Benefit</th><th scope="col">Stage</th><th scope="col">{view === 'closed' ? 'Closed' : 'Next deadline'}</th><th scope="col">Documents</th><th scope="col">Suggestions to check</th><th scope="col">Adviser</th></tr></thead>
             <tbody>{cases.map(c => (
               <tr key={c.id}>
-                <td><Link className="mono" href={`/cases/${c.id}`}>{c.ref}</Link></td>
+                <td><Link className="mono" href={`/cases/${c.id}`}>{c.ref}</Link>{c.external_ref ? <><br /><span className="soft small">{c.external_ref}</span></> : null}</td>
                 <td>{c.claimant_id ? <Link href={`/clients/${c.claimant_id}`}>{c.client_name}</Link> : <span className="soft">–</span>}</td>
                 <td>{c.benefit === 'pip' ? 'PIP' : 'UC WCA'}</td>
                 <td>{STAGE[c.stage] ?? c.stage}</td>

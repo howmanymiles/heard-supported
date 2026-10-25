@@ -51,9 +51,6 @@ export async function clientCaseAction(_: ActionState, form: FormData): Promise<
   let id: string;
   try {
     id = await createCase(me, text(form, 'ref'), form.get('benefit') === 'uc-wca' ? 'uc-wca' : 'pip', text(form, 'claimantId'));
-  } catch (e) {
-    const m = msg(e);
-    return { error: m.includes('duplicate key') ? 'Your agency already has a case with that reference. Use a different one.' : m };
-  }
+  } catch (e) { return { error: msg(e) }; }
   redirect(`/cases/${id}`);
 }

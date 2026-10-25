@@ -48,7 +48,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
     <div className="stack-lg">
       <p className="crumbs"><Link href="/">← Cases</Link></p>
       <div className="head">
-        <h1><span className="mono">{cs.ref}</span></h1>
+        <h1><span className="mono">{cs.ref}</span>{cs.external_ref ? <span className="soft small"> · your ref {cs.external_ref}</span> : null}</h1>
         <p className="soft">{isPip ? 'Personal Independence Payment' : 'Universal Credit · Work Capability Assessment'} · Mandatory reconsideration</p>
       </div>
       <CaseTabs id={id} benefit={cs.benefit} current="mr" />

@@ -50,11 +50,20 @@ test('case references that look like names are refused', { skip }, async () => {
   await assert.rejects(cases.createCase(me.a, "O'Neill, Mary", 'pip'));
 });
 
-test('a reference already in use says where, and another agency can use the same one', { skip }, async () => {
-  const ref = `DUP-${Date.now()}`;
-  await cases.createCase(me.a, ref, 'pip');
-  await assert.rejects(cases.createCase(me.a, ref, 'uc-wca'), new RegExp(`already has a case ${ref}.*different reference`));
-  await cases.createCase(me.b, ref, 'pip');
+test('case numbers are allocated, unique across agencies, and the agency reference is kept', { skip }, async () => {
+  const { formatRef, normaliseRefSearch, CAPACITY } = await import('../src/lib/refs.ts');
+  assert.equal(formatRef(1), 'AAA-00-0001');
+  assert.equal(formatRef(999_999), 'AAA-99-9999');
+  assert.equal(formatRef(1_000_000), 'AAB-00-0000');
+  assert.equal(formatRef(CAPACITY - 1), 'ZZZ-99-9999');
+  for (const n of [8_000_000, 14_000_000, 336_000_000, 7_000_123_456]) assert.ok(!/[IO]/.test(formatRef(n)));   // no I or O, ever
+  assert.equal(normaliseRefSearch('abc 12 1234'), 'ABC-12-1234');
+  const yours = `CMS-${Date.now()}`;
+  const a = await cases.createCase(me.a, yours, 'pip'), b = await cases.createCase(me.a, yours, 'uc-wca'), x = await cases.createCase(me.b, yours, 'pip');
+  const rows = await Promise.all([[me.a, a], [me.a, b], [me.b, x]].map(async ([who, id]: any) => (await cases.getCase(who, id))!.case));
+  assert.ok(rows.every(r => /^[A-HJ-NP-Z]{3}-\d{2}-\d{4}$/.test(r.ref) && r.external_ref === yours));   // the same agency reference twice is fine
+  assert.equal(new Set(rows.map(r => r.ref)).size, 3);
+  await assert.rejects(cases.createCase(me.a, "O'Neill, Mary", 'pip'), /Don’t use the client’s name/);
 });
 
 test('decisions store days as a share of the week, for the engine', { skip }, async () => {

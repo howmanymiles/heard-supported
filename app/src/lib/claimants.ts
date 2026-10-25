@@ -123,7 +123,7 @@ export async function getClaimant(me: Me, id: string) {
     const consents = (await c.query(`select n.id, n.statement_version, n.method, to_char(n.given_on, 'YYYY-MM-DD') as given_on, n.store_data, n.ai_processing, n.act_on_behalf,
       u.name as recorded_by_name, n.recorded_at, n.withdrawn_at, n.withdrawn_note
       from consents n left join users u on u.id = n.recorded_by where n.claimant_id = $1 order by n.recorded_at desc`, [id])).rows as ConsentRow[];
-    const cases = (await c.query("select id, ref, benefit, stage, to_char(closed_at, 'YYYY-MM-DD') as closed_on from cases where claimant_id = $1 order by created_at desc", [id])).rows;
+    const cases = (await c.query("select id, ref, external_ref, benefit, stage, to_char(closed_at, 'YYYY-MM-DD') as closed_on from cases where claimant_id = $1 order by created_at desc", [id])).rows;
     return { claimant: k, consents, current: consents.find(n => !n.withdrawn_at) ?? null, cases };
   });
 }

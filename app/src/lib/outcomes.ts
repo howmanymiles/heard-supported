@@ -12,7 +12,7 @@ const APPEAL_DECIDED = ['allowed', 'allowed_in_part', 'dismissed', 'lapsed_revis
 const APPEAL_OVERTURN = ['allowed', 'allowed_in_part', 'lapsed_revised'];
 
 export type OutcomeRow = {
-  id: string; ref: string; client: string | null; office?: string | null; benefit: 'pip' | 'uc-wca'; adviser: string | null;
+  id: string; ref: string; external_ref?: string | null; client: string | null; office?: string | null; benefit: 'pip' | 'uc-wca'; adviser: string | null;
   mr_request_date: string | null; mr_outcome: string | null; mr_outcome_date: string | null;
   appeal_sent_date: string | null; appeal_outcome: string | null; appeal_outcome_date: string | null;
   award_before: Award | null; award_after: Award | null; uc_lcwra_rate: string | null; lcw_legacy: boolean;
@@ -44,7 +44,7 @@ export async function issueResultsFor(me: Me, caseId: string): Promise<IssueRow[
 export async function outcomeData(me: Me, from: string, to: string, officeId: string | null = null): Promise<{ rows: OutcomeRow[]; issues: IssueRow[] }> {
   return asAgency(me.agencyId, async c => {
     const rows = (await c.query(`
-      select c.id, c.ref, k.name as client, o.name as office, c.benefit, u.name as adviser,
+      select c.id, c.ref, c.external_ref, k.name as client, o.name as office, c.benefit, u.name as adviser,
         to_char(c.mr_request_date, 'YYYY-MM-DD') as mr_request_date, c.mr_outcome, to_char(c.mr_outcome_date, 'YYYY-MM-DD') as mr_outcome_date,
         to_char(c.appeal_sent_date, 'YYYY-MM-DD') as appeal_sent_date, c.appeal_outcome, to_char(c.appeal_outcome_date, 'YYYY-MM-DD') as appeal_outcome_date,
         c.award_before, c.award_after, c.uc_lcwra_rate, c.lcw_legacy
@@ -134,9 +134,9 @@ const csvCell = (v: unknown) => { const s = v === null || v === undefined ? '' :
 
 /** One row per case, for funders' returns and the agency's own analysis. Client names are left out unless asked for. */
 export function outcomesCsv(cases: OutcomeCase[], withNames = false): string {
-  const head = ['Reference', ...(withNames ? ['Client'] : []), 'Benefit', 'Office', 'Adviser', 'MR requested', 'MR result', 'MR result date', 'Days to MR result',
+  const head = ['Reference', 'Your reference', ...(withNames ? ['Client'] : []), 'Benefit', 'Office', 'Adviser', 'MR requested', 'MR result', 'MR result date', 'Days to MR result',
     'Appeal sent', 'Appeal result', 'Appeal result date', 'Days to appeal result', 'Overturned at', 'Award before', 'Award after', 'Change', 'Yearly value gained (GBP)', 'Rates year'];
-  const lines = cases.map(c => [c.ref, ...(withNames ? [c.client] : []), c.benefit === 'pip' ? 'PIP' : 'UC WCA', c.office, c.adviser, c.mr_request_date, c.mr_outcome && MR_OUTCOMES[c.mr_outcome as keyof typeof MR_OUTCOMES], c.mr_outcome_date, c.mrDays,
+  const lines = cases.map(c => [c.ref, c.external_ref, ...(withNames ? [c.client] : []), c.benefit === 'pip' ? 'PIP' : 'UC WCA', c.office, c.adviser, c.mr_request_date, c.mr_outcome && MR_OUTCOMES[c.mr_outcome as keyof typeof MR_OUTCOMES], c.mr_outcome_date, c.mrDays,
     c.appeal_sent_date, c.appeal_outcome && APPEAL_OUTCOMES[c.appeal_outcome as keyof typeof APPEAL_OUTCOMES], c.appeal_outcome_date, c.appealDays, c.stageWon === 'mr' ? 'Reconsideration' : c.stageWon === 'appeal' ? 'Appeal' : '', AWARD(c.benefit, c.award_before), AWARD(c.benefit, c.award_after), c.change ?? '', c.gain, c.gainYear].map(csvCell).join(','));
   return [head.map(csvCell).join(','), ...lines].join('\r\n') + '\r\n';
 }

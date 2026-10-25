@@ -65,10 +65,10 @@ test('overturn rates, gains, time taken and disputed points', { skip }, async ()
   assert.equal(s.cases.find(x => x.id === b)!.stageWon, 'mr');
 
   const csv = oc.outcomesCsv(s.cases);
-  assert.ok(csv.startsWith('Reference,Benefit,Office,Adviser'));
-  assert.ok(csv.includes(`OC-${t}-B,UC WCA,,Adviser me,2026-06-01,Revised in full,2026-07-11,40,`));
+  assert.ok(csv.startsWith('Reference,Your reference,Benefit,Office,Adviser'));
+  assert.ok(new RegExp(`[A-Z]{3}-\\d{2}-\\d{4},OC-${t}-B,UC WCA,,Adviser me,2026-06-01,Revised in full,2026-07-11,40,`).test(csv));
   assert.ok(!csv.includes('Client'));
-  assert.ok(oc.outcomesCsv(s.cases, true).startsWith('Reference,Client,'));
+  assert.ok(oc.outcomesCsv(s.cases, true).startsWith('Reference,Your reference,Client,'));
   assert.equal((await oc.outcomeData(other, '2026-04-01', '2027-03-31')).rows.length, 0);
 });
 
@@ -95,7 +95,7 @@ test('offices: cases take the adviser’s office, move with open cases, and filt
   assert.equal(await officeOf(open), pais);                                       // their open case goes with them
   assert.equal(await officeOf(done), govan);                                      // the closed result stays where it was won
   const g = (await oc.outcomeData(me, '2026-04-01', '2027-03-31', govan)).rows;
-  assert.deepEqual(g.map(r => r.ref), [`OF-${t}-2`]);
+  assert.deepEqual(g.map(r => r.external_ref), [`OF-${t}-2`]);
   assert.equal(g[0].office, `Govan ${t}`);
   const { rows } = await oc.outcomeData(me, '2026-04-01', '2027-03-31');
   const { open: byOpen } = await oc.trendAndOfficeData(me, '2026-04-01', '2027-03-31');

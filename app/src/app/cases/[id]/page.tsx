@@ -45,7 +45,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
     <div className="stack-lg">
       <p className="crumbs"><Link href="/">← Cases</Link></p>
       <div className="head">
-        <h1><span className="mono">{cs.ref}</span></h1>
+        <h1><span className="mono">{cs.ref}</span>{cs.external_ref ? <span className="soft small"> · your ref {cs.external_ref}</span> : null}</h1>
         <p className="soft">{cs.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit · Work Capability Assessment'} · Descriptor data {cs.dataset_version}</p>
       </div>
       {client ? (

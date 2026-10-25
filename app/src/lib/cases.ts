@@ -5,10 +5,11 @@ import { putDocument, getDocument } from './storage.ts';
 import type { Me } from './auth.ts';
 import { aiGate, storeGate } from './claimants.ts';
 import { officeOfUser } from './offices.ts';
+import { nextRef } from './refs.ts';
 
 export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number;
   decision_date: string | null; mr_request_date: string | null; mr_notice_date: string | null; appeal_sent_date: string | null;
-  adviser_id?: string | null; closed_on?: string | null; closed_reason?: string | null; claimant_id?: string | null; client_name?: string | null };
+  adviser_id?: string | null; closed_on?: string | null; closed_reason?: string | null; claimant_id?: string | null; client_name?: string | null; external_ref?: string | null };
 export type DocKind = 'evidence' | 'notes' | 'pa4' | 'uc85' | 'uc85a' | 'decision' | 'mr_notice' | 'dwp_bundle' | 'other';
 export const DOC_KINDS: DocKind[] = ['evidence', 'notes', 'pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle', 'other'];
 /** Papers that record the DWP's position rather than the client's evidence. */
@@ -41,17 +42,20 @@ export async function listCases(me: Me): Promise<CaseRow[]> {
     order by c.created_at desc`)).rows);
 }
 
-export async function createCase(me: Me, ref: string, benefit: Benefit, claimantId: string | null = null): Promise<string> {
-  const clean = ref.trim().slice(0, 40);
-  if (!/^[A-Za-z0-9][A-Za-z0-9 _\-\/]*$/.test(clean)) throw new Error('Use letters, numbers, spaces, hyphens or slashes for the case reference. Don’t use the client’s name.');
+/**
+ * The system allocates the case reference (AAA-12-1234, unique across the system). The agency's own reference, from
+ * its case management system, is optional and kept alongside for searching.
+ */
+export async function createCase(me: Me, yourRef: string | null, benefit: Benefit, claimantId: string | null = null): Promise<string> {
+  const ext = (yourRef ?? '').trim().slice(0, 40) || null;
+  if (ext && !/^[A-Za-z0-9][A-Za-z0-9 _\-\/.]*$/.test(ext)) throw new Error('Use letters, numbers, spaces, hyphens, dots or slashes for your reference. Don’t use the client’s name.');
   return asAgency(me.agencyId, async c => {
-    const existing = (await c.query('select x.closed_at, k.name from cases x left join claimants k on k.id = x.claimant_id where x.ref = $1', [clean])).rows[0];
-    if (existing) throw new Error(`Your agency already has a case ${clean}${existing.name ? `, for ${existing.name}` : ''}${existing.closed_at ? ' (closed)' : ''}. Find it on the Cases page${existing.closed_at ? ' under Closed cases' : ''}, or use a different reference.`);
     if (claimantId) await storeGate(c, null, claimantId);
     const office = await officeOfUser(c, me.agencyId, me.userId);
-    const r = await c.query('insert into cases (agency_id, ref, benefit, adviser_id, dataset_version, claimant_id, office_id) values ($1, $2, $3, $4, $5, $6, $7) returning id',
-      [me.agencyId, clean, benefit, me.userId, datasetVersion(benefit), claimantId, office]);
-    await audit(c, me.agencyId, me.userId, r.rows[0].id, 'Case created');
+    const ref = await nextRef(c);
+    const r = await c.query('insert into cases (agency_id, ref, external_ref, benefit, adviser_id, dataset_version, claimant_id, office_id) values ($1, $2, $3, $4, $5, $6, $7, $8) returning id',
+      [me.agencyId, ref, ext, benefit, me.userId, datasetVersion(benefit), claimantId, office]);
+    await audit(c, me.agencyId, me.userId, r.rows[0].id, `Case ${ref} created`);
     return r.rows[0].id;
   });
 }
