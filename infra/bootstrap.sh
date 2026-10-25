@@ -28,7 +28,7 @@ read -r -p "Is this the right subscription, and NOT connected to any employer? [
 [[ "$ok" =~ ^[Yy]$ ]] || { echo "Stopped. Switch with: az account set --subscription <id>"; exit 1; }
 
 echo "== Registering resource providers (first time only, can take a few minutes)"
-for p in Microsoft.Web Microsoft.DBforPostgreSQL Microsoft.Storage Microsoft.KeyVault Microsoft.CognitiveServices Microsoft.Consumption; do
+for p in Microsoft.App Microsoft.ContainerRegistry Microsoft.OperationalInsights Microsoft.ManagedIdentity Microsoft.DBforPostgreSQL Microsoft.Storage Microsoft.KeyVault Microsoft.CognitiveServices Microsoft.Consumption; do
   az provider register --namespace "$p" --wait >/dev/null
 done
 
@@ -65,7 +65,9 @@ for role in Contributor "Role Based Access Control Administrator"; do
 done
 
 echo "== Adviser sign-in app (Entra ID, this tenant only)"
-REDIRECT="https://${WEBAPP}.azurewebsites.net/api/auth/callback/azure-ad"
+# The app's address is known only after the first deploy; the Deploy run's summary gives the
+# command that sets the real redirect address. This placeholder keeps the registration valid.
+REDIRECT="https://localhost:3000/api/auth/callback/azure-ad"
 SIGNIN_APP_ID="$(az ad app create --display-name "Heard & Supported (${ENV_NAME})" \
   --sign-in-audience AzureADMyOrg --web-redirect-uris "$REDIRECT" \
   --enable-id-token-issuance true --query appId -o tsv)"
@@ -118,4 +120,4 @@ set_var BUDGET_START "$BUDGET_START"
 set_var AI_LOCATION "$AI_LOCATION"
 
 echo
-echo "Done. Next: push to main (or run the Deploy workflow). The app will be at https://${WEBAPP}.azurewebsites.net"
+echo "Done. Next: push to main (or run the Deploy workflow). Its summary gives the app's address and one command to set the sign-in redirect."

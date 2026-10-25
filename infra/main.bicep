@@ -14,8 +14,17 @@ param aiLocation string = 'swedencentral'
 @description('Short environment name, used in resource names.')
 param env string = 'dev'
 
-@description('Web app name (globally unique). Chosen by the bootstrap script.')
+@description('App name. Chosen by the bootstrap script.')
 param webAppName string
+
+@description('The app image, already pushed to the registry (registry.bicep).')
+param image string
+
+@description('Registry login server, from registry.bicep.')
+param registryServer string
+
+@description('The app identity, from registry.bicep.')
+param identityName string
 
 @description('Model to deploy, from the list the bootstrap script prints.')
 param modelName string
@@ -26,9 +35,9 @@ param modelVersion string
 @description('Model format: OpenAI for Azure OpenAI models; other families use their own publisher name.')
 param modelFormat string = 'OpenAI'
 
-@description('App Service plan size. F1 (free) works for light development use when the subscription has no Basic quota yet.')
-@allowed(['F1', 'B1', 'B2', 'P0v3', 'P0v4'])
-param appSku string = 'B1'
+@description('Replicas kept running. 0 scales to nothing when idle (a cold start of some seconds); 1 keeps it warm.')
+@allowed([0, 1])
+param minReplicas int = 0
 
 @description('Model deployment type. DataZoneStandard keeps processing in the EU; Standard keeps it in aiLocation. GlobalStandard is for synthetic data only.')
 @allowed(['DataZoneStandard', 'Standard', 'GlobalStandard'])
@@ -112,7 +121,7 @@ resource pgDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-01' =
   name: dbName
 }
 
-// Allows Azure services (the web app) to connect. Before any real client data,
+// Allows Azure services (the app) to connect. Before any real client data,
 // replace with private networking (see SECURITY.md).
 resource pgFirewallAzure 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2024-08-01' = {
   parent: pg
@@ -208,54 +217,33 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-
   }
 }
 
-// ---------- Web app ----------
-resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
-  name: 'hs-${env}-plan'
-  location: location
-  tags: tags
-  kind: 'linux'
-  sku: { name: appSku }
-  properties: { reserved: true }
+// ---------- App (Azure Container Apps) ----------
+resource appIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: identityName
 }
 
-resource web 'Microsoft.Web/sites@2023-12-01' = {
-  name: webAppName
+resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+  name: 'hs-${env}-logs'
   location: location
   tags: tags
-  identity: { type: 'SystemAssigned' }
+  properties: { sku: { name: 'PerGB2018' }, retentionInDays: 30, workspaceCapping: { dailyQuotaGb: 1 } }
+}
+
+resource caEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
+  name: 'hs-${env}-apps'
+  location: location
+  tags: tags
   properties: {
-    serverFarmId: plan.id
-    httpsOnly: true
-    siteConfig: {
-      linuxFxVersion: 'NODE|22-lts'
-      appCommandLine: 'node app/server.js'
-      ftpsState: 'Disabled'
-      minTlsVersion: '1.2'
-      http20Enabled: true
-      alwaysOn: appSku != 'F1' // not available on the free plan
-      appSettings: [
-        { name: 'DATABASE_URL', value: '@Microsoft.KeyVault(SecretUri=${secretDbUrl.properties.secretUri})' }
-        { name: 'AZURE_AD_CLIENT_SECRET', value: '@Microsoft.KeyVault(SecretUri=${secretEntra.properties.secretUri})' }
-        { name: 'NEXTAUTH_SECRET', value: '@Microsoft.KeyVault(SecretUri=${secretNextAuth.properties.secretUri})' }
-        { name: 'AZURE_AD_CLIENT_ID', value: entraClientId }
-        { name: 'AZURE_AD_TENANT_ID', value: entraTenantId }
-        { name: 'NEXTAUTH_URL', value: 'https://${webAppName}.azurewebsites.net' }
-        { name: 'DOCINTEL_ENDPOINT', value: docIntel.properties.endpoint }
-        { name: 'AI_ENDPOINT', value: ai.properties.endpoints['OpenAI Language Model Instance API'] }
-        { name: 'AI_DEPLOYMENT', value: modelDeployment.name }
-        { name: 'STORAGE_ACCOUNT', value: storage.name }
-        { name: 'STORAGE_CONTAINER', value: docsContainer.name }
-        { name: 'DATA_MODE', value: 'synthetic-only' }
-        { name: 'BOOTSTRAP_ADMIN_EMAIL', value: firstAdminEmail }
-        { name: 'PORT', value: '8080' }
-        { name: 'WEBSITES_PORT', value: '8080' }
-        { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'false' }
-      ]
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: { customerId: logs.properties.customerId, sharedKey: logs.listKeys().primarySharedKey }
     }
   }
 }
 
-// ---------- Access for the web app's managed identity ----------
+var appUrl = 'https://${webAppName}.${caEnv.properties.defaultDomain}'
+
+// The identity needs its Key Vault, storage and AI roles before the app first starts.
 var roles = {
   blobDataContributor: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   cognitiveServicesUser: 'a97b65f3-24c7-4388-baec-2e87135dc908'
@@ -264,27 +252,77 @@ var roles = {
 }
 
 resource raBlob 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(storage.id, web.id, roles.blobDataContributor)
+  name: guid(storage.id, appIdentity.id, roles.blobDataContributor)
   scope: storage
-  properties: { principalId: web.identity.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.blobDataContributor) }
+  properties: { principalId: appIdentity.properties.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.blobDataContributor) }
 }
 
 resource raDocIntel 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(docIntel.id, web.id, roles.cognitiveServicesUser)
+  name: guid(docIntel.id, appIdentity.id, roles.cognitiveServicesUser)
   scope: docIntel
-  properties: { principalId: web.identity.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.cognitiveServicesUser) }
+  properties: { principalId: appIdentity.properties.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.cognitiveServicesUser) }
 }
 
 resource raAi 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(ai.id, web.id, roles.openAiUser)
+  name: guid(ai.id, appIdentity.id, roles.openAiUser)
   scope: ai
-  properties: { principalId: web.identity.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.openAiUser) }
+  properties: { principalId: appIdentity.properties.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.openAiUser) }
 }
 
 resource raKv 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(kv.id, web.id, roles.kvSecretsUser)
+  name: guid(kv.id, appIdentity.id, roles.kvSecretsUser)
   scope: kv
-  properties: { principalId: web.identity.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.kvSecretsUser) }
+  properties: { principalId: appIdentity.properties.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.kvSecretsUser) }
+}
+
+resource app 'Microsoft.App/containerApps@2024-03-01' = {
+  name: webAppName
+  location: location
+  tags: tags
+  identity: { type: 'UserAssigned', userAssignedIdentities: { '${appIdentity.id}': {} } }
+  dependsOn: [ raKv, raBlob, raDocIntel, raAi ]
+  properties: {
+    managedEnvironmentId: caEnv.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      ingress: { external: true, targetPort: 3000, transport: 'auto', allowInsecure: false }
+      registries: [ { server: registryServer, identity: appIdentity.id } ]
+      secrets: [
+        { name: 'database-url', keyVaultUrl: secretDbUrl.properties.secretUri, identity: appIdentity.id }
+        { name: 'entra-client-secret', keyVaultUrl: secretEntra.properties.secretUri, identity: appIdentity.id }
+        { name: 'nextauth-secret', keyVaultUrl: secretNextAuth.properties.secretUri, identity: appIdentity.id }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          name: 'app'
+          image: image
+          resources: { cpu: json('0.5'), memory: '1Gi' }
+          env: [
+            { name: 'DATABASE_URL', secretRef: 'database-url' }
+            { name: 'AZURE_AD_CLIENT_SECRET', secretRef: 'entra-client-secret' }
+            { name: 'NEXTAUTH_SECRET', secretRef: 'nextauth-secret' }
+            { name: 'AZURE_CLIENT_ID', value: appIdentity.properties.clientId }   // which identity the Azure SDK signs in as
+            { name: 'AZURE_AD_CLIENT_ID', value: entraClientId }
+            { name: 'AZURE_AD_TENANT_ID', value: entraTenantId }
+            { name: 'NEXTAUTH_URL', value: appUrl }
+            { name: 'DOCINTEL_ENDPOINT', value: docIntel.properties.endpoint }
+            { name: 'AI_ENDPOINT', value: ai.properties.endpoints['OpenAI Language Model Instance API'] }
+            { name: 'AI_DEPLOYMENT', value: modelDeployment.name }
+            { name: 'STORAGE_ACCOUNT', value: storage.name }
+            { name: 'STORAGE_CONTAINER', value: docsContainer.name }
+            { name: 'DATA_MODE', value: 'synthetic-only' }
+            { name: 'BOOTSTRAP_ADMIN_EMAIL', value: firstAdminEmail }
+          ]
+          probes: [
+            { type: 'Startup', httpGet: { path: '/signup', port: 3000 }, initialDelaySeconds: 3, periodSeconds: 5, failureThreshold: 24 }
+          ]
+        }
+      ]
+      scale: { minReplicas: minReplicas, maxReplicas: 1 }
+    }
+  }
 }
 
 // The deploy identity runs the evaluation harness against the model and Document Intelligence.
@@ -315,7 +353,8 @@ resource budget 'Microsoft.Consumption/budgets@2023-11-01' = {
   }
 }
 
-output webUrl string = 'https://${web.properties.defaultHostName}'
+output webUrl string = appUrl
+output signInRedirect string = '${appUrl}/api/auth/callback/azure-ad'
 output aiEndpoint string = ai.properties.endpoints['OpenAI Language Model Instance API']
 output aiDeployment string = modelDeployment.name
 output docIntelEndpoint string = docIntel.properties.endpoint

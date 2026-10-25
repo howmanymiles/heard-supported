@@ -21,7 +21,7 @@ It reads the client's documents (including handwriting), suggests passages of ev
 
 Everything is in **UK South**, except the AI model, which runs in **Sweden Central** under an EU Data Zone deployment (data stays in the EU; the model choice in UK South is limited).
 
-App Service (Node 22) · PostgreSQL Flexible Server · Blob Storage · Key Vault · Document Intelligence (Read) · Azure AI Foundry model deployment `review-model` · monthly budget alert. Services talk to each other with managed identity; there are no keys in app settings. GitHub signs in to Azure with OIDC, so there is no stored Azure password either.
+Container Apps (the app as a container, scaling to zero when idle) · Container Registry · PostgreSQL Flexible Server · Blob Storage · Key Vault · Document Intelligence (Read) · Azure AI Foundry model deployment `review-model` · monthly budget alert. Services talk to each other with managed identity; there are no keys in app settings. GitHub signs in to Azure with OIDC, so there is no stored Azure password either.
 
 Expect roughly £30–£50 a month while idle in development. The budget alert emails you at the amount you set.
 
@@ -42,7 +42,7 @@ You need: an Azure subscription that is **yours, not an employer's**; a GitHub a
    ```
    It asks you to confirm the subscription, then creates the resource group, the deploy identity, the sign-in app and the secrets. When it lists the available models, pick a current GPT model offered as DataZoneStandard.
 4. **Deploy.** In GitHub, go to Actions → Deploy → Run workflow (or push any commit to `main`). The first run takes about 15 minutes, mostly the database.
-5. **Sign in** at the address the workflow prints (`https://hs-dev-xxxxxx.azurewebsites.net`). Sign in with the email you gave the set-up script (or the `FIRST_ADMIN_EMAIL` repository variable): on a new installation that person becomes the admin of the development agency. Everyone else needs an invitation from the Team page.
+5. **Set the sign-in redirect, once.** The Deploy run's summary shows the app's address and an `az ad app update ...` command: run it in Cloud Shell. Then **sign in** at that address. Sign in with the email you gave the set-up script (or the `FIRST_ADMIN_EMAIL` repository variable): on a new installation that person becomes the admin of the development agency. Everyone else needs an invitation from the Team page.
 6. **Try it.** Load one of the fictional test cases from the home page, press *Read and review*, and work through the suggestions.
 
 ### Running the evaluation

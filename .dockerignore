@@ -1,0 +1,9 @@
+**/node_modules
+**/.next
+.git
+.github
+infra
+**/*.log
+**/.env*
+!**/.env.example
+app/tsconfig.tsbuildinfo

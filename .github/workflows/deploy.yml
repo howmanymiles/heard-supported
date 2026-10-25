@@ -54,18 +54,40 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy infrastructure
+      - name: Registry and app identity
+        id: reg
         run: |
-          az deployment group create \
+          out=$(az deployment group create --resource-group "${{ vars.RESOURCE_GROUP }}" --template-file infra/registry.bicep \
+            --query properties.outputs -o json)
+          echo "name=$(jq -r .registryName.value <<<"$out")" >> "$GITHUB_OUTPUT"
+          echo "server=$(jq -r .registryServer.value <<<"$out")" >> "$GITHUB_OUTPUT"
+          echo "identity=$(jq -r .identityName.value <<<"$out")" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push the app image
+        id: img
+        run: |
+          az acr login --name "${{ steps.reg.outputs.name }}"
+          image="${{ steps.reg.outputs.server }}/heard-supported:${{ github.sha }}"
+          docker build -t "$image" .
+          docker push "$image"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy infrastructure and app
+        id: infra
+        run: |
+          out=$(az deployment group create \
             --resource-group "${{ vars.RESOURCE_GROUP }}" \
             --template-file infra/main.bicep \
             --parameters \
               webAppName="${{ vars.WEBAPP_NAME }}" \
+              image="${{ steps.img.outputs.image }}" \
+              registryServer="${{ steps.reg.outputs.server }}" \
+              identityName="${{ steps.reg.outputs.identity }}" \
+              minReplicas="${{ vars.MIN_REPLICAS || '0' }}" \
               aiLocation="${{ vars.AI_LOCATION }}" \
               modelName="${{ vars.MODEL_NAME }}" \
               modelVersion="${{ vars.MODEL_VERSION }}" \
               modelFormat="${{ vars.MODEL_FORMAT }}" \
-              appSku="${{ vars.APP_SKU || 'B1' }}" \
               modelSku="${{ vars.MODEL_SKU || 'DataZoneStandard' }}" \
               modelCapacity="${{ vars.MODEL_CAPACITY || '20' }}" \
               entraClientId="${{ vars.ENTRA_CLIENT_ID }}" \
@@ -76,20 +98,25 @@ jobs:
               budgetEmail="${{ vars.BUDGET_EMAIL }}" \
               firstAdminEmail="${{ vars.FIRST_ADMIN_EMAIL || vars.BUDGET_EMAIL }}" \
               budgetStart="${{ vars.BUDGET_START }}" \
-            --output none
+            --query properties.outputs -o json)
+          echo "url=$(jq -r .webUrl.value <<<"$out")" >> "$GITHUB_OUTPUT"
+          echo "redirect=$(jq -r .signInRedirect.value <<<"$out")" >> "$GITHUB_OUTPUT"
 
-      - name: Build app
+      - name: Check the app answers
         run: |
-          npm ci
-          npm run build -w app
-          # Standalone output: copy static assets and SQL migrations alongside the server.
-          cp -r app/.next/static app/.next/standalone/app/.next/static
-          mkdir -p app/.next/standalone/app/db
-          cp -r app/db/migrations app/.next/standalone/app/db/migrations
-          (cd app/.next/standalone && zip -qr ../../../app.zip .)
-
-      - name: Deploy app
-        run: |
-          az webapp deploy --resource-group "${{ vars.RESOURCE_GROUP }}" --name "${{ vars.WEBAPP_NAME }}" \
-            --src-path app.zip --type zip --async false
-          echo "Deployed to https://${{ vars.WEBAPP_NAME }}.azurewebsites.net"
+          url="${{ steps.infra.outputs.url }}"
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$url/signup" || true)
+            if [ "$code" = 200 ]; then echo "App is up at $url"; break; fi
+            echo "waiting ($code)"; sleep 10
+          done
+          [ "$code" = 200 ] || { echo "The app did not answer at $url"; exit 1; }
+          {
+            echo "### Deployed"
+            echo "App: $url"
+            echo
+            echo "Sign-in needs this redirect address on the sign-in app registration (once):"
+            echo '```'
+            echo "az ad app update --id ${{ vars.ENTRA_CLIENT_ID }} --web-redirect-uris ${{ steps.infra.outputs.redirect }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
