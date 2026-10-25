@@ -62,7 +62,11 @@ async function inviteToken(): Promise<string | null> {
 }
 
 function identity(profile: unknown): Identity | null {
-  const p = (profile ?? {}) as { oid?: string; tid?: string; name?: string; email?: string; preferred_username?: string };
+  const p = (profile ?? {}) as { oid?: string; tid?: string; name?: string; email?: string; preferred_username?: string; upn?: string };
   if (!p.oid || !p.tid) return null;
-  return { oid: p.oid, tid: p.tid, name: p.name ?? '', email: p.email ?? p.preferred_username ?? '' };
+  // Microsoft can report the address in several claims; a personal account added to a
+  // directory has a user name like "name_hotmail.co.uk#EXT#@x.onmicrosoft.com".
+  const all = [p.email, p.preferred_username, p.upn].filter((x): x is string => !!x);
+  const ext = all.map(a => a.match(/^(.+)#EXT#@/i)?.[1]).filter((x): x is string => !!x).map(x => x.replace(/_([^_]+)$/, '@$1'));
+  return { oid: p.oid, tid: p.tid, name: p.name ?? '', email: all[0] ?? '', emails: [...new Set([...all, ...ext].map(e => e.trim().toLowerCase()))] };
 }

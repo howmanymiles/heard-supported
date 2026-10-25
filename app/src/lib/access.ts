@@ -127,7 +127,10 @@ export async function peekInvite(token: string) {
 
 // ---------- sign-in ----------
 
-export type Identity = { oid: string; tid: string; name: string; email: string };
+export type Identity = { oid: string; tid: string; name: string; email: string; emails?: string[] };
+
+/** Any address Microsoft reported for the person matches. */
+const hasEmail = (id: Identity, want: string) => [id.email, ...(id.emails ?? [])].some(e => normEmail(e) === normEmail(want));
 
 /**
  * Who this person is in the app, or why they can't come in. An existing user must be
@@ -149,7 +152,7 @@ export async function resolveSignIn(id: Identity, inviteToken: string | null): P
     if (!inviteToken) {
       // A brand-new installation only: the named first admin sets up the first agency.
       const first = process.env.BOOTSTRAP_ADMIN_EMAIL;
-      if (first && normEmail(id.email) === normEmail(first) && !(await c.query('select 1 from users limit 1')).rowCount) {
+      if (first && hasEmail(id, first) && !(await c.query('select 1 from users limit 1')).rowCount) {
         const ag = (await c.query("insert into agencies (name, status, contact_email, approved_at, approved_by) values ('Development agency', 'active', $1, now(), 'first sign-in') returning id", [normEmail(first)])).rows[0].id;
         const nu = (await c.query("insert into users (agency_id, entra_oid, entra_tenant_id, name, email, role, last_sign_in_at) values ($1, $2, $3, $4, $5, 'admin', now()) returning id", [ag, id.oid, id.tid, id.name || null, normEmail(first)])).rows[0].id;
         await asIn(c, ag);
@@ -164,7 +167,7 @@ export async function resolveSignIn(id: Identity, inviteToken: string | null): P
     if (inv.accepted_at) throw deny('used');
     if (new Date(inv.expires_at) < new Date()) throw deny('expired');
     if (inv.status !== 'active') throw deny('agency_pending');
-    if (normEmail(id.email) !== inv.email) throw deny('wrong_account');
+    if (!hasEmail(id, inv.email)) throw deny('wrong_account');
     const nu = (await c.query(`insert into users (agency_id, entra_oid, entra_tenant_id, name, email, role, office_id, last_sign_in_at) values ($1, $2, $3, $4, $5, $6, $7, now()) returning id`,
       [inv.agency_id, id.oid, id.tid, id.name || null, inv.email, inv.role, inv.office_id])).rows[0].id;
     await c.query('update invites set accepted_at = now(), accepted_user_id = $2 where id = $1', [inv.id, nu]);

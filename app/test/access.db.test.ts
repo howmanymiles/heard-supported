@@ -35,7 +35,7 @@ test('an agency signs up, is approved, and its first admin gets in only with the
   assert.equal((await ac.peekInvite(token))!.agency, 'Govan Advice');
 
   await assert.rejects(ac.resolveSignIn(who('Mallory', `mallory-${T}@elsewhere.example`), token), code('wrong_account'));
-  const me = await ac.resolveSignIn({ ...ann, email: ann.email.toUpperCase() }, token);   // email case doesn't matter
+  const me = await ac.resolveSignIn({ ...ann, email: 'ann_govan.example#EXT#@x.onmicrosoft.com', emails: [ann.email.toUpperCase()] }, token);   // any reported address, any case
   assert.equal(me.role, 'admin');
   await assert.rejects(ac.resolveSignIn(who('Mallory', ann.email), token), code('used'));  // single use, even with the right email
   assert.deepEqual(await ac.resolveSignIn(ann, null), me);                          // later sign-ins need no invitation
