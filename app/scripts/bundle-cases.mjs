@@ -16,5 +16,7 @@ for (const id of fs.readdirSync(root).sort()) {
   const claimDocs = docs.filter(d => !/ (pa4|decision|mr request|mr notice|sscs1|dwp response)\.md$/.test(d.name));
   out.push({ id, benefit: c.benefit, title: c.title, docs: claimDocs });
 }
-fs.writeFileSync(path.resolve(import.meta.dirname, '../src/data/synthetic.json'), JSON.stringify(out));
+const target = path.resolve(import.meta.dirname, '../src/data/synthetic.json');
+fs.mkdirSync(path.dirname(target), { recursive: true });
+fs.writeFileSync(target, JSON.stringify(out));
 console.log(`Bundled ${out.length} synthetic cases.`);
