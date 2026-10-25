@@ -12,7 +12,7 @@ const APPEAL_DECIDED = ['allowed', 'allowed_in_part', 'dismissed', 'lapsed_revis
 const APPEAL_OVERTURN = ['allowed', 'allowed_in_part', 'lapsed_revised'];
 
 export type OutcomeRow = {
-  id: string; ref: string; client: string | null; benefit: 'pip' | 'uc-wca'; adviser: string | null;
+  id: string; ref: string; client: string | null; district?: string | null; benefit: 'pip' | 'uc-wca'; adviser: string | null;
   mr_request_date: string | null; mr_outcome: string | null; mr_outcome_date: string | null;
   appeal_sent_date: string | null; appeal_outcome: string | null; appeal_outcome_date: string | null;
   award_before: Award | null; award_after: Award | null; uc_lcwra_rate: string | null; lcw_legacy: boolean;
@@ -44,7 +44,7 @@ export async function issueResultsFor(me: Me, caseId: string): Promise<IssueRow[
 export async function outcomeData(me: Me, from: string, to: string): Promise<{ rows: OutcomeRow[]; issues: IssueRow[] }> {
   return asAgency(me.agencyId, async c => {
     const rows = (await c.query(`
-      select c.id, c.ref, k.name as client, c.benefit, u.name as adviser,
+      select c.id, c.ref, k.name as client, k.postcode_district as district, c.benefit, u.name as adviser,
         to_char(c.mr_request_date, 'YYYY-MM-DD') as mr_request_date, c.mr_outcome, to_char(c.mr_outcome_date, 'YYYY-MM-DD') as mr_outcome_date,
         to_char(c.appeal_sent_date, 'YYYY-MM-DD') as appeal_sent_date, c.appeal_outcome, to_char(c.appeal_outcome_date, 'YYYY-MM-DD') as appeal_outcome_date,
         c.award_before, c.award_after, c.uc_lcwra_rate, c.lcw_legacy
@@ -139,4 +139,79 @@ export function outcomesCsv(cases: OutcomeCase[], withNames = false): string {
   const lines = cases.map(c => [c.ref, ...(withNames ? [c.client] : []), c.benefit === 'pip' ? 'PIP' : 'UC WCA', c.adviser, c.mr_request_date, c.mr_outcome && MR_OUTCOMES[c.mr_outcome as keyof typeof MR_OUTCOMES], c.mr_outcome_date, c.mrDays,
     c.appeal_sent_date, c.appeal_outcome && APPEAL_OUTCOMES[c.appeal_outcome as keyof typeof APPEAL_OUTCOMES], c.appeal_outcome_date, c.appealDays, c.stageWon === 'mr' ? 'Reconsideration' : c.stageWon === 'appeal' ? 'Appeal' : '', AWARD(c.benefit, c.award_before), AWARD(c.benefit, c.award_after), c.change ?? '', c.gain, c.gainYear].map(csvCell).join(','));
   return [head.map(csvCell).join(','), ...lines].join('\r\n') + '\r\n';
+}
+
+// ---------- trends and areas ----------
+
+/** Rates on fewer results than this are shown as counts only: too few to compare. */
+export const SMALL = 5;
+
+const MONTHS = (from: string, to: string) => {
+  const out: string[] = [];
+  let [y, m] = from.slice(0, 7).split('-').map(Number);
+  const [ty, tm] = to.slice(0, 7).split('-').map(Number);
+  while (y < ty || (y === ty && m <= tm)) { out.push(`${y}-${String(m).padStart(2, '0')}`); if (++m > 12) { m = 1; y++; } }
+  return out.slice(-60);
+};
+
+export type MonthRow = { month: string; opened: number; mr: Tally; appeal: Tally; overall: Tally; money: number };
+
+/** Pure: month by month, by the date of each result; cases opened by the date they were created. */
+export function monthlyTrends(rows: OutcomeRow[], opened: Record<string, number>, from: string, to: string): MonthRow[] {
+  const by = new Map(MONTHS(from, to).map(m => [m, { month: m, opened: opened[m] ?? 0, mr: tally(), appeal: tally(), overall: tally(), money: 0 } as MonthRow]));
+  for (const r of rows) {
+    if (r.mr_outcome && inPeriod(r.mr_outcome_date, from, to)) {
+      const x = by.get(r.mr_outcome_date!.slice(0, 7)); const o = MR_OVERTURN.includes(r.mr_outcome);
+      if (x) { x.mr.decided++; x.overall.decided++; if (o) { x.mr.overturned++; x.overall.overturned++; } }
+    }
+    if (r.appeal_outcome && APPEAL_DECIDED.includes(r.appeal_outcome) && inPeriod(r.appeal_outcome_date, from, to)) {
+      const x = by.get(r.appeal_outcome_date!.slice(0, 7)); const o = APPEAL_OVERTURN.includes(r.appeal_outcome);
+      if (x) { x.appeal.decided++; x.overall.decided++; if (o) { x.appeal.overturned++; x.overall.overturned++; } }
+    }
+    const last = r.appeal_outcome && APPEAL_OVERTURN.includes(r.appeal_outcome) ? r.appeal_outcome_date : r.mr_outcome && MR_OVERTURN.includes(r.mr_outcome) ? r.mr_outcome_date : null;
+    if (last && inPeriod(last, from, to)) { const g = caseGain({ ...r, on: last }); const x = by.get(last.slice(0, 7)); if (g && x) x.money += g.gain; }
+  }
+  return [...by.values()].map(x => { for (const t of [x.mr, x.appeal, x.overall]) t.rate = rate(t.overturned, t.decided); x.money = Math.round(x.money * 100) / 100; return x; });
+}
+
+export type AreaRow = { key: string; open: number; cases: number; mr: Tally; appeal: Tally; overall: Tally; money: number; small: boolean };
+
+/** Postcode area: the letters at the start of the district ("G41" is in "G"). */
+export const postcodeArea = (district: string) => district.match(/^[A-Z]+/)![0];
+
+/** Pure: results by the client's postcode district, or by postcode area. Cases without a postcode are kept, as “Not recorded”. */
+export function byArea(rows: OutcomeRow[], openByDistrict: Record<string, number>, from: string, to: string, level: 'district' | 'area' = 'district'): AreaRow[] {
+  const keyOf = (d: string | null | undefined) => (!d ? 'Not recorded' : level === 'area' ? postcodeArea(d) : d);
+  const m = new Map<string, AreaRow>();
+  const get = (k: string) => m.get(k) ?? (m.set(k, { key: k, open: 0, cases: 0, mr: tally(), appeal: tally(), overall: tally(), money: 0, small: false }), m.get(k)!);
+  for (const [d, n] of Object.entries(openByDistrict)) get(keyOf(d === '' ? null : d)).open += n;
+  const s = summariseOutcomes(rows, [], from, to);
+  for (const c of s.cases) {
+    const x = get(keyOf(c.district)); x.cases++;
+    if (c.mr_outcome && inPeriod(c.mr_outcome_date, from, to)) { x.mr.decided++; if (MR_OVERTURN.includes(c.mr_outcome)) x.mr.overturned++; }
+    if (c.appeal_outcome && APPEAL_DECIDED.includes(c.appeal_outcome) && inPeriod(c.appeal_outcome_date, from, to)) { x.appeal.decided++; if (APPEAL_OVERTURN.includes(c.appeal_outcome)) x.appeal.overturned++; }
+    if ((c.mr_outcome && inPeriod(c.mr_outcome_date, from, to)) || (c.appeal_outcome && APPEAL_DECIDED.includes(c.appeal_outcome) && inPeriod(c.appeal_outcome_date, from, to))) {
+      x.overall.decided++; if (c.stageWon) x.overall.overturned++;
+    }
+    if (c.gain !== null && c.stageWon) x.money += c.gain;
+  }
+  return [...m.values()].map(x => {
+    for (const t of [x.mr, x.appeal, x.overall]) t.rate = t.decided >= SMALL ? rate(t.overturned, t.decided) : null;
+    x.small = x.overall.decided < SMALL; x.money = Math.round(x.money * 100) / 100; return x;
+  }).sort((a, b) => (a.key === 'Not recorded' ? 1 : b.key === 'Not recorded' ? -1 : b.overall.decided - a.overall.decided || a.key.localeCompare(b.key)));
+}
+
+/** Cases opened per month, and the open caseload by postcode district, for the trend and area views. */
+export async function trendAndAreaData(me: Me, from: string, to: string) {
+  return asAgency(me.agencyId, async c => {
+    const opened = Object.fromEntries((await c.query("select to_char(created_at, 'YYYY-MM') m, count(*)::int n from cases where created_at::date between $1 and $2 group by 1", [from, to])).rows.map(r => [r.m, r.n]));
+    const open = Object.fromEntries((await c.query("select coalesce(k.postcode_district, '') d, count(*)::int n from cases x left join claimants k on k.id = x.claimant_id where x.closed_at is null group by 1")).rows.map(r => [r.d, r.n]));
+    return { opened, open };
+  });
+}
+
+export function areasCsv(rows: AreaRow[], level: 'district' | 'area'): string {
+  const head = [level === 'area' ? 'Postcode area' : 'Postcode district', 'Open cases now', 'Cases with a result', 'MR decided', 'MR overturned', 'Appeals decided', 'Appeals overturned', 'Overturned, any stage', 'Overturn rate %', 'Yearly value of overturns (GBP)'];
+  return [head, ...rows.map(r => [r.key, r.open, r.cases, r.mr.decided, r.mr.overturned, r.appeal.decided, r.appeal.overturned, r.overall.overturned, r.overall.rate ?? (r.overall.decided ? `fewer than ${SMALL} results` : ''), r.money])]
+    .map(l => l.map(csvCell).join(',')).join('\r\n') + '\r\n';
 }

@@ -13,7 +13,7 @@ const consentFrom = (f: FormData): ConsentInput => ({
   method: text(f, 'method'), givenOn: text(f, 'givenOn'), confirmed: f.get('confirmed') === 'yes',
   storeData: f.get('store_data') === 'yes', aiProcessing: f.get('ai_processing') === 'yes', actOnBehalf: f.get('act_on_behalf') === 'yes',
 });
-const personFrom = (f: FormData) => ({ name: text(f, 'name'), preferredName: text(f, 'preferredName') || null, dateOfBirth: text(f, 'dateOfBirth') || null, agencyRef: text(f, 'agencyRef') || null });
+const personFrom = (f: FormData) => ({ name: text(f, 'name'), preferredName: text(f, 'preferredName') || null, dateOfBirth: text(f, 'dateOfBirth') || null, agencyRef: text(f, 'agencyRef') || null, postcode: text(f, 'postcode') || null });
 
 export async function createClientAction(_: ActionState, form: FormData): Promise<ActionState> {
   const me = await requireMe();

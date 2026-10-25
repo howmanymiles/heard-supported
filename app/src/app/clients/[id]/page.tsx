@@ -20,7 +20,7 @@ export default async function Client({ params }: { params: Promise<{ id: string 
   return (
     <div className="stack-lg">
       <p className="crumbs"><Link href="/clients">← Clients</Link></p>
-      <div className="head"><h1>{k.name}</h1><p className="soft">{k.preferred_name ? `Known as ${k.preferred_name} · ` : ''}{k.agency_ref ? `Ref ${k.agency_ref} · ` : ''}Record created {day(k.created_at)}</p></div>
+      <div className="head"><h1>{k.name}</h1><p className="soft">{k.preferred_name ? `Known as ${k.preferred_name} · ` : ''}{k.agency_ref ? `Ref ${k.agency_ref} · ` : ''}{k.postcode_district ? `${k.postcode_district} · ` : ''}Record created {day(k.created_at)}</p></div>
 
       <section className="panel stack" aria-label="Consent">
         <h2 className="eyebrow">Consent</h2>

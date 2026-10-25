@@ -30,12 +30,13 @@ function ConsentFields({ statement, today }: { statement: Statement; today: stri
   );
 }
 
-function PersonFields({ v }: { v?: { name?: string; preferred_name?: string | null; date_of_birth?: string | null; agency_ref?: string | null } }) {
+function PersonFields({ v }: { v?: { name?: string; preferred_name?: string | null; date_of_birth?: string | null; agency_ref?: string | null; postcode_district?: string | null } }) {
   return (
     <div className="row">
       <label className="field">Full name<input name="name" required maxLength={120} defaultValue={v?.name ?? ''} autoComplete="off" /></label>
       <label className="field small-field">Known as (optional)<input name="preferredName" maxLength={60} defaultValue={v?.preferred_name ?? ''} autoComplete="off" /></label>
       <label className="field small-field">Date of birth (optional)<input type="date" name="dateOfBirth" defaultValue={v?.date_of_birth ?? ''} /></label>
+      <label className="field small-field">Postcode (optional)<input name="postcode" maxLength={8} defaultValue={v?.postcode_district ?? ''} autoComplete="off" /><span className="hint">Only the first half is kept, for figures by area.</span></label>
       <label className="field small-field">Your agency’s client reference (optional)<input name="agencyRef" maxLength={40} defaultValue={v?.agency_ref ?? ''} autoComplete="off" /></label>
     </div>
   );
@@ -57,7 +58,7 @@ export function NewClientForm({ statement, today }: { statement: Statement; toda
   );
 }
 
-export function EditClientForm({ claimant }: { claimant: { id: string; name: string; preferred_name: string | null; date_of_birth: string | null; agency_ref: string | null } }) {
+export function EditClientForm({ claimant }: { claimant: { id: string; name: string; preferred_name: string | null; date_of_birth: string | null; agency_ref: string | null; postcode_district?: string | null } }) {
   const [state, action] = useActionState(updateClientAction, {});
   return (
     <form action={action} className="stack">
