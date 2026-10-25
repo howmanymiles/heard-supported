@@ -20,6 +20,12 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
   const data = await getCase(me, id);
   if (!data) notFound();
   const { case: cs, evidence, gaps, decisions, lastRun, log } = data;
+  if (cs.anonymised_at) return (
+    <div className="stack-lg">
+      <div className="head"><h1>Case {cs.ref}</h1></div>
+      <p className="msg">{cs.anonymised_reason === 'erasure' ? 'This case’s content was erased at the client’s request' : 'This case’s content was deleted when your agency’s retention period ended'} on {new Date(cs.anonymised_at).toLocaleDateString('en-GB', { timeZone: 'Europe/London', dateStyle: 'long' })}. Its outcome still counts in your reports; nothing that identifies the client is kept.</p>
+    </div>
+  );
   const docs = data.docs.filter(d => d.kind === 'evidence' || d.kind === 'notes' || d.kind === 'other'); // decision papers live on the MR tab
   const acts = activityList(cs.benefit);
   const s = score(cs.benefit, decisions);

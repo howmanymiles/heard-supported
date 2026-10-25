@@ -140,8 +140,9 @@ export async function aiGate(me: Me, caseId: string): Promise<{ names: string[] 
   limit(`ai:u:${me.userId}`, LIMITS.aiPerUser.max, LIMITS.aiPerUser.window, 'You have used the AI a lot in the last hour. Wait a while and try again, or ask your admin if this keeps happening.');
   limit(`ai:a:${me.agencyId}`, LIMITS.aiPerAgency.max, LIMITS.aiPerAgency.window, 'Your agency has reached today’s limit on AI use. It resets within 24 hours; contact us if you need it raised.');
   return asAgency(me.agencyId, async c => {
-    const cs = (await c.query('select claimant_id from cases where id = $1', [caseId])).rows[0];
+    const cs = (await c.query('select claimant_id, anonymised_at from cases where id = $1', [caseId])).rows[0];
     if (!cs) throw new Error('Case not found.');
+    if (cs.anonymised_at) throw new Error('This case’s content has been deleted, so the AI can’t be used on it.');
     if (!cs.claimant_id) {
       if (process.env.DATA_MODE === 'synthetic-only') return { names: [] };
       throw new Error('Link this case to a client, with their consent recorded, before using the AI.');
@@ -156,7 +157,9 @@ export async function aiGate(me: Me, caseId: string): Promise<{ names: string[] 
 
 /** Before adding documents: the client's consent to keep their information must stand. */
 export async function storeGate(c: PoolClient, caseId: string | null, claimantId?: string) {
-  const id = claimantId ?? (await c.query('select claimant_id from cases where id = $1', [caseId])).rows[0]?.claimant_id;
+  const cs = caseId ? (await c.query('select claimant_id, anonymised_at from cases where id = $1', [caseId])).rows[0] : null;
+  if (cs?.anonymised_at) throw new Error('This case’s content has been deleted under the retention rules, so nothing can be added to it.');
+  const id = claimantId ?? cs?.claimant_id;
   if (!id) return;
   if (!(await c.query('select 1 from claimants where id = $1', [id])).rowCount) throw new Error('Client not found.');
   if (!(await currentConsent(c, id))) throw new Error('Your client has withdrawn consent, so nothing more can be added to their case.');

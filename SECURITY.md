@@ -69,8 +69,8 @@ Infrastructure (costed in the plan below; each needs a go-ahead):
 
 Application:
 
-9. Retention and erasure: delete a closed case's documents on the agency's schedule; erase a client on request (keeping the audit entries, which hold no content).
-10. Subject access export: everything held about a client, as one download.
+9. ~~Retention and erasure~~: built. Each agency sets how long closed cases' content is kept (6 months to 6 years, 2 years unless changed); after that the content is deleted and the case is cut loose from the client, keeping only the outcome for reports. Admins can erase a client on request. Once blob soft delete is on (infrastructure item 3), deleted files stay recoverable for 14 days, which the privacy notice must say.
+10. ~~Subject access export~~: built. Admins and supervisors download a zip with a readable report, the data as JSON and the original files; the download is recorded.
 11. Switch the sign-in app registration to multi-tenant (`AzureADMultipleOrgs`, `AZURE_AD_TENANT_ID=organizations`) so other agencies can sign in; send invitations by email rather than as copied links.
 12. Confirm MFA detection with a live sign-in: the Team page should show "With a second step" for an account that used one.
 

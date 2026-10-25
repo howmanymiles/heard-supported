@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { Submit, Status } from '../forms';
-import { addOfficeAction, renameOfficeAction, userOfficeAction, inviteAction, roleAction, deactivateAction, reactivateAction, revokeInviteAction, type InviteState } from './actions';
+import { addOfficeAction, renameOfficeAction, userOfficeAction, inviteAction, roleAction, deactivateAction, reactivateAction, revokeInviteAction, retentionAction, type InviteState } from './actions';
 import type { ActionState } from '../actions';
 
 export function AddOfficeForm() {
@@ -90,3 +90,16 @@ export function RoleForm({ userId, name, role }: { userId: string; name: string;
 export const DeactivateButton = ({ userId, name }: { userId: string; name: string }) => <Small act={deactivateAction} fields={{ userId }} label="Remove access" pending="Removing…" confirm={`Remove ${name}’s access now?`} />;
 export const ReactivateButton = ({ userId }: { userId: string }) => <Small act={reactivateAction} fields={{ userId }} label="Restore access" pending="Restoring…" />;
 export const RevokeInviteButton = ({ inviteId }: { inviteId: string }) => <Small act={revokeInviteAction} fields={{ inviteId }} label="Cancel" pending="Cancelling…" />;
+
+export function RetentionForm({ months, choices }: { months: number; choices: readonly number[] }) {
+  const [state, action] = useActionState(retentionAction, {});
+  return (
+    <form action={action} className="row">
+      <label className="field small-field">Keep a closed case’s content for
+        <select name="months" defaultValue={String(months)}>{choices.map(m => <option key={m} value={m}>{m < 12 ? `${m} months` : `${m / 12} year${m === 12 ? '' : 's'}`}</option>)}</select>
+      </label>
+      <div style={{ alignSelf: 'flex-end' }}><Submit pending="Saving…" primary={false}>Save</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}

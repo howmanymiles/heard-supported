@@ -4,7 +4,8 @@ import { canManage } from '@/lib/casework';
 import { listOffices } from '@/lib/offices';
 import { listPeople, listInvites, ROLES } from '@/lib/access';
 import { checkAudit } from '@/lib/auditlog';
-import { AddOfficeForm, RenameOfficeForm, UserOfficeForm, InviteForm, RoleForm, DeactivateButton, ReactivateButton, RevokeInviteButton } from './forms';
+import { getRetention, RETENTION_CHOICES } from '@/lib/retention';
+import { AddOfficeForm, RenameOfficeForm, UserOfficeForm, InviteForm, RoleForm, DeactivateButton, ReactivateButton, RevokeInviteButton, RetentionForm } from './forms';
 
 export const dynamic = 'force-dynamic';
 const day = (d: Date | string | null) => (d ? new Date(d).toISOString().slice(0, 10) : '–');
@@ -17,6 +18,7 @@ export default async function Team() {
   const active = people.filter(p => p.active), removed = people.filter(p => !p.active);
   const orphaned = removed.filter(p => p.open_cases > 0);
   const chain = admin ? await checkAudit(me) : null;
+  const retention = admin ? await getRetention(me) : null;
 
   return (
     <div className="stack-lg">
@@ -74,6 +76,15 @@ export default async function Team() {
         )}
         {manage && <AddOfficeForm />}
       </section>
+
+      {retention && (
+        <section className="panel stack" aria-label="Keeping information">
+          <h2 className="eyebrow">Keeping information</h2>
+          <p className="soft small">When a case has been closed this long, its documents, notes, drafts and letters are deleted and it is no longer linked to the client. Its outcome still counts in your reports. Set this to match your agency’s retention policy.</p>
+          <RetentionForm months={retention.months} choices={RETENTION_CHOICES} />
+          {retention.dueWithin30Days > 0 && <p className="msg">{retention.dueWithin30Days} closed case{retention.dueWithin30Days === 1 ? '' : 's'} will reach the end of the period in the next 30 days.</p>}
+        </section>
+      )}
 
       {chain && (
         <section className="panel stack" aria-label="Audit record">

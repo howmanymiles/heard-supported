@@ -71,11 +71,11 @@ export async function getCase(me: Me, id: string) {
 
 export async function getDocumentPages(me: Me, caseId: string, docId: string) {
   return asAgency(me.agencyId, async c => {
-    const d = await c.query('select id, name from documents where id = $1 and case_id = $2', [docId, caseId]);
+    const d = await c.query('select id, name, kind from documents where id = $1 and case_id = $2', [docId, caseId]);
     if (!d.rowCount) return null;
     const pages = (await c.query('select page_no, text, lines from pages where document_id = $1 order by page_no', [docId])).rows;
     const owner = (await c.query('select claimant_id from cases where id = $1', [caseId])).rows[0]?.claimant_id ?? null;
-    await viewed(c, me.agencyId, me.userId, { caseId, claimantId: owner, action: `Read the document “${d.rows[0].name}”` });
+    await viewed(c, me.agencyId, me.userId, { caseId, claimantId: owner, action: `Read a document (${d.rows[0].kind}, ${String(d.rows[0].id).slice(0, 8)})` });   // never the file name: it may name the client, and the audit record is permanent
     return { doc: d.rows[0], pages };
   });
 }

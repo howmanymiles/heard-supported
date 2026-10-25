@@ -52,3 +52,10 @@ export async function roleAction(_: ActionState, form: FormData) { return person
 export async function deactivateAction(_: ActionState, form: FormData) { return personAction(form, (me, a) => a.deactivate(me, String(form.get('userId'))), 'Access removed. They are signed out on their next click.'); }
 export async function reactivateAction(_: ActionState, form: FormData) { return personAction(form, (me, a) => a.reactivate(me, String(form.get('userId'))), 'Access restored.'); }
 export async function revokeInviteAction(_: ActionState, form: FormData) { return personAction(form, (me, a) => a.revokeInvite(me, String(form.get('inviteId'))), 'Invitation cancelled.'); }
+
+export async function retentionAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  try { await (await import('@/lib/retention')).setRetention(me, Number(form.get('months'))); } catch (e) { return { error: msg(e) }; }
+  revalidatePath('/team');
+  return { ok: 'Saved.' };
+}

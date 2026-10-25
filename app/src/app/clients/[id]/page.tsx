@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireMe } from '@/lib/auth';
 import { getClaimant, CONSENT_STATEMENT, CONSENT_METHODS } from '@/lib/claimants';
 import { clientHistory } from '@/lib/auditlog';
-import { EditClientForm, NewConsentForm, WithdrawForm, ClientCaseForm } from '../forms';
+import { EditClientForm, NewConsentForm, WithdrawForm, ClientCaseForm, EraseForm } from '../forms';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +56,22 @@ export default async function Client({ params }: { params: Promise<{ id: string 
       </section>
 
       <section className="panel stack" aria-label="Details"><h2 className="eyebrow">Details</h2><EditClientForm claimant={k} /></section>
+      {history && (
+        <section className="panel stack" aria-label="Subject access">
+          <h2 className="eyebrow">If your client asks what you hold</h2>
+          <p className="soft small">One download with everything held about this client: a readable report, the same data for a computer, and the original files. Giving it to them answers a subject access request. The download is recorded.</p>
+          <p><a className="btn" href={`/clients/${id}/export`} download>Download everything held</a></p>
+        </section>
+      )}
+      {me.role === 'admin' && (
+        <section className="panel stack" aria-label="Erase this client">
+          <details>
+            <summary><h2 className="eyebrow" style={{ display: 'inline' }}>Erase this client</h2></summary>
+            <p className="soft small">If your client asks to be forgotten, this deletes their details, consent records, every document and file, notes, drafts and letters, for all their cases, straight away. Case outcomes stay in your reports without anything that identifies them. The audit record keeps that it happened, never what was deleted. This can’t be undone. Check whether you need to keep anything first.</p>
+            <EraseForm claimantId={id} />
+          </details>
+        </section>
+      )}
       {history && (
         <section className="panel stack" aria-label="Who has used this record">
           <details>

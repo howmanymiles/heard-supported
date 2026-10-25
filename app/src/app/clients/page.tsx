@@ -11,6 +11,7 @@ export default async function Clients({ searchParams }: { searchParams: Promise<
   return (
     <div className="stack-lg">
       <div className="head"><h1>Clients</h1><p className="soft">Start here when a client sits down with you: record their consent, then create their record. Their cases sit under it.</p></div>
+      {sp.erased === '1' && <p className="msg msg-ok" role="status">The client has been erased. Their case outcomes still count in your reports.</p>}
       <div className="row">
         <form className="row" role="search" method="get" aria-label="Find a client">
           <label className="field small-field">Name or reference<input name="q" defaultValue={sp.q ?? ''} /></label>

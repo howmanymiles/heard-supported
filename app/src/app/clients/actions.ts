@@ -55,3 +55,9 @@ export async function clientCaseAction(_: ActionState, form: FormData): Promise<
   } catch (e) { return { error: msg(e) }; }
   redirect(`/cases/${id}`);
 }
+
+export async function eraseClientAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  try { await (await import('@/lib/retention')).eraseClient(me, text(form, 'claimantId'), text(form, 'confirmName')); } catch (e) { return { error: msg(e) }; }
+  redirect('/clients?erased=1');
+}

@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { Submit, Status } from '../forms';
-import { createClientAction, updateClientAction, consentAction, withdrawAction, clientCaseAction } from './actions';
+import { createClientAction, updateClientAction, consentAction, withdrawAction, clientCaseAction, eraseClientAction } from './actions';
 
 type Statement = { version: string; intro: string; items: ReadonlyArray<{ key: string; required: boolean; text: string }>; withdraw: string };
 const ITEM_LABEL: Record<string, string> = { store_data: 'Keeping their information', ai_processing: 'AI help', act_on_behalf: 'Acting on their behalf' };
@@ -103,6 +103,18 @@ export function ClientCaseForm({ claimantId }: { claimantId: string }) {
         <label className="field">Benefit<select name="benefit" defaultValue="pip"><option value="pip">Personal Independence Payment</option><option value="adp">Adult Disability Payment (Scotland)</option><option value="uc-wca">Universal Credit (WCA)</option></select></label>
       </div>
       <div><Submit pending="Creating…">Create case</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+export function EraseForm({ claimantId }: { claimantId: string }) {
+  const [state, action] = useActionState(eraseClientAction, {});
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="claimantId" value={claimantId} />
+      <label className="field">To confirm, type the client’s full name<input name="confirmName" required autoComplete="off" /></label>
+      <div><Submit pending="Erasing…" primary={false}>Erase this client permanently</Submit></div>
       <Status state={state} />
     </form>
   );
