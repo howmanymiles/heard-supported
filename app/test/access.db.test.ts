@@ -108,3 +108,17 @@ test('the first admin of a brand-new installation needs no invitation; nobody el
     await assert.rejects(ac.resolveSignIn(who('Else', `else-${T}@example.org`), null), code('no_invite'));
   } finally { delete process.env.BOOTSTRAP_ADMIN_EMAIL; }
 });
+
+test('an agency is tied to its Microsoft organisation: an account elsewhere claiming the invited email is refused', { skip }, async () => {
+  const id = await ac.signUpAgency({ name: 'Leith Advice', registeredNumber: '', contactName: 'Cy', contactEmail: `cy-${T}@leith.example`, acceptTerms: true });
+  const { token } = await ac.approveAgency(id, 'Stephen');
+  const cy = { ...(await ac.resolveSignIn(who('Cy', `cy-${T}@leith.example`, 'tenant-leith'), token)), name: 'Cy' } as any;
+  assert.equal((await db.pool().query('select entra_tenant_id from agencies where id = $1', [id])).rows[0].entra_tenant_id, 'tenant-leith');
+  const t2 = await ac.invite(cy, `dee-${T}@leith.example`, 'adviser', null);
+  // Someone with the link sets up their own organisation with an account reporting Dee's address.
+  await assert.rejects(ac.resolveSignIn(who('Fake', `dee-${T}@leith.example`, 'tenant-attacker'), t2), code('wrong_tenant'));
+  const dee = await ac.resolveSignIn(who('Dee', `dee-${T}@leith.example`, 'tenant-leith'), t2);
+  assert.equal(dee.role, 'adviser');
+  // The same object id in another organisation is a different account.
+  await assert.rejects(ac.resolveSignIn({ ...who('Dee', `dee-${T}@leith.example`, 'tenant-other') }, null), code('no_invite'));
+});

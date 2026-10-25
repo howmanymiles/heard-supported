@@ -50,11 +50,20 @@ export function InviteForm({ offices, canInviteAll }: { offices: Array<{ id: str
         <label className="field">Work email<input type="email" name="email" required maxLength={200} autoComplete="off" /></label>
         <label className="field small-field">Role<select name="role" defaultValue="adviser"><option value="adviser">Adviser</option>{canInviteAll && <><option value="supervisor">Supervisor</option><option value="admin">Admin</option></>}</select></label>
         {offices.length > 0 && <label className="field small-field">Office<select name="officeId" defaultValue=""><option value="">No office set</option>{offices.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
-        <div style={{ alignSelf: 'flex-end' }}><Submit pending="Creating…">Create invitation</Submit></div>
+        <div style={{ alignSelf: 'flex-end' }}><Submit pending="Sending…">Send invitation</Submit></div>
       </div>
       {state.error && <p className="msg msg-error" role="alert">{state.error}</p>}
-      {state.link && (
+      {state.emailed && (
         <div className="msg msg-ok stack" role="status">
+          <p>{state.ok} It works once, for that address only, and expires in 7 days.</p>
+          <details><summary className="small">Not arrived? Copy the link instead</summary>
+            <p><input readOnly value={state.link} aria-label="Invitation link" className="mono" style={{ width: '100%' }} onFocus={e => e.currentTarget.select()} /></p>
+          </details>
+        </div>
+      )}
+      {state.link && !state.emailed && (
+        <div className="msg msg-ok stack" role="status">
+          {state.ok !== 'Invitation created.' && <p>{state.ok}</p>}
           <p>Send this link to <b>{state.email}</b> yourself, by your work email. It works once, for that address only, and expires in 7 days. You won’t see it again.</p>
           <p><input readOnly value={state.link} aria-label="Invitation link" className="mono" style={{ width: '100%' }} onFocus={e => e.currentTarget.select()} /></p>
           <p><button type="button" className="btn btn-small" onClick={() => navigator.clipboard?.writeText(state.link!)}>Copy link</button></p>

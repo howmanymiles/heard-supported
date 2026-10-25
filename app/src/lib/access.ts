@@ -32,6 +32,7 @@ export const SIGN_IN_PROBLEMS: Record<string, string> = {
   expired: 'This invitation has expired. Ask your agency’s admin for a new one.',
   agency_pending: 'Your agency’s account is not active yet.',
   mfa_required: 'Heard & Supported needs a sign-in with a second step, such as the Microsoft Authenticator app or a code by text. Ask your IT team to turn on multi-factor sign-in for your account, then sign in again.',
+  wrong_tenant: 'This invitation is for an account in your agency’s own Microsoft organisation. Sign in with your work account there, not a personal or other organisation’s account. If your agency uses more than one, contact us.',
   expired_session: 'You were signed out because the session ended: after 30 minutes without activity, or 8 hours after signing in. Sign in again to carry on.',
   wrong_account: 'You signed in with a different account from the one the invitation was sent to. Sign out of Microsoft, then open the invitation again and sign in with the invited account.',
   denied: 'You can’t sign in to Heard & Supported with this account.',
@@ -76,6 +77,10 @@ export async function setAgencyStatus(agencyId: string, status: 'active' | 'susp
 }
 
 // ---------- invitations ----------
+
+export async function agencyName(me: Me): Promise<string> {
+  return (await pool().query('select name from agencies where id = $1', [me.agencyId])).rows[0]?.name ?? 'your agency';
+}
 
 async function insertInvite(c: import('pg').PoolClient, agencyId: string, email: string, role: Role, officeId: string | null, by: string | null) {
   const token = randomBytes(32).toString('base64url');
@@ -143,7 +148,8 @@ export async function resolveSignIn(id: Identity, inviteToken: string | null): P
   const c = await pool().connect();
   try {
     await c.query('begin');
-    const u = (await c.query('select u.id, u.agency_id, u.role, u.active, a.status from users u join agencies a on a.id = u.agency_id where u.entra_oid = $1', [id.oid])).rows[0];
+    // The account is the pair (tenant, object id): an object id is only unique within its tenant.
+    const u = (await c.query('select u.id, u.agency_id, u.role, u.active, a.status from users u join agencies a on a.id = u.agency_id where u.entra_oid = $1 and (u.entra_tenant_id is null or u.entra_tenant_id = $2)', [id.oid, id.tid])).rows[0];
     if (u) {
       if (!u.active) throw deny('removed');
       if (u.status !== 'active') throw deny('agency_inactive');
@@ -155,7 +161,7 @@ export async function resolveSignIn(id: Identity, inviteToken: string | null): P
       // A brand-new installation only: the named first admin sets up the first agency.
       const first = process.env.BOOTSTRAP_ADMIN_EMAIL;
       if (first && hasEmail(id, first) && !(await c.query('select 1 from users limit 1')).rowCount) {
-        const ag = (await c.query("insert into agencies (name, status, contact_email, approved_at, approved_by) values ('Development agency', 'active', $1, now(), 'first sign-in') returning id", [normEmail(first)])).rows[0].id;
+        const ag = (await c.query("insert into agencies (name, status, contact_email, approved_at, approved_by, entra_tenant_id) values ('Development agency', 'active', $1, now(), 'first sign-in', $2) returning id", [normEmail(first), id.tid])).rows[0].id;
         const nu = (await c.query("insert into users (agency_id, entra_oid, entra_tenant_id, name, email, role, last_sign_in_at) values ($1, $2, $3, $4, $5, 'admin', now()) returning id", [ag, id.oid, id.tid, id.name || null, normEmail(first)])).rows[0].id;
         await asIn(c, ag);
         await audit(c, ag, nu, null, 'First admin set up the installation');
@@ -164,12 +170,17 @@ export async function resolveSignIn(id: Identity, inviteToken: string | null): P
       }
       throw deny('no_invite');
     }
-    const inv = (await c.query(`select i.*, a.status from invites i join agencies a on a.id = i.agency_id where i.token_hash = $1 for update of i`, [hash(inviteToken)])).rows[0];
+    const inv = (await c.query(`select i.*, a.status, a.entra_tenant_id as agency_tenant from invites i join agencies a on a.id = i.agency_id where i.token_hash = $1 for update of i`, [hash(inviteToken)])).rows[0];
     if (!inv || inv.revoked_at) throw deny('invalid');
     if (inv.accepted_at) throw deny('used');
     if (new Date(inv.expires_at) < new Date()) throw deny('expired');
     if (inv.status !== 'active') throw deny('agency_pending');
     if (!hasEmail(id, inv.email)) throw deny('wrong_account');
+    // Each agency is tied to one Microsoft organisation: the one its first person signed in from.
+    // Microsoft doesn't verify the email an account reports, so without this someone could set
+    // up their own organisation with an account claiming an invited address.
+    if (inv.agency_tenant && inv.agency_tenant !== id.tid) throw deny('wrong_tenant');
+    if (!inv.agency_tenant) await c.query('update agencies set entra_tenant_id = $2 where id = $1 and entra_tenant_id is null', [inv.agency_id, id.tid]);
     const nu = (await c.query(`insert into users (agency_id, entra_oid, entra_tenant_id, name, email, role, office_id, last_sign_in_at) values ($1, $2, $3, $4, $5, $6, $7, now()) returning id`,
       [inv.agency_id, id.oid, id.tid, id.name || null, inv.email, inv.role, inv.office_id])).rows[0].id;
     await c.query('update invites set accepted_at = now(), accepted_user_id = $2 where id = $1', [inv.id, nu]);

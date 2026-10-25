@@ -39,6 +39,16 @@ param modelFormat string = 'OpenAI'
 @allowed([0, 1])
 param minReplicas int = 0
 
+@description('Who can sign in: single (our own Microsoft organisation only) or multi (any organisation; invitations still decide who gets in). The app registration must match: az ad app update --sign-in-audience AzureADMultipleOrgs.')
+@allowed(['single', 'multi'])
+param signInAudience string = 'single'
+
+@description('Send invitation emails through Azure Communication Services. Needs the Microsoft.Communication provider registered first.')
+param enableEmail bool = false
+
+@description('Address shown for support, and used as reply-to on emails. Empty for none.')
+param supportEmail string = ''
+
 @description('Model deployment type. DataZoneStandard keeps processing in the EU; Standard keeps it in aiLocation. GlobalStandard is for synthetic data only.')
 @allowed(['DataZoneStandard', 'Standard', 'GlobalStandard'])
 param modelSku string = 'DataZoneStandard'
@@ -249,7 +259,41 @@ var roles = {
   cognitiveServicesUser: 'a97b65f3-24c7-4388-baec-2e87135dc908'
   openAiUser: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
   kvSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6'
+  contributor: 'b24988ac-6180-42a0-ab88-20f7382dd24c'   // only on the email resource: sending with Entra ID needs it
 }
+
+// ---------- Email (invitations) ----------
+// Azure-managed sender domain for now; a heardsupported.co.uk domain can replace it once its DNS records are added.
+resource emailService 'Microsoft.Communication/emailServices@2023-04-01' = if (enableEmail) {
+  name: 'hs-${env}-email-${take(suffix, 8)}'
+  location: 'global'
+  properties: { dataLocation: 'UK' }
+}
+
+resource emailDomain 'Microsoft.Communication/emailServices/domains@2023-04-01' = if (enableEmail) {
+  parent: emailService
+  name: 'AzureManagedDomain'
+  location: 'global'
+  properties: { domainManagement: 'AzureManaged', userEngagementTracking: 'Disabled' }
+}
+
+resource comms 'Microsoft.Communication/communicationServices@2023-04-01' = if (enableEmail) {
+  name: 'hs-${env}-comms-${take(suffix, 8)}'
+  location: 'global'
+  properties: { dataLocation: 'UK', linkedDomains: [emailDomain.id] }
+}
+
+resource raEmail 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (enableEmail) {
+  name: guid(comms.id, appIdentity.id, roles.contributor)
+  scope: comms
+  properties: { principalId: appIdentity.properties.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.contributor) }
+}
+
+var emailEnv = enableEmail ? [
+  { name: 'EMAIL_ENDPOINT', value: 'https://${comms!.properties.hostName}' }
+  { name: 'EMAIL_FROM', value: 'DoNotReply@${emailDomain!.properties.mailFromSenderDomain}' }
+] : []
+var supportEnv = empty(supportEmail) ? [] : [ { name: 'SUPPORT_EMAIL', value: supportEmail } ]
 
 resource raBlob 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(storage.id, appIdentity.id, roles.blobDataContributor)
@@ -299,13 +343,13 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'app'
           image: image
           resources: { cpu: json('0.5'), memory: '1Gi' }
-          env: [
+          env: concat([
             { name: 'DATABASE_URL', secretRef: 'database-url' }
             { name: 'AZURE_AD_CLIENT_SECRET', secretRef: 'entra-client-secret' }
             { name: 'NEXTAUTH_SECRET', secretRef: 'nextauth-secret' }
             { name: 'AZURE_CLIENT_ID', value: appIdentity.properties.clientId }   // which identity the Azure SDK signs in as
             { name: 'AZURE_AD_CLIENT_ID', value: entraClientId }
-            { name: 'AZURE_AD_TENANT_ID', value: entraTenantId }
+            { name: 'AZURE_AD_TENANT_ID', value: signInAudience == 'multi' ? 'organizations' : entraTenantId }
             { name: 'NEXTAUTH_URL', value: appUrl }
             { name: 'DOCINTEL_ENDPOINT', value: docIntel.properties.endpoint }
             { name: 'AI_ENDPOINT', value: ai.properties.endpoints['OpenAI Language Model Instance API'] }
@@ -314,7 +358,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'STORAGE_CONTAINER', value: docsContainer.name }
             { name: 'DATA_MODE', value: 'synthetic-only' }
             { name: 'BOOTSTRAP_ADMIN_EMAIL', value: firstAdminEmail }
-          ]
+          ], emailEnv, supportEnv)
           probes: [
             { type: 'Startup', httpGet: { path: '/signup', port: 3000 }, initialDelaySeconds: 3, periodSeconds: 5, failureThreshold: 24 }
           ]

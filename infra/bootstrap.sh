@@ -28,7 +28,7 @@ read -r -p "Is this the right subscription, and NOT connected to any employer? [
 [[ "$ok" =~ ^[Yy]$ ]] || { echo "Stopped. Switch with: az account set --subscription <id>"; exit 1; }
 
 echo "== Registering resource providers (first time only, can take a few minutes)"
-for p in Microsoft.App Microsoft.ContainerRegistry Microsoft.OperationalInsights Microsoft.ManagedIdentity Microsoft.DBforPostgreSQL Microsoft.Storage Microsoft.KeyVault Microsoft.CognitiveServices Microsoft.Consumption; do
+for p in Microsoft.App Microsoft.ContainerRegistry Microsoft.OperationalInsights Microsoft.ManagedIdentity Microsoft.DBforPostgreSQL Microsoft.Storage Microsoft.KeyVault Microsoft.CognitiveServices Microsoft.Consumption Microsoft.Communication; do
   az provider register --namespace "$p" --wait >/dev/null
 done
 

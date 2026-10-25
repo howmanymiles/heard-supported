@@ -28,17 +28,30 @@ export async function userOfficeAction(_: ActionState, form: FormData): Promise<
   return { ok: 'Saved. Their open cases moved with them.' };
 }
 
-export type InviteState = ActionState & { link?: string; email?: string };
+export type InviteState = ActionState & { link?: string; email?: string; emailed?: boolean };
 
 export async function inviteAction(_: InviteState, form: FormData): Promise<InviteState> {
   const me = await requireMe();
   const { invite } = await import('@/lib/access');
   const email = String(form.get('email') ?? '');
   try {
-    const token = await invite(me, email, String(form.get('role') ?? 'adviser'), String(form.get('officeId') ?? '') || null);
+    const role = String(form.get('role') ?? 'adviser');
+    const token = await invite(me, email, role, String(form.get('officeId') ?? '') || null);
     const base = process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
+    const link = `${base.replace(/\/$/, '')}/invite/${token}`, to = email.trim().toLowerCase();
     revalidatePath('/team');
-    return { ok: 'Invitation created.', link: `${base.replace(/\/$/, '')}/invite/${token}`, email: email.trim().toLowerCase() };
+    const mail = await import('@/lib/email');
+    if (mail.emailEnabled()) {
+      try {
+        const { agencyName, ROLES, INVITE_DAYS } = await import('@/lib/access');
+        await mail.sendMail(mail.inviteMail({ to, agency: await agencyName(me), inviter: me.name || 'Your agency’s admin', role: (role === 'admin' ? 'an ' : 'a ') + ROLES[role as keyof typeof ROLES].toLowerCase(), link, days: INVITE_DAYS }));
+        return { ok: `Invitation emailed to ${to}.`, email: to, emailed: true, link };
+      } catch (e) {
+        console.error('Invitation email failed:', e instanceof Error ? e.message : e);
+        return { ok: 'The invitation was created, but the email couldn’t be sent. Send them this link instead.', link, email: to };
+      }
+    }
+    return { ok: 'Invitation created.', link, email: to };
   } catch (e) { return { error: msg(e) }; }
 }
 

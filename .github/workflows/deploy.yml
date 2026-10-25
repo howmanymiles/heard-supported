@@ -112,6 +112,9 @@ jobs:
               budgetEmail="${{ vars.BUDGET_EMAIL }}" \
               firstAdminEmail="${{ vars.FIRST_ADMIN_EMAIL || vars.BUDGET_EMAIL }}" \
               budgetStart="${{ vars.BUDGET_START }}" \
+              signInAudience="${{ vars.SIGN_IN_AUDIENCE || 'single' }}" \
+              enableEmail="${{ vars.ENABLE_EMAIL || 'false' }}" \
+              supportEmail="${{ vars.SUPPORT_EMAIL }}" \
             --query properties.outputs -o json)
           echo "url=$(jq -r .webUrl.value <<<"$out")" >> "$GITHUB_OUTPUT"
           echo "redirect=$(jq -r .signInRedirect.value <<<"$out")" >> "$GITHUB_OUTPUT"

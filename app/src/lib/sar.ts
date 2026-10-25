@@ -6,13 +6,13 @@
 import { crc32 } from 'node:zlib';
 import { activityList, terms, type Benefit } from '@hs/core';
 import { asAgency, audit } from './db.ts';
+import { esc } from './html.ts';
 import type { Me } from './auth.ts';
 
 type BlobReader = (path: string) => Promise<Buffer>;
 let readBlob: BlobReader = async p => (await import('./storage.ts')).getDocument(p);
 export function setBlobReaderForTests(f: BlobReader) { readBlob = f; }
 
-const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 const day = (d: unknown) => (d ? new Date(d as string).toLocaleDateString('en-GB', { timeZone: 'Europe/London', dateStyle: 'long' }) : '');
 const when = (d: unknown) => (d ? new Date(d as string).toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' }) : '');
 const safeName = (s: string) => s.replace(/[^\w .()-]+/g, '_').slice(0, 100) || 'file';
