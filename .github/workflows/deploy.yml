@@ -24,8 +24,8 @@ jobs:
       # A non-superuser, so the row-level security tests mean something.
       TEST_DATABASE_URL: postgres://hsapp:hsapp@localhost:5432/hstest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 22, cache: npm }
       - name: Create test database
         env: { PGPASSWORD: postgres }
@@ -33,6 +33,8 @@ jobs:
           psql -h localhost -U postgres -c "create role hsapp login password 'hsapp'"
           psql -h localhost -U postgres -c "create database hstest owner hsapp"
       - run: npm ci
+      - name: No known high or critical vulnerabilities in what we ship
+        run: node scripts/audit-gate.mjs
       - run: npm test --workspaces --if-present
       - run: npm run typecheck -w app
 
@@ -43,12 +45,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 22, cache: npm }
 
       - name: Sign in to Azure (OIDC)
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -63,14 +65,26 @@ jobs:
           echo "server=$(jq -r .registryServer.value <<<"$out")" >> "$GITHUB_OUTPUT"
           echo "identity=$(jq -r .identityName.value <<<"$out")" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push the app image
+      - name: Build the app image
         id: img
         run: |
           az acr login --name "${{ steps.reg.outputs.name }}"
           image="${{ steps.reg.outputs.server }}/heard-supported:${{ github.sha }}"
           docker build -t "$image" .
-          docker push "$image"
           echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      # Grype rather than Trivy: Trivy's action and releases were compromised in March 2026.
+      - name: Scan the image before it is pushed
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
+        with:
+          image: ${{ steps.img.outputs.image }}
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+
+      - name: Push the image
+        run: |
+          docker push "${{ steps.img.outputs.image }}"
 
       - name: Deploy infrastructure and app
         id: infra

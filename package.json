@@ -12,5 +12,8 @@
   },
   "scripts": {
     "test": "npm test --workspaces --if-present"
+  },
+  "overrides": {
+    "postcss": "^8.5.31"
   }
 }

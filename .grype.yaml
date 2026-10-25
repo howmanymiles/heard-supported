@@ -1,0 +1,9 @@
+# Image scan exceptions. Each one must say why it does not apply; keep in step with
+# scripts/audit-gate.mjs.
+ignore:
+  # MSAL Node authorization code flow. The app never uses it (managed identity only;
+  # users sign in through next-auth). @azure/identity does not yet accept the fixed
+  # msal-node 7.1. Review by 2027-01-31.
+  - vulnerability: GHSA-xcx6-jx8p-x3h5
+    package:
+      name: "@azure/msal-node"
