@@ -21,7 +21,7 @@ export default async function OutcomePage({ params }: { params: Promise<{ id: st
   // The award challenged, as far as the system knows it: the DWP position for PIP, the notice for WCA.
   let beforeDefault: { daily_living?: string; mobility?: string; wca?: string } | null = null;
   if (cs.benefit !== 'uc-wca') {
-    const { comparison } = buildComparison(m.choices, m.decisions, m.evidence, cs.benefit);
+    const { comparison } = buildComparison(m.choices, m.decisions, m.evidence, cs.benefit, cs.decision_date);
     if (comparison) beforeDefault = { daily_living: comparison.dailyLiving.assessor.rate, mobility: comparison.mobility.assessor.rate };
   } else if (cs.decision_outcome) beforeDefault = { wca: cs.decision_outcome };
   const ap = await getAppeal(me, id);

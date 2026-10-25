@@ -1,0 +1,6 @@
+{
+ "meta": {
+  "note": "Superseded versions of the law library. When the law changes, move the old benefit entry here (adding in_force_to: the day before the new text took effect) and update descriptors.json. See docs/law-updates.md."
+ },
+ "benefits": []
+}

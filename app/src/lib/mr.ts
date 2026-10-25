@@ -6,7 +6,7 @@ import { extractAssessor, mrTiming, activityList, terms, type MrTiming } from '@
 import { comparePip, type PipComparison, type EvidenceRef } from '@hs/engine';
 import { asAgency, audit } from './db.ts';
 import { getCase, readUnread, readPages, type DecisionRow, type EvidenceRow } from './cases.ts';
-import { data, pipInputs } from './score.ts';
+import { lawForCase, pipInputs, syncLawVersion } from './score.ts';
 import type { Me } from './auth.ts';
 import { aiGate } from './claimants.ts';
 
@@ -66,6 +66,7 @@ export async function readAssessment(me: Me, caseId: string) {
   await asAgency(me.agencyId, async c => {
     await storeChoices(c, me, caseId, r.activities.map(a => ({ key: `pip:${a.activity}`, letter: a.letter, source: a.source, decision: a.decisionQuote ?? a.pointsQuote, report: a.pa4Quote, justification: a.justification, departs: a.departs, candidates: a.candidates })));
     if (r.decisionDate) await c.query('update cases set decision_date = coalesce(decision_date, $2) where id = $1', [caseId, r.decisionDate.date]);
+    await syncLawVersion(c, caseId);
     await c.query("update cases set stage = 'mr' where id = $1 and stage in ('claim', 'assessment', 'decision')", [caseId]);
     const resolved = r.activities.filter(a => a.letter).length;
     await c.query("insert into extraction_runs (agency_id, case_id, model, dataset_version, verified, rejected, identifiers_removed, created_by, kind) values ($1, $2, $3, $4, $5, $6, $7, $8, 'assessment')",
@@ -79,7 +80,9 @@ export async function readAssessment(me: Me, caseId: string) {
 export async function setAssessorChoice(me: Me, caseId: string, activity: string, letter: string) {
   let label: string;
   if (activity.startsWith('pip:')) {
-    const scheme = (await asAgency(me.agencyId, c => c.query('select benefit from cases where id = $1', [caseId]))).rows[0]?.benefit === 'adp' ? 'adp' : 'pip';
+    const row = (await asAgency(me.agencyId, c => c.query('select benefit, decision_date from cases where id = $1', [caseId]))).rows[0];
+    const scheme = row?.benefit === 'adp' ? 'adp' : 'pip';
+    const data = lawForCase(scheme, row?.decision_date).data;
     const act = activityList(scheme).find(a => a.key === activity);
     if (!act) throw new Error('Unknown activity.');
     const n = Number(activity.split(':')[1]);
@@ -117,6 +120,7 @@ export async function saveMrDates(me: Me, caseId: string, decisionDate: string |
   if (outcome !== undefined && outcome !== null && !['none', 'lcw', 'lcwra'].includes(outcome)) throw new Error('Choose the award in the decision notice.');
   await asAgency(me.agencyId, async c => {
     await c.query('update cases set decision_date = $2, mr_request_date = $3, late_reason = $4 where id = $1', [caseId, decisionDate, requestDate, lateReason.trim().slice(0, 2000) || null]);
+    await syncLawVersion(c, caseId);
     if (outcome !== undefined) await c.query('update cases set decision_outcome = $2 where id = $1', [caseId, outcome]);
     await audit(c, me.agencyId, me.userId, caseId, 'Reconsideration dates updated');
   });
@@ -131,7 +135,7 @@ export async function saveMrDraft(me: Me, caseId: string, text: string) {
 
 // ---------- pure: comparison and draft ----------
 
-export function buildComparison(choices: ChoiceRow[], decisions: DecisionRow[], evidence: EvidenceRow[], benefit: string = 'pip'):
+export function buildComparison(choices: ChoiceRow[], decisions: DecisionRow[], evidence: EvidenceRow[], benefit: string = 'pip', decisionDate?: unknown):
   { comparison: PipComparison | null; missing: number[]; unconfirmed: number[] } {
   const pip = choices.filter(c => c.activity.startsWith('pip:'));
   const has = (n: number) => pip.find(c => c.activity === `pip:${n}` && c.letter);
@@ -149,6 +153,7 @@ export function buildComparison(choices: ChoiceRow[], decisions: DecisionRow[], 
     const n = Number(c.activity.split(':')[1]);
     return { activity: n, letter: c.letter!, justification: c.justification ? { doc: c.justification.docId, page: c.justification.page, quote: c.justification.quote } : undefined };
   });
+  const data = lawForCase(benefit === 'adp' ? 'adp' : 'pip', decisionDate).data;
   return { comparison: comparePip(data, assessor, pipInputs(decisions), refs, benefit === 'adp' ? 'adp' : 'pip'), missing, unconfirmed };
 }
 

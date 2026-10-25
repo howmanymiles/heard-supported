@@ -5,7 +5,7 @@ import { extractWcaAssessor, type WcaAssessorDoc } from '@hs/core';
 import { assessWca, type EvidenceRef, type WcaResult } from '@hs/engine';
 import { asAgency, audit } from './db.ts';
 import { readUnread, readPages, RISK_KEYS, type DecisionRow, type EvidenceRow, type getCase } from './cases.ts';
-import { data, wcaInputs } from './score.ts';
+import { data, lawForCase, wcaInputs, syncLawVersion } from './score.ts';
 import { storeChoices, type ChoiceRow, type Quote } from './mr.ts';
 import type { MrTiming } from '@hs/core';
 import type { Me } from './auth.ts';
@@ -45,6 +45,7 @@ export async function readWcaAssessment(me: Me, caseId: string, base: Base) {
       { key: 'sch9:4', letter: r.sch9_4.value, source: 'report', report: r.sch9_4.quote, justification: r.sch9_4.justification },
     ]);
     if (r.decisionDate) await c.query('update cases set decision_date = coalesce(decision_date, $2) where id = $1', [caseId, r.decisionDate.date]);
+    await syncLawVersion(c, caseId);
     if (r.outcome.value) await c.query('update cases set decision_outcome = coalesce(decision_outcome, $2), decision_outcome_quote = coalesce(decision_outcome_quote, $3) where id = $1',
       [caseId, r.outcome.value, { docId: r.outcome.cite!.docId, page: r.outcome.cite!.page, quote: r.outcome.cite!.quote }]);
     await c.query("update cases set stage = 'mr' where id = $1 and stage in ('claim', 'assessment', 'decision')", [caseId]);
@@ -98,10 +99,10 @@ const outcomeOf = (r: WcaResult) => (r.lcwra.result ? 'lcwra' : r.lcw.result ? '
 const RANK: Record<string, number> = { none: 0, lcw: 1, lcwra: 2 };
 
 /** Without the report: the adviser's position, set against the award in the notice. */
-function positionOnly(decisions: DecisionRow[], evidence: EvidenceRow[], noticeOutcome: string | null): WcaComparison {
+function positionOnly(decisions: DecisionRow[], evidence: EvidenceRow[], noticeOutcome: string | null, law: typeof data = data): WcaComparison {
   const refs = (key: string) => evidence.filter(e => e.status === 'accepted' && e.activities.includes(key)).map(e => ({ doc: e.doc_name, page: e.page_no, quote: e.quote }));
   const adv = wcaInputs(decisions);
-  const advR = assessWca(data, adv);
+  const advR = assessWca(law, adv);
   const rows: WcaRow[] = [];
   for (const a of advR.lcwra.descriptors) rows.push({ key: 'sch7', label: 'Schedule 7', group: 'lcwra', dwp: 'unknown', adviser: a.id, dwpPoints: 0, adviserPoints: 0, status: 'challenge', gain: 0, justification: null, evidence: refs(`sch7:${a.activity}`), dwpText: '', adviserText: `${a.id} ${a.text}` });
   if (adv.treatedAsLcwra.length) rows.push({ key: 'sch9:4', label: RISK_KEYS['sch9:4'], group: 'lcwra', dwp: 'unknown', adviser: 'applies', dwpPoints: 0, adviserPoints: 0, status: 'challenge', gain: 0, justification: null, evidence: refs('sch9:4'), dwpText: '', adviserText: 'Applies' });
@@ -118,9 +119,10 @@ function positionOnly(decisions: DecisionRow[], evidence: EvidenceRow[], noticeO
   return { mode: 'outcome_only', rows, challenges: rows, agreed: [], dwp: null, adviser: advR, dwpOutcome: noticeOutcome ?? 'none', adviserOutcome, warnings };
 }
 
-export function buildWcaComparison(choices: ChoiceRow[], decisions: DecisionRow[], evidence: EvidenceRow[], noticeOutcome: string | null, hasReport = true):
+export function buildWcaComparison(choices: ChoiceRow[], decisions: DecisionRow[], evidence: EvidenceRow[], noticeOutcome: string | null, hasReport = true, decisionDate?: unknown):
   { comparison: WcaComparison | null; missing: string[]; unconfirmed: string[] } {
-  if (!hasReport) return { comparison: positionOnly(decisions, evidence, noticeOutcome), missing: [], unconfirmed: [] };
+  const law = lawForCase('uc-wca', decisionDate).data;
+  if (!hasReport) return { comparison: positionOnly(decisions, evidence, noticeOutcome, law), missing: [], unconfirmed: [] };
   const get = (k: string) => choices.find(c => c.activity === k);
   const keys = [...sch6.map(a => `sch6:${a.number}`), 'sch7', 'sch8:4', 'sch9:4'];
   const missing = keys.filter(k => !get(k)?.letter);
@@ -147,8 +149,8 @@ export function buildWcaComparison(choices: ChoiceRow[], decisions: DecisionRow[
     treatedAsLcw: dec('sch8:4') ? adv.treatedAsLcw : dwpIn.treatedAsLcw,
     treatedAsLcwra: dec('sch9:4') ? adv.treatedAsLcwra : dwpIn.treatedAsLcwra,
   };
-  const dwpR = assessWca(data, dwpIn);
-  const advR = assessWca(data, advIn);
+  const dwpR = assessWca(law, dwpIn);
+  const advR = assessWca(law, advIn);
 
   const rows: WcaRow[] = [];
   for (const a of sch6) {

@@ -165,7 +165,7 @@ export async function draftAction(_: ActionState, form: FormData): Promise<Actio
   if (!mr) return { error: 'Case not found.' };
   if (mr.case.benefit === 'uc-wca') {
     const { buildWcaComparison, buildWcaDraft } = await import('@/lib/mr-wca');
-    const w = buildWcaComparison(mr.choices, mr.decisions, mr.evidence, mr.case.decision_outcome, mr.docs.some(d => d.kind === 'uc85' || d.kind === 'uc85a'));
+    const w = buildWcaComparison(mr.choices, mr.decisions, mr.evidence, mr.case.decision_outcome, mr.docs.some(d => d.kind === 'uc85' || d.kind === 'uc85a'), mr.case.decision_date);
     if (!w.comparison) return { error: `The DWP finding is still missing for ${w.missing.join(', ')}.` };
     if (w.unconfirmed.length) return { error: `Confirm the DWP finding for ${w.unconfirmed.join(', ')} first.` };
     const report = mr.docs.find(d => d.kind === 'uc85a') ? 'UC85A report' : 'UC85 report';
@@ -175,7 +175,7 @@ export async function draftAction(_: ActionState, form: FormData): Promise<Actio
   }
   const b = mr.case.benefit === 'adp' ? 'adp' : 'pip';
   const who = b === 'adp' ? 'Social Security Scotland' : 'DWP';
-  const { comparison, missing, unconfirmed } = buildComparison(mr.choices, mr.decisions, mr.evidence, b);
+  const { comparison, missing, unconfirmed } = buildComparison(mr.choices, mr.decisions, mr.evidence, b, mr.case.decision_date);
   if (!comparison || missing.length) return { error: `The ${who} descriptor is still missing for activity ${missing.join(', ')}.` };
   if (unconfirmed.length) return { error: `Confirm the ${who} descriptor for activity ${unconfirmed.join(', ')} first.` };
   const labels = Object.fromEntries(activityList(b).map(a => [Number(a.key.split(':')[1]), a.label]));

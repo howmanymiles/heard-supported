@@ -64,6 +64,7 @@ a { color: var(--accent); }
 .msg { padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; }
 .msg-error { background: var(--bad-bg); color: var(--bad-fg); }
 .msg-ok { background: var(--good-bg); color: var(--good-fg); }
+.msg-warn { background: var(--warn-bg); color: var(--warn-fg); }
 .inline { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .table-wrap { overflow-x: auto; }
 table.list { width: 100%; border-collapse: collapse; font-size: 15px; }

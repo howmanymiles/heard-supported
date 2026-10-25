@@ -87,7 +87,8 @@
     "provision": "Sch 1; regs 7-10",
     "fetched": "2026-10-25"
    }
-  ]
+  ],
+  "in_force_note": "in_force_from: the earliest date from which the text held gives the same descriptors, points and rules, checked against the point-in-time versions on legislation.gov.uk on 2026-10-25. Later changes that alter wording but not scoring are listed in changes_since. A decision before in_force_from is worked under an archived version in history.json, if one is held, and flagged otherwise. To be confirmed by expert review."
  },
  "benefits": [
   {
@@ -969,6 +970,11 @@
      "verified": true,
      "note_numbering": "Numbered 2 in Sch 1 Pt 3; conventionally referred to as activity 12."
     }
+   ],
+   "in_force_from": "2017-03-16",
+   "changes_since": [
+    "2024-12-13: physician associates added to the professionals in daily living activity 3 (wording only; no change to points).",
+    "2022-03-21: regulation 7 refers to regulation 15A as well as 15 (wording only)."
    ]
   },
   {
@@ -2050,6 +2056,10 @@
      "ref": "UC Regs Sch 9 para 5",
      "verified": true
     }
+   ],
+   "in_force_from": "2013-04-29",
+   "changes_since": [
+    "2025-03-21: Schedules 8 and 9 add Scottish adult disability living allowance to the qualifying benefits; it did not exist before."
    ]
   },
   {
@@ -2857,6 +2867,10 @@
      "evidence_prompts": [],
      "verified": true
     }
+   ],
+   "in_force_from": "2022-03-21",
+   "changes_since": [
+    "2022-08-29: regulation 7(2)(a) also refers to the mobility table in Part 3 of Schedule 1 (correction)."
    ]
   }
  ]

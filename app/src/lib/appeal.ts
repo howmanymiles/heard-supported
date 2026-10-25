@@ -39,7 +39,7 @@ export function issuesFor(a: NonNullable<Awaited<ReturnType<typeof getAppeal>>>)
   if (isPipLike(a.case.benefit)) {
     const b = a.case.benefit;
     const who = b === 'adp' ? 'Social Security Scotland' : 'DWP';
-    const { comparison: c, missing, unconfirmed } = buildComparison(a.choices, a.decisions, a.evidence, b);
+    const { comparison: c, missing, unconfirmed } = buildComparison(a.choices, a.decisions, a.evidence, b, a.case.decision_date);
     if (!c) return { issues: [], summary: null, blocked: `The ${who} descriptor is missing for activity ${missing.join(', ')}. Complete the ${b === 'adp' ? 're-determination' : 'reconsideration'} tab first.` };
     if (unconfirmed.length) return { issues: [], summary: null, blocked: `Confirm the ${who} descriptor for activity ${unconfirmed.join(', ')} on the ${b === 'adp' ? 're-determination' : 'reconsideration'} tab.` };
     const labels = Object.fromEntries(activityList(b).map(x => [x.key, x.label]));
@@ -57,7 +57,7 @@ export function issuesFor(a: NonNullable<Awaited<ReturnType<typeof getAppeal>>>)
     };
   }
   const hasReport = a.docs.some(d => d.kind === 'uc85' || d.kind === 'uc85a');
-  const { comparison: c, missing, unconfirmed } = buildWcaComparison(a.choices, a.decisions, a.evidence, a.case.decision_outcome, hasReport);
+  const { comparison: c, missing, unconfirmed } = buildWcaComparison(a.choices, a.decisions, a.evidence, a.case.decision_outcome, hasReport, a.case.decision_date);
   if (!c) return { issues: [], summary: null, blocked: `The DWP finding is missing for ${missing.join(', ')}. Complete the reconsideration tab first.` };
   if (unconfirmed.length) return { issues: [], summary: null, blocked: `Confirm the DWP finding for ${unconfirmed.join(', ')} on the reconsideration tab.` };
   return {

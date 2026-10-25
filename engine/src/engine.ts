@@ -30,6 +30,8 @@ export type Dataset = {
   benefits: Array<{
     id: string;
     version: string;
+    in_force_from?: string;   // the date this text became the law
+    in_force_to?: string;     // archived versions only: the last day it was the law
     thresholds?: Record<'daily_living' | 'mobility', { standard: number; enhanced: number }>;
     activities: Array<PipActivity | WcaActivity>;
     lcw_threshold?: number;

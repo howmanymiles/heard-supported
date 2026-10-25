@@ -4,7 +4,7 @@ import { activityList, LOW_CONFIDENCE, terms } from '@hs/core';
 import { requireMe } from '@/lib/auth';
 import { getCase, type EvidenceRow } from '@/lib/cases';
 import { caseClient } from '@/lib/claimants';
-import { score, descriptorsFor } from '@/lib/score';
+import { score, descriptorsFor, lawForCase } from '@/lib/score';
 import { UploadForm, ReviewForm } from '../../forms';
 import { evidenceAction, gapAction, decisionAction } from '../../actions';
 import { CaseTabs } from './tabs';
@@ -28,7 +28,8 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
   );
   const docs = data.docs.filter(d => d.kind === 'evidence' || d.kind === 'notes' || d.kind === 'other'); // decision papers live on the MR tab
   const acts = activityList(cs.benefit);
-  const s = score(cs.benefit, decisions);
+  const s = score(cs.benefit, decisions, cs.decision_date);
+  const law = lawForCase(cs.benefit, cs.decision_date);
   const unread = docs.filter(d => d.read_status !== 'read').length;
   const byAct = (key: string) => evidence.filter(e => e.activities.includes(key));
   const decisionFor = (key: string) => decisions.find(d => d.activity === key);
@@ -52,8 +53,9 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
       <p className="crumbs"><Link href="/">← Cases</Link></p>
       <div className="head">
         <h1><span className="mono">{cs.ref}</span>{cs.external_ref ? <span className="soft small"> · your ref {cs.external_ref}</span> : null}</h1>
-        <p className="soft">{terms(cs.benefit).name} · Descriptor data {cs.dataset_version}</p>
+        <p className="soft">{terms(cs.benefit).name} · Law as in force {cs.decision_date ? `on the decision date (${new Date(cs.decision_date).toLocaleDateString('en-GB', { dateStyle: 'medium' })})` : 'today'}: version {law.version}</p>
       </div>
+      {!law.covered && <p className="msg msg-warn" role="note">The decision date is before {law.inForceFrom ? new Date(law.inForceFrom).toLocaleDateString('en-GB', { dateStyle: 'long' }) : 'the earliest text we hold'}, when the descriptors and rules we hold came into force. They are applied anyway; check the law that applied on the decision date before relying on the scores.</p>}
       {client ? (
         <p className="small">Client: <Link href={`/clients/${client.id}`}>{client.name}</Link>{' · '}
           {!client.consent ? <span className="chip chip-lower">Consent withdrawn: AI off, nothing more can be added</span> : client.consent.ai ? 'consent to AI help in place' : <span className="chip chip-challenge">No consent to AI help: AI steps are off</span>}</p>
@@ -97,7 +99,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
         {acts.map(a => {
           const ev = byAct(a.key); const g = gaps.filter(x => x.activity === a.key && x.status === 'open'); const dec = decisionFor(a.key);
           const chosen = Array.isArray(dec?.satisfied) && dec!.satisfied.length ? (typeof dec!.satisfied[0] === 'string' ? dec!.satisfied[0] as string : (dec!.satisfied[0] as { letter: string }).letter) : '';
-          const options = descriptorsFor(a.key, cs.benefit);
+          const options = descriptorsFor(a.key, cs.benefit, cs.decision_date);
           return (
             <details key={a.key} id={a.key.replace(':', '-')} className="panel act" open={ev.length > 0 || g.length > 0}>
               <summary><span className="act-title">{a.label}</span><span className="soft small">{ev.filter(e => e.status === 'suggested').length} to check · {ev.filter(e => e.status === 'accepted').length} accepted{g.length ? ` · ${g.length} gaps` : ''}{chosen ? ` · descriptor ${chosen}` : ''}</span></summary>

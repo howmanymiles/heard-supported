@@ -35,9 +35,9 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
   const papers = docs.filter(d => paperKinds.includes(d.kind));
   const unreadPapers = papers.filter(d => d.read_status !== 'read').length;
   const synthId = /^TEST-((?:PIP|WCA|ADP)-\d\d)/.exec(cs.external_ref ?? cs.ref)?.[1];
-  const pip = isPip ? buildComparison(choices, decisions, evidence, cs.benefit) : null;
+  const pip = isPip ? buildComparison(choices, decisions, evidence, cs.benefit, cs.decision_date) : null;
   const hasReport = docs.some(d => d.kind === 'uc85' || d.kind === 'uc85a');
-  const wca = isPip ? null : buildWcaComparison(choices, decisions, evidence, cs.decision_outcome, hasReport);
+  const wca = isPip ? null : buildWcaComparison(choices, decisions, evidence, cs.decision_outcome, hasReport, cs.decision_date);
   const { comparison: cmp, missing, unconfirmed } = pip ?? { comparison: null, missing: [] as number[], unconfirmed: [] as number[] };
   const ready = isPip ? !!cmp && !unconfirmed.length : !!wca?.comparison && !wca.unconfirmed.length && wca.comparison.challenges.length > 0;
   const acts = activityList(scot ? 'adp' : 'pip');
@@ -121,7 +121,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
               <tbody>{acts.map(a => {
                 const ch = choiceFor(a.key);
                 const row = cmp?.activities.find(x => `pip:${x.activity}` === a.key);
-                const options = descriptorsFor(a.key, cs.benefit);
+                const options = descriptorsFor(a.key, cs.benefit, cs.decision_date);
                 const q = ch?.decision_quote ?? ch?.report_quote;
                 return (
                   <tr key={a.key}>
