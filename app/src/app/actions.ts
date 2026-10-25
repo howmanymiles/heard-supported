@@ -18,25 +18,13 @@ type Synthetic = { id: string; benefit: Benefit; title: string; docs: Array<{ na
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Try again.');
 
-export async function createCaseAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const me = await requireMe();
-  let id: string;
-  try {
-    const benefit = form.get('benefit') === 'uc-wca' ? 'uc-wca' : 'pip';
-    id = await createCase(me, String(form.get('ref') ?? ''), benefit);
-  } catch (e) {
-    const m = msg(e);
-    return { error: m.includes('duplicate key') ? 'A case with that reference already exists.' : m };
-  }
-  redirect(`/cases/${id}`);
-}
-
 export async function loadSyntheticAction(form: FormData) {
   const me = await requireMe();
   const sc = (synthetic as Synthetic[]).find(s => s.id === form.get('id'));
   if (!sc) return;
   const ref = `TEST-${sc.id}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-  const caseId = await createCase(me, ref, sc.benefit);
+  const { fictionalClaimant } = await import('@/lib/claimants');
+  const caseId = await createCase(me, ref, sc.benefit, await fictionalClaimant(me, sc.id));
   for (const d of sc.docs) {
     const docId = randomUUID();
     const path = `${me.agencyId}/${caseId}/${docId}`;
@@ -314,7 +302,7 @@ export async function outcomeAction(_: ActionState, form: FormData): Promise<Act
   const award = (p: string) => ({ daily_living: v(`${p}_dl`) ?? undefined, mobility: v(`${p}_mob`) ?? undefined, wca: v(`${p}_wca`) ?? undefined });
   try {
     const { saveOutcome } = await import('@/lib/casework');
-    await saveOutcome(me, caseId, { mrOutcome: v('mrOutcome'), mrOutcomeDate: v('mrOutcomeDate'), appealOutcome: v('appealOutcome'), appealOutcomeDate: v('appealOutcomeDate'), before: award('before'), after: award('after') });
+    await saveOutcome(me, caseId, { mrOutcome: v('mrOutcome'), mrOutcomeDate: v('mrOutcomeDate'), appealOutcome: v('appealOutcome'), appealOutcomeDate: v('appealOutcomeDate'), before: award('before'), after: award('after'), ucLcwraRate: v('ucLcwraRate'), lcwLegacy: form.get('lcwLegacy') === 'yes' });
   } catch (e) { return { error: msg(e) }; }
   revalidatePath(`/cases/${caseId}/outcome`);
   return { ok: 'Outcome saved.' };

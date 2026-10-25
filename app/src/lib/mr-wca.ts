@@ -9,6 +9,7 @@ import { data, wcaInputs } from './score.ts';
 import { storeChoices, type ChoiceRow, type Quote } from './mr.ts';
 import type { MrTiming } from '@hs/core';
 import type { Me } from './auth.ts';
+import { aiGate } from './claimants.ts';
 
 type Base = NonNullable<Awaited<ReturnType<typeof getCase>>>;
 const wca = data.benefits.find(b => b.id === 'uc-wca')!;
@@ -32,7 +33,8 @@ export async function readWcaAssessment(me: Me, caseId: string, base: Base) {
   const hasReport = papers.some(d => reportKinds.includes(d.kind));
   await readUnread(me, caseId, papers);
   const docs = (await readPages(me, caseId, ['decision', 'uc85', 'uc85a'])).map(d => ({ ...d, kind: d.kind as WcaAssessorDoc['kind'] }));
-  const r = await extractWcaAssessor(docs);
+  const { names } = await aiGate(me, caseId);
+  const r = await extractWcaAssessor(docs, { names });
 
   await asAgency(me.agencyId, async c => {
     // Without the report the notice gives only the date and award: no descriptors to record.

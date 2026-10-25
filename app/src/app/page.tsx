@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { requireMe } from '@/lib/auth';
 import { findCases, listUsers } from '@/lib/casework';
-import { CreateCaseForm } from './forms';
 import { loadSyntheticAction } from './actions';
 import synthetic from '@/data/synthetic.json';
 import { nextDeadline, type NextDeadline } from '@hs/core';
@@ -33,7 +32,7 @@ export default async function Caseload({ searchParams }: { searchParams: Promise
   const tests = synthetic as Array<{ id: string; title: string; benefit: string }>;
   return (
     <div className="stack-lg">
-      <div className="head"><h1>Cases</h1><p className="soft">Your agency’s cases. Each is identified by your reference only.</p></div>
+      <div className="head"><h1>Cases</h1><p className="soft">Your agency’s cases.</p></div>
 
       {soon.length > 0 && (
         <section className="msg msg-error" role="status" aria-label="Deadlines">
@@ -54,18 +53,19 @@ export default async function Caseload({ searchParams }: { searchParams: Promise
         <label className="field small-field">Benefit
           <select name="benefit" defaultValue={sp.benefit ?? ''}><option value="">Both</option><option value="pip">PIP</option><option value="uc-wca">UC WCA</option></select>
         </label>
-        <label className="field small-field">Reference<input name="q" defaultValue={sp.q ?? ''} /></label>
+        <label className="field small-field">Reference or client<input name="q" defaultValue={sp.q ?? ''} /></label>
         <div style={{ alignSelf: 'flex-end' }}><button className="btn" type="submit">Show</button></div>
       </form>
 
       <section className="panel">
         <h2 className="eyebrow">{view === 'closed' ? 'Closed cases' : view === 'all' ? 'All open cases, nearest deadline first' : 'My open cases, nearest deadline first'}</h2>
-        {cases.length === 0 ? <p className="soft">{view === 'mine' && !sp.q && !sp.stage && !sp.benefit ? 'No open cases assigned to you. Create one below, load a fictional test case, or show all open cases.' : 'No cases match.'}</p> : (
+        {cases.length === 0 ? <p className="soft">{view === 'mine' && !sp.q && !sp.stage && !sp.benefit ? 'No open cases assigned to you. Start from a client, load a fictional test case, or show all open cases.' : 'No cases match.'}</p> : (
           <div className="table-wrap"><table className="list">
-            <thead><tr><th scope="col">Reference</th><th scope="col">Benefit</th><th scope="col">Stage</th><th scope="col">{view === 'closed' ? 'Closed' : 'Next deadline'}</th><th scope="col">Documents</th><th scope="col">Suggestions to check</th><th scope="col">Adviser</th></tr></thead>
+            <thead><tr><th scope="col">Reference</th><th scope="col">Client</th><th scope="col">Benefit</th><th scope="col">Stage</th><th scope="col">{view === 'closed' ? 'Closed' : 'Next deadline'}</th><th scope="col">Documents</th><th scope="col">Suggestions to check</th><th scope="col">Adviser</th></tr></thead>
             <tbody>{cases.map(c => (
               <tr key={c.id}>
                 <td><Link className="mono" href={`/cases/${c.id}`}>{c.ref}</Link></td>
+                <td>{c.claimant_id ? <Link href={`/clients/${c.claimant_id}`}>{c.client_name}</Link> : <span className="soft">–</span>}</td>
                 <td>{c.benefit === 'pip' ? 'PIP' : 'UC WCA'}</td>
                 <td>{STAGE[c.stage] ?? c.stage}</td>
                 <td>{view === 'closed' ? <span className="soft">{c.closed_on}</span> : <Deadline d={c.next} />}</td>
@@ -79,7 +79,7 @@ export default async function Caseload({ searchParams }: { searchParams: Promise
       </section>
 
       <div className="grid-2">
-        <section className="panel"><h2 className="eyebrow">New case</h2><CreateCaseForm /></section>
+        <section className="panel stack"><h2 className="eyebrow">New case</h2><p className="soft small">Cases start from the client, once their consent is recorded.</p><p><Link className="btn btn-primary" href="/clients/new">New client</Link> <Link className="btn" href="/clients">Find a client</Link></p></section>
         <section className="panel">
           <h2 className="eyebrow">Load a fictional test case</h2>
           <p className="soft small">Creates a case with the synthetic documents already uploaded, ready to read and review.</p>

@@ -2,39 +2,17 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { createCaseAction, uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, letterAction, saveLetterAction, outcomeAction, closeAction, type ActionState } from './actions';
+import { uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, letterAction, saveLetterAction, outcomeAction, closeAction, type ActionState } from './actions';
 
-function Submit({ children, pending: pendingText, primary = true }: { children: React.ReactNode; pending: string; primary?: boolean }) {
+export function Submit({ children, pending: pendingText, primary = true }: { children: React.ReactNode; pending: string; primary?: boolean }) {
   const { pending } = useFormStatus();
   return <button className={primary ? 'btn btn-primary' : 'btn'} type="submit" disabled={pending} aria-disabled={pending}>{pending ? pendingText : children}</button>;
 }
 
-function Status({ state }: { state: ActionState }) {
+export function Status({ state }: { state: ActionState }) {
   if (state.error) return <p className="msg msg-error" role="alert">{state.error}</p>;
   if (state.ok) return <p className="msg msg-ok" role="status">{state.ok}</p>;
   return null;
-}
-
-export function CreateCaseForm() {
-  const [state, action] = useActionState(createCaseAction, {});
-  return (
-    <form action={action} className="stack">
-      <div className="row">
-        <label className="field">Case reference
-          <input name="ref" id="new-ref" required maxLength={40} placeholder="e.g. HS-2041" autoComplete="off" />
-          <span className="hint">Your agency’s reference. Never the client’s name.</span>
-        </label>
-        <label className="field">Benefit
-          <select name="benefit" id="new-benefit" defaultValue="pip">
-            <option value="pip">Personal Independence Payment</option>
-            <option value="uc-wca">Universal Credit (WCA)</option>
-          </select>
-        </label>
-      </div>
-      <div><Submit pending="Creating…">Create case</Submit></div>
-      <Status state={state} />
-    </form>
-  );
 }
 
 const KIND_LABEL: Record<string, string> = { evidence: 'Evidence (medical, form, letters)', notes: 'Your agency’s interview notes', pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: 'Decision letter or notice', mr_notice: 'Mandatory reconsideration notice', dwp_bundle: 'DWP response bundle', other: 'Other' };
@@ -283,6 +261,22 @@ export function OutcomeForm({ caseId, benefit, c, beforeDefault }: { caseId: str
         <AwardFields prefix="before" label="Award before (the decision challenged)" benefit={benefit} value={c.award_before ?? beforeDefault} />
         <AwardFields prefix="after" label="Award after" benefit={benefit} value={c.award_after} />
       </div>
+      {benefit === 'uc-wca' && (
+        <fieldset className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
+          <legend className="small"><b>For the money value</b></legend>
+          <div className="row">
+            <label className="field">Which LCWRA amount applies
+              <select name="ucLcwraRate" defaultValue={c.uc_lcwra_rate ?? ''}>
+                <option value="">Not known</option>
+                <option value="standard">Standard amount (most claims made from 6 April 2026)</option>
+                <option value="protected">Higher amount (claim before April 2026, severe conditions criteria, or terminally ill)</option>
+              </select>
+            </label>
+            <label className="field small-field" style={{ alignSelf: 'flex-end' }}><span><input type="checkbox" name="lcwLegacy" value="yes" defaultChecked={!!c.lcw_legacy} /> Legacy LCW element in payment</span></label>
+          </div>
+          <p className="soft small">Only claims with the LCW element from before April 2017 get money for LCW alone.</p>
+        </fieldset>
+      )}
       <div><Submit pending="Saving…" primary={false}>Save outcome</Submit></div>
       <Status state={state} />
     </form>

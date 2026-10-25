@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { activityList, LOW_CONFIDENCE } from '@hs/core';
 import { requireMe } from '@/lib/auth';
 import { getCase, type EvidenceRow } from '@/lib/cases';
+import { caseClient } from '@/lib/claimants';
 import { score, descriptorsFor } from '@/lib/score';
 import { UploadForm, ReviewForm } from '../../forms';
 import { evidenceAction, gapAction, decisionAction } from '../../actions';
@@ -26,6 +27,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
   const byAct = (key: string) => evidence.filter(e => e.activities.includes(key));
   const decisionFor = (key: string) => decisions.find(d => d.activity === key);
   const syntheticOnly = process.env.DATA_MODE === 'synthetic-only';
+  const client = await caseClient(me, id);
 
   const evidenceItem = (e: EvidenceRow) => (
     <li key={e.id} className={`ev ev-${e.status}`}>
@@ -46,6 +48,10 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
         <h1><span className="mono">{cs.ref}</span></h1>
         <p className="soft">{cs.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit · Work Capability Assessment'} · Descriptor data {cs.dataset_version}</p>
       </div>
+      {client ? (
+        <p className="small">Client: <Link href={`/clients/${client.id}`}>{client.name}</Link>{' · '}
+          {!client.consent ? <span className="chip chip-lower">Consent withdrawn: AI off, nothing more can be added</span> : client.consent.ai ? 'consent to AI help in place' : <span className="chip chip-challenge">No consent to AI help: AI steps are off</span>}</p>
+      ) : <p className="soft small">No client linked{syntheticOnly ? ' (fictional test case)' : ': link one before using the AI'}.</p>}
       <AssignBox caseId={id} adviserId={cs.adviser_id} adviserName={cs.adviser_name} />
       <CaseTabs id={id} benefit={cs.benefit} current="evidence" />
 

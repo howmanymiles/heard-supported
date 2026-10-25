@@ -34,9 +34,9 @@ Rules:
 
 Reply with JSON only: {"items":[{"key":"pip:12","reasoning":{"doc":"D1","page":3,"quote":"exact words"}}]}`;
 
-export async function extractResponseReasoning(bundle: { id: string; name: string; pages: Array<{ page: number; text: string }> }, items: ResponseItem[], opts: { endpoint?: string; deployment?: string } = {}): Promise<ResponseResult> {
+export async function extractResponseReasoning(bundle: { id: string; name: string; pages: Array<{ page: number; text: string }> }, items: ResponseItem[], opts: { endpoint?: string; deployment?: string; names?: string[] } = {}): Promise<ResponseResult> {
   let identifiersRemoved = 0;
-  const pages = bundle.pages.map(p => { const s = scrub(p.text); identifiersRemoved += s.removed; return { docId: bundle.id, page: p.page, text: s.text }; });
+  const pages = bundle.pages.map(p => { const s = scrub(p.text, opts.names); identifiersRemoved += s.removed; return { docId: bundle.id, page: p.page, text: s.text }; });
   const user = `Disputed items (key, name):\n${items.map(i => `${i.key}  ${i.label}`).join('\n')}\n\nDocuments:\n\n${pages.map(p => `=== D1: DWP response bundle (${bundle.name}), page ${p.page} ===\n${p.text}`).join('\n\n')}`;
   const { data, model } = await chatJson<{ items?: Array<{ key?: unknown; reasoning?: RawCite | null }> }>([{ role: 'system', content: SYSTEM }, { role: 'user', content: user }], opts);
   return { ...resolveResponse(data ?? {}, items, pages, { D1: bundle.id }), model, identifiersRemoved };

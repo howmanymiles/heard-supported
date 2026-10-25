@@ -1,9 +1,11 @@
 import { requireMe } from '@/lib/auth';
 import { agencyReport, MR_OUTCOMES, APPEAL_OUTCOMES, CLOSE_REASONS } from '@/lib/casework';
+import { RATES_SOURCE } from '@hs/core';
 
 export const dynamic = 'force-dynamic';
 
 const STAGE: Record<string, string> = { claim: 'Claim', assessment: 'Awaiting assessment', decision: 'Awaiting decision', mr: 'Reconsideration', appeal: 'Appeal' };
+const pounds = (n: number) => `${n < 0 ? '−' : ''}£${Math.abs(Math.round(n)).toLocaleString('en-GB')}`;
 const long = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 /** The UK financial year containing a date: 1 April to 31 March. */
@@ -56,6 +58,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
         <div><span className="eyebrow">Reconsiderations changed</span><p><b className="big">{mrWon}</b> of {mrDone}</p></div>
         <div><span className="eyebrow">Appeals won</span><p><b className="big">{won}</b> of {decided} decided</p></div>
         <div><span className="eyebrow">Award better at close</span><p><b className="big">{r.awards.better}</b> of {r.closed}</p></div>
+        <div><span className="eyebrow">Yearly value gained</span><p><b className="big">{pounds(r.money.total)}</b></p></div>
       </section>
 
       <div className="grid-2">
@@ -68,9 +71,18 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
           <Rows data={{ better: r.awards.better, same: r.awards.same, worse: r.awards.worse, unknown: r.awards.unknown }} labels={{ better: 'Better', same: 'No overall change', worse: 'Worse', unknown: 'Not recorded' }} total />
           <p className="small">PIP: daily living rate up in {r.awards.pip.dailyLivingUp}, mobility rate up in {r.awards.pip.mobilityUp}. UC WCA: moved to LCWRA in {r.awards.wca.toLcwra}, to LCW in {r.awards.wca.toLcw}.</p>
         </section>
+        <section className="panel stack">
+          <h2 className="eyebrow">Money gained, a year</h2>
+          <table className="list"><tbody>
+            <tr><td>PIP</td><td className="mono">{pounds(r.money.pip)}</td></tr>
+            <tr><td>UC: LCWRA and LCW elements, at most</td><td className="mono">{pounds(r.money.uc)}</td></tr>
+            <tr><td><b>Total</b></td><td className="mono"><b>{pounds(r.money.total)}</b></td></tr>
+          </tbody></table>
+          <p className="small">From {r.money.valued} closed {r.money.valued === 1 ? 'case' : 'cases'}{r.money.notValued ? `; ${r.money.notValued} not valued because the award before or after, or the LCWRA amount, isn’t recorded` : ''}.</p>
+        </section>
         <section className="panel stack"><h2 className="eyebrow">Why cases closed</h2><Rows data={r.closedReasons} labels={CLOSE_REASONS} total /></section>
       </div>
-      <p className="soft small">Counts come from the outcomes advisers record on each case. Money gained is not calculated, because benefit rates change each April.</p>
+      <p className="soft small">Counts come from the outcomes advisers record on each case. Money gained is the yearly difference between the award before and after, at the DWP rates for the benefit year of each result ({r.money.years.join(', ') || 'none yet'}): PIP weekly rates × 52, UC monthly elements × 12. It leaves out arrears and backdating. UC figures are the most the element adds, since UC is means-tested and other income reduces it. <a href={RATES_SOURCE}>Benefit rates on GOV.UK</a>.</p>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import synthetic from '../src/data/synthetic.json' with { type: 'json' };
 import { pool, asAgency } from '../src/lib/db.ts';
 import { migrate } from '../src/lib/migrate.ts';
 import { createCase, saveDecision } from '../src/lib/cases.ts';
+import { fictionalClaimant } from '../src/lib/claimants.ts';
 
 process.chdir(new URL('..', import.meta.url).pathname);
 await migrate();
@@ -14,7 +15,7 @@ const ag = (await pool().query("insert into agencies (name) values ('Development
 const u = (await pool().query("insert into users (agency_id, entra_oid, name, role) values ($1, $2, 'Seed Adviser', 'admin') returning id", [ag, `seed-${Date.now()}`])).rows[0].id;
 const me = { agencyId: ag, userId: u, role: 'admin' as const, name: 'Seed Adviser' };
 const sc = (synthetic as any[]).find(s => s.id === 'PIP-01');
-const caseId = await createCase(me, 'TEST-PIP-01-SEED', 'pip');
+const caseId = await createCase(me, 'TEST-PIP-01-SEED', 'pip', await fictionalClaimant(me, 'PIP-01'));
 const ids: Record<string, string> = {};
 for (const d of [...sc.mrDocs, ...sc.docs.map((x: any) => ({ ...x, kind: 'evidence' }))]) {
   ids[d.name] = await asAgency(ag, async c => {
@@ -46,7 +47,7 @@ await saveDecision(me, caseId, 'pip', 'pip:4', 'b', 7);
 await saveDecision(me, caseId, 'pip', 'pip:12', 'b', 5);
 // A WCA case (WCA-02, paper-based UC85A) at the same stage.
 const wsc = (synthetic as any[]).find(s => s.id === 'WCA-02');
-const wcaId = await createCase(me, 'TEST-WCA-02-SEED', 'uc-wca');
+const wcaId = await createCase(me, 'TEST-WCA-02-SEED', 'uc-wca', await fictionalClaimant(me, 'WCA-02'));
 const wids: Record<string, string> = {};
 for (const d of [...wsc.mrDocs, ...wsc.docs.map((x: any) => ({ ...x, kind: / notes\.md$/.test(x.name) ? 'notes' : 'evidence' }))]) {
   wids[d.kind === 'evidence' ? d.name : d.kind] = await asAgency(ag, async c => {
@@ -82,7 +83,7 @@ for (const [k, l] of [['sch6:13', 'c'], ['sch6:16', 'c'], ['sch8:4', 'applies'],
 import fs from 'node:fs';
 const appeal = JSON.parse(fs.readFileSync(new URL('../../evals/cases/PIP-03/appeal.json', import.meta.url), 'utf8'));
 const s3 = (synthetic as any[]).find(s => s.id === 'PIP-03');
-const apId = await createCase(me, 'TEST-PIP-03-SEED', 'pip');
+const apId = await createCase(me, 'TEST-PIP-03-SEED', 'pip', await fictionalClaimant(me, 'PIP-03'));
 const aid: Record<string, string> = {};
 for (const d of [...s3.docs.map((x: any) => ({ ...x, kind: / notes\.md$/.test(x.name) ? 'notes' : 'evidence', key: x.name.split(' ')[1].replace('.md', '') })), ...s3.mrDocs.map((x: any) => ({ ...x, key: x.kind })), ...s3.appealDocs.map((x: any) => ({ ...x, key: x.kind }))]) {
   aid[d.key] = await asAgency(ag, async c => {

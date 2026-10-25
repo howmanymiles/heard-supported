@@ -2,6 +2,7 @@
 
 import { asAgency, audit, pool } from './db.ts';
 import type { Me } from './auth.ts';
+import { annualGain, rateYear } from '@hs/core';
 import type { CaseRow } from './cases.ts';
 
 export const canManage = (me: Me) => me.role === 'supervisor' || me.role === 'admin';
@@ -25,7 +26,7 @@ export async function assignCase(me: Me, caseId: string, userId: string) {
   });
 }
 
-export type CaseFilter = { mine?: boolean; stage?: string; benefit?: string; adviser?: string; q?: string; closed?: boolean };
+export type CaseFilter = { claimant?: string; mine?: boolean; stage?: string; benefit?: string; adviser?: string; q?: string; closed?: boolean };
 
 export async function findCases(me: Me, f: CaseFilter): Promise<CaseRow[]> {
   const where: string[] = [], args: unknown[] = [];
@@ -35,15 +36,16 @@ export async function findCases(me: Me, f: CaseFilter): Promise<CaseRow[]> {
   else if (f.adviser) add('c.adviser_id = ?', f.adviser);
   if (f.stage) add('c.stage = ?', f.stage);
   if (f.benefit === 'pip' || f.benefit === 'uc-wca') add('c.benefit = ?', f.benefit);
-  if (f.q) add("c.ref ilike '%' || ? || '%'", f.q.replace(/[%_\\]/g, m => `\\${m}`).slice(0, 40));
+  if (f.q) { args.push(f.q.replace(/[%_\\]/g, m => `\\${m}`).slice(0, 40)); const n = `$${args.length}`; where.push(`(c.ref ilike '%' || ${n} || '%' or k.name ilike '%' || ${n} || '%' or k.preferred_name ilike '%' || ${n} || '%')`); }
+  if (f.claimant) add('c.claimant_id = ?', f.claimant);
   return asAgency(me.agencyId, async c => (await c.query(`
-    select c.id, c.ref, c.benefit, c.stage, c.status, u.name as adviser_name, c.adviser_id, c.created_at,
+    select c.id, c.ref, c.benefit, c.stage, c.status, u.name as adviser_name, c.adviser_id, c.created_at, c.claimant_id, k.name as client_name,
       to_char(c.decision_date, 'YYYY-MM-DD') as decision_date, to_char(c.mr_request_date, 'YYYY-MM-DD') as mr_request_date,
       to_char(c.mr_notice_date, 'YYYY-MM-DD') as mr_notice_date, to_char(c.appeal_sent_date, 'YYYY-MM-DD') as appeal_sent_date,
       to_char(c.closed_at, 'YYYY-MM-DD') as closed_on, c.closed_reason,
       (select count(*)::int from documents d where d.case_id = c.id) as documents,
       (select count(*)::int from evidence e where e.case_id = c.id and e.status = 'suggested') as suggested
-    from cases c left join users u on u.id = c.adviser_id
+    from cases c left join users u on u.id = c.adviser_id left join claimants k on k.id = c.claimant_id
     where ${where.join(' and ')}
     order by c.created_at desc limit 500`, args)).rows);
 }
@@ -69,17 +71,23 @@ export function checkAward(benefit: string, a: Award | null): Award | null {
   return a.wca ? { wca: a.wca } : null;
 }
 
+export const UC_LCWRA_RATES = { standard: 'Standard LCWRA amount (most claims made from 6 April 2026)', protected: 'Higher LCWRA amount (claims before April 2026, severe conditions criteria, or terminally ill)' } as const;
+
 export async function saveOutcome(me: Me, caseId: string, o: {
   mrOutcome: string | null; mrOutcomeDate: string | null; appealOutcome: string | null; appealOutcomeDate: string | null; before: Award | null; after: Award | null;
+  ucLcwraRate?: string | null; lcwLegacy?: boolean;
 }) {
+  if (o.ucLcwraRate && !(o.ucLcwraRate in UC_LCWRA_RATES)) throw new Error('Choose which LCWRA amount applies.');
   if (o.mrOutcome && !(o.mrOutcome in MR_OUTCOMES)) throw new Error('Choose the reconsideration result.');
   if (o.appealOutcome && !(o.appealOutcome in APPEAL_OUTCOMES)) throw new Error('Choose the appeal result.');
   const date = (d: string | null) => { if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new Error('Enter dates as day, month and year.'); return d; };
   await asAgency(me.agencyId, async c => {
     const cs = (await c.query('select benefit from cases where id = $1', [caseId])).rows[0];
     if (!cs) throw new Error('Case not found.');
-    await c.query('update cases set mr_outcome = $2, mr_outcome_date = $3, appeal_outcome = $4, appeal_outcome_date = $5, award_before = $6, award_after = $7 where id = $1',
-      [caseId, o.mrOutcome, date(o.mrOutcomeDate), o.appealOutcome, date(o.appealOutcomeDate), checkAward(cs.benefit, o.before), checkAward(cs.benefit, o.after)]);
+    const uc = cs.benefit === 'uc-wca';
+    await c.query('update cases set mr_outcome = $2, mr_outcome_date = $3, appeal_outcome = $4, appeal_outcome_date = $5, award_before = $6, award_after = $7, uc_lcwra_rate = $8, lcw_legacy = $9 where id = $1',
+      [caseId, o.mrOutcome, date(o.mrOutcomeDate), o.appealOutcome, date(o.appealOutcomeDate), checkAward(cs.benefit, o.before), checkAward(cs.benefit, o.after),
+        uc ? o.ucLcwraRate ?? null : null, uc ? !!o.lcwLegacy : false]);
     await audit(c, me.agencyId, me.userId, caseId, 'Outcome recorded');
   });
 }
@@ -105,6 +113,7 @@ export async function reopenCase(me: Me, caseId: string) {
 
 // ---------- reporting ----------
 
+const round = (n: number) => Math.round(n * 100) / 100;
 const RANK: Record<string, number> = { none: 0, standard: 1, enhanced: 2, lcw: 1, lcwra: 2 };
 
 /** Whether the award at the end is better than at the start, by component. Pure, for reports and tests. */
@@ -124,8 +133,19 @@ export type Report = {
   mr: Record<string, number>;
   appeal: Record<string, number>;
   awards: { better: number; same: number; worse: number; unknown: number; pip: { dailyLivingUp: number; mobilityUp: number }; wca: { toLcw: number; toLcwra: number } };
+  /** Yearly value of the change in award, at the rates for the year of each result. UC is the most it can add: UC is means-tested. */
+  money: { pip: number; uc: number; total: number; valued: number; notValued: number; years: string[] };
   closedReasons: Record<string, number>;
 };
+
+/** The yearly value of one case's change in award, or null if it can't be worked out. */
+export function caseGain(x: { benefit: string; award_before: Award | null; award_after: Award | null; uc_lcwra_rate?: string | null; lcw_legacy?: boolean; on: string }) {
+  if (!x.award_before || !x.award_after) return null;
+  const year = rateYear(x.on);
+  const g = annualGain(x.benefit as 'pip' | 'uc-wca', x.award_before, x.award_after, year,
+    { lcwra: (x.uc_lcwra_rate as 'standard' | 'protected' | null) ?? null, lcwLegacy: !!x.lcw_legacy });
+  return g === null ? null : { gain: g, year };
+}
 
 /** Agency figures for a period: open caseload now; outcomes and closures dated in the period. */
 export async function agencyReport(me: Me, from: string, to: string, today: string): Promise<Report> {
@@ -136,11 +156,19 @@ export async function agencyReport(me: Me, from: string, to: string, today: stri
     const late = open.filter(o => { const n = nextDeadline({ decisionDate: o.d, mrRequestDate: o.r, mrNoticeDate: o.n, appealSentDate: o.s }, today); return n && n.status !== 'in_time'; }).length;
     const mr = (await c.query('select mr_outcome from cases where mr_outcome is not null and mr_outcome_date between $1 and $2', [from, to])).rows;
     const ap = (await c.query('select appeal_outcome from cases where appeal_outcome is not null and appeal_outcome_date between $1 and $2', [from, to])).rows;
-    const closed = (await c.query("select benefit, closed_reason, award_before, award_after from cases where closed_at::date between $1 and $2", [from, to])).rows;
+    const closed = (await c.query(`select benefit, closed_reason, award_before, award_after, uc_lcwra_rate, lcw_legacy,
+      to_char(coalesce(appeal_outcome_date, mr_outcome_date, closed_at::date), 'YYYY-MM-DD') as on from cases where closed_at::date between $1 and $2`, [from, to])).rows;
+    const money = { pip: 0, uc: 0, total: 0, valued: 0, notValued: 0, years: [] as string[] };
     const awards = { better: 0, same: 0, worse: 0, unknown: 0, pip: { dailyLivingUp: 0, mobilityUp: 0 }, wca: { toLcw: 0, toLcwra: 0 } };
     for (const x of closed) {
       const ch = awardChange(x.benefit, x.award_before, x.award_after);
       if (ch) awards[ch]++; else awards.unknown++;
+      const g = caseGain(x);
+      if (!g) money.notValued++;
+      else {
+        money.valued++; money[x.benefit === 'pip' ? 'pip' : 'uc'] += g.gain;
+        if (!money.years.includes(g.year)) money.years.push(g.year);
+      }
       if (x.award_before && x.award_after) {
         if (x.benefit === 'pip') {
           if ((RANK[x.award_after.daily_living] ?? 0) > (RANK[x.award_before.daily_living] ?? 0)) awards.pip.dailyLivingUp++;
@@ -155,6 +183,7 @@ export async function agencyReport(me: Me, from: string, to: string, today: stri
       from, to,
       open: { total: open.length, byStage: count(open, o => o.stage), byBenefit: count(open, o => o.benefit), late },
       closed: closed.length, mr: count(mr, x => x.mr_outcome), appeal: count(ap, x => x.appeal_outcome), awards,
+      money: { ...money, pip: round(money.pip), uc: round(money.uc), total: round(money.pip + money.uc), years: money.years.sort() },
       closedReasons: count(closed, x => x.closed_reason),
     };
   });

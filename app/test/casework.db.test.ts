@@ -77,6 +77,10 @@ test('outcomes, closing and reopening, and the agency report', { skip }, async (
   assert.ok((r.mr.revised ?? 0) >= 1 && (r.mr.unchanged ?? 0) >= 1);
   assert.ok(r.awards.better >= 2);
   assert.ok(r.awards.pip.mobilityUp >= 1 && r.awards.wca.toLcwra >= 1);
+  assert.equal(r.money.pip, Math.round((76.70 + 80.00) * 52 * 100) / 100);       // 2026-27 rates, from the appeal result date
+  assert.equal(r.money.uc, 0);
+  assert.equal(r.money.notValued, 1);                                               // LCWRA amount not recorded
+  assert.deepEqual(r.money.years, ['2026-27']);
   const elsewhere = await cw.agencyReport(other, '2026-01-01', '2027-12-31', today);
   assert.equal(elsewhere.closed, 0);                                               // another agency's figures are its own
 
@@ -90,4 +94,11 @@ test('award change: better, worse, mixed and unknown', { skip }, () => {
   assert.equal(cw.awardChange('pip', { daily_living: 'standard', mobility: 'none' }, { daily_living: 'none', mobility: 'enhanced' }), 'same');
   assert.equal(cw.awardChange('uc-wca', { wca: 'lcw' }, { wca: 'none' }), 'worse');
   assert.equal(cw.awardChange('uc-wca', null, { wca: 'lcw' }), null);
+});
+
+test('money: yearly value of one case at the rates for the year of its result', { skip }, () => {
+  assert.deepEqual(cw.caseGain({ benefit: 'uc-wca', award_before: { wca: 'none' }, award_after: { wca: 'lcwra' }, uc_lcwra_rate: 'protected', on: '2026-07-01' }), { gain: 429.80 * 12, year: '2026-27' });
+  assert.deepEqual(cw.caseGain({ benefit: 'uc-wca', award_before: { wca: 'none' }, award_after: { wca: 'lcwra' }, uc_lcwra_rate: 'standard', on: '2026-03-01' }), { gain: Math.round(423.27 * 12 * 100) / 100, year: '2025-26' });
+  assert.deepEqual(cw.caseGain({ benefit: 'pip', award_before: { daily_living: 'enhanced', mobility: 'enhanced' }, award_after: { daily_living: 'standard', mobility: 'enhanced' }, on: '2026-07-01' }), { gain: Math.round((76.70 - 114.60) * 52 * 100) / 100, year: '2026-27' });
+  assert.equal(cw.caseGain({ benefit: 'pip', award_before: null, award_after: { daily_living: 'standard' }, on: '2026-07-01' }), null);
 });

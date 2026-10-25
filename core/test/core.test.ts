@@ -233,3 +233,24 @@ test('case law: only library authorities by id, citations written by code, no na
   const [sys2] = buildSubmissionMessages({ ...facts, authorities: [] });
   assert.match(sys2.content, /Do not cite case law/);
 });
+
+test('rates: benefit year from 6 April, and yearly values and gains', async () => {
+  const { rateYear, annualValue, annualGain } = await import('../src/rates.ts');
+  assert.equal(rateYear('2026-04-05'), '2025-26');
+  assert.equal(rateYear('2026-04-06'), '2026-27');
+  assert.equal(rateYear('2031-01-01'), '2026-27');        // later years use the latest known rates
+  assert.equal(annualValue('pip', { daily_living: 'standard', mobility: 'enhanced' }, '2026-27'), Math.round((76.70 + 80.00) * 52 * 100) / 100);
+  assert.equal(annualGain('pip', { daily_living: 'none', mobility: 'none' }, { daily_living: 'enhanced', mobility: 'standard' }, '2026-27'), Math.round((114.60 + 30.30) * 52 * 100) / 100);
+  assert.equal(annualGain('uc-wca', { wca: 'none' }, { wca: 'lcwra' }, '2026-27', { lcwra: 'standard', lcwLegacy: false }), 217.26 * 12);
+  assert.equal(annualGain('uc-wca', { wca: 'none' }, { wca: 'lcwra' }, '2026-27', { lcwra: 'protected', lcwLegacy: false }), 429.80 * 12);
+  assert.equal(annualGain('uc-wca', { wca: 'none' }, { wca: 'lcwra' }, '2026-27'), null);   // amount unknown until the category is recorded
+  assert.equal(annualGain('uc-wca', { wca: 'none' }, { wca: 'lcw' }, '2026-27'), 0);        // LCW alone adds no money for most claims
+});
+
+test('scrub: the client’s own names from the claimant record, whole words only', async () => {
+  const { scrub } = await import('../src/scrub.ts');
+  const r = scrub("Jane O'Neill-Smith said Jane's mum helps. Smith. Janet came. jane o'neill-smith", ["Jane O'Neill-Smith", 'Janey']);
+  assert.equal(r.text, "[name] said [name]'s mum helps. [name]. Janet came. [name]");
+  assert.equal(r.removed, 4);
+  assert.equal(scrub('Nothing to see', []).text, 'Nothing to see');
+});

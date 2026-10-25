@@ -12,6 +12,7 @@
 // argument, kept but marked for the adviser to check. Citations are turned into
 // references by code, not by the model.
 
+import { scrub } from './scrub.ts';
 import { chatJson } from './ai.ts';
 import { normalise } from './verify.ts';
 import confirmed from '../data/caselaw-confirmed.json' with { type: 'json' };
@@ -174,8 +175,10 @@ export function buildSubmissionMessages(facts: SubmissionFacts) {
   ];
 }
 
-export async function draftSubmission(facts: SubmissionFacts, opts: { endpoint?: string; deployment?: string } = {}): Promise<SubmissionResult> {
-  const { data, model } = await chatJson<RawSubmission>(buildSubmissionMessages(facts), opts);
+export async function draftSubmission(facts: SubmissionFacts, opts: { endpoint?: string; deployment?: string; names?: string[] } = {}): Promise<SubmissionResult> {
+  // The client's names come out of what is sent; a sentence quoting one then fails the verbatim check and is dropped.
+  const messages = buildSubmissionMessages(facts).map(m => ({ ...m, content: scrub(m.content, opts.names).text }));
+  const { data, model } = await chatJson<RawSubmission>(messages, opts);
   return { ...resolveSubmission(data ?? {}, facts), model };
 }
 

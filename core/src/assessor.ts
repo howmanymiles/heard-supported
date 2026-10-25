@@ -242,11 +242,11 @@ export function buildAssessorMessages(docs: Array<{ label: string; name: string;
   ];
 }
 
-export async function extractAssessor(docs: AssessorDoc[], opts: { endpoint?: string; deployment?: string } = {}): Promise<AssessorResult> {
+export async function extractAssessor(docs: AssessorDoc[], opts: { endpoint?: string; deployment?: string; names?: string[] } = {}): Promise<AssessorResult> {
   let identifiersRemoved = 0;
   const labelled = docs.map((d, i) => ({
     id: d.id, label: `D${i + 1}`, name: d.name, kind: d.kind,
-    pages: d.pages.map(p => { const s = scrub(p.text); identifiersRemoved += s.removed; return { page: p.page, text: s.text }; }),
+    pages: d.pages.map(p => { const s = scrub(p.text, opts.names); identifiersRemoved += s.removed; return { page: p.page, text: s.text }; }),
   }));
   const alias = Object.fromEntries(labelled.map(d => [d.label, d.id]));
   const pages = labelled.flatMap(d => d.pages.map(p => ({ docId: d.id, page: p.page, text: p.text })));

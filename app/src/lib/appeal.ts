@@ -8,6 +8,7 @@ import { readUnread, readPages, type EvidenceRow, type DocRow } from './cases.ts
 import { getMr, buildComparison, docTitle, type ChoiceRow, type Quote } from './mr.ts';
 import { buildWcaComparison, OUTCOME_LABEL } from './mr-wca.ts';
 import type { Me } from './auth.ts';
+import { aiGate } from './claimants.ts';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const isoDate = (d: unknown) => (d instanceof Date ? d.toISOString().slice(0, 10) : typeof d === 'string' && d ? d.slice(0, 10) : null);
@@ -129,7 +130,8 @@ export async function readMrNotice(me: Me, caseId: string) {
   const date = dateLine ? parseUkDate(dateLine) : null;
   const revised: string[] = [];
   if (a.case.benefit === 'pip') {
-    const r = await extractAssessor(docs.map(d => ({ ...d, kind: 'decision' as const })));
+    const { names } = await aiGate(me, caseId);
+    const r = await extractAssessor(docs.map(d => ({ ...d, kind: 'decision' as const })), { names });
     await asAgency(me.agencyId, async c => {
       for (const x of r.activities) {
         const key = `pip:${x.activity}`;
@@ -160,7 +162,8 @@ export async function readBundle(me: Me, caseId: string) {
   const fresh = (await getAppeal(me, caseId))!;
   const { issues, blocked } = issuesFor(fresh);
   if (blocked) throw new Error(blocked);
-  const r = await extractResponseReasoning(fresh.bundle!, issues.map(i => ({ key: i.key, label: i.label })));
+  const { names } = await aiGate(me, caseId);
+  const r = await extractResponseReasoning(fresh.bundle!, issues.map(i => ({ key: i.key, label: i.label })), { names });
   const reasoning = Object.fromEntries(Object.entries(r.reasoning).map(([k, q]) => [k, { docId: q.docId, page: q.page, quote: q.quote }]));
   await asAgency(me.agencyId, async c => {
     await c.query('update cases set response_reasoning = $2 where id = $1', [caseId, reasoning]);

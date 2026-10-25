@@ -8,6 +8,7 @@ import { asAgency, audit } from './db.ts';
 import { getCase, readUnread, readPages, type DecisionRow, type EvidenceRow } from './cases.ts';
 import { data, pipInputs } from './score.ts';
 import type { Me } from './auth.ts';
+import { aiGate } from './claimants.ts';
 
 export type Quote = { docId: string; page: number; quote: string };
 export type ChoiceRow = {
@@ -59,7 +60,8 @@ export async function readAssessment(me: Me, caseId: string) {
   if (!papers.length) throw new Error('Upload the decision letter first (and the PA4 if you have it), marked as such.');
   await readUnread(me, caseId, papers);
   const docs = (await readPages(me, caseId, ['pa4', 'decision'])).map(d => ({ ...d, kind: d.kind as 'pa4' | 'decision' }));
-  const r = await extractAssessor(docs);
+  const { names } = await aiGate(me, caseId);
+  const r = await extractAssessor(docs, { names });
 
   await asAgency(me.agencyId, async c => {
     await storeChoices(c, me, caseId, r.activities.map(a => ({ key: `pip:${a.activity}`, letter: a.letter, source: a.source, decision: a.decisionQuote ?? a.pointsQuote, report: a.pa4Quote, justification: a.justification, departs: a.departs, candidates: a.candidates })));

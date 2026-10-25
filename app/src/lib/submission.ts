@@ -6,6 +6,7 @@ import { asAgency, audit } from './db.ts';
 import { getAppeal, issuesFor, locate } from './appeal.ts';
 import { docTitle } from './mr.ts';
 import type { Me } from './auth.ts';
+import { aiGate } from './claimants.ts';
 
 type Appeal = NonNullable<Awaited<ReturnType<typeof getAppeal>>>;
 const long = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -53,7 +54,8 @@ export async function writeSubmission(me: Me, caseId: string, stage: 'mr' | 'app
   if (!a) throw new Error('Case not found.');
   const built = buildFacts(a, stage);
   if ('blocked' in built) throw new Error(built.blocked);
-  const r = await draftSubmission(built.facts);
+  const { names } = await aiGate(me, caseId);
+  const r = await draftSubmission(built.facts, { names });
   const text = renderSubmission(r, built.facts, built.header);
   const sentences = [...r.opening, ...r.issues.flatMap(i => i.sentences), ...r.closing];
   const cited = [...new Set(sentences.flatMap(s => s.authorities))].map(ref => built.facts.authorities!.find(x => x.ref === ref)!).map(x => ({ name: x.name, citation: x.citation, proposition: x.proposition, source_url: x.source_url }));

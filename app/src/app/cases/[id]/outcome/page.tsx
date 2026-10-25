@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireMe } from '@/lib/auth';
 import { getMr, buildComparison } from '@/lib/mr';
-import { CLOSE_REASONS, awardChange } from '@/lib/casework';
+import { CLOSE_REASONS, awardChange, caseGain } from '@/lib/casework';
 import { OutcomeForm, CloseForm } from '../../../forms';
 import { reopenAction } from '../../../actions';
 import { CaseTabs } from '../tabs';
@@ -22,6 +22,9 @@ export default async function OutcomePage({ params }: { params: Promise<{ id: st
     if (comparison) beforeDefault = { daily_living: comparison.dailyLiving.assessor.rate, mobility: comparison.mobility.assessor.rate };
   } else if (cs.decision_outcome) beforeDefault = { wca: cs.decision_outcome };
   const change = awardChange(cs.benefit, cs.award_before, cs.award_after);
+  const on = (cs.appeal_outcome_date ?? cs.mr_outcome_date ?? new Date().toISOString()).slice(0, 10);
+  const gain = caseGain({ ...cs, on });
+  const pounds = (n: number) => `${n < 0 ? '−' : ''}£${Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="stack-lg">
@@ -36,7 +39,8 @@ export default async function OutcomePage({ params }: { params: Promise<{ id: st
         <h2 className="eyebrow">Results</h2>
         <p className="soft small">Recorded for your agency’s reports. “Award before” is filled in from the decision papers where the app has read them; check it.</p>
         <OutcomeForm caseId={id} benefit={cs.benefit} c={cs} beforeDefault={beforeDefault} />
-        {change && <p className="small">Change in award: <b>{change === 'better' ? 'better' : change === 'worse' ? 'worse' : 'no overall change'}</b>.</p>}
+        {change && <p className="small">Change in award: <b>{change === 'better' ? 'better' : change === 'worse' ? 'worse' : 'no overall change'}</b>.
+          {gain ? <> Worth about <b>{pounds(gain.gain)} a year</b> at {gain.year} rates{cs.benefit === 'uc-wca' ? ' (the most it adds: UC is means-tested)' : ''}.</> : cs.benefit === 'uc-wca' && cs.award_after?.wca === 'lcwra' ? ' Choose which LCWRA amount applies to see its value.' : ''}</p>}
       </section>
 
       <section className="panel stack" aria-label="Close">

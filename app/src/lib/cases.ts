@@ -3,10 +3,11 @@ import { readDocument, extractEvidence, splitTextPages, activityList, datasetVer
 import { asAgency, audit } from './db.ts';
 import { putDocument, getDocument } from './storage.ts';
 import type { Me } from './auth.ts';
+import { aiGate, storeGate } from './claimants.ts';
 
 export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number;
   decision_date: string | null; mr_request_date: string | null; mr_notice_date: string | null; appeal_sent_date: string | null;
-  adviser_id?: string | null; closed_on?: string | null; closed_reason?: string | null };
+  adviser_id?: string | null; closed_on?: string | null; closed_reason?: string | null; claimant_id?: string | null; client_name?: string | null };
 export type DocKind = 'evidence' | 'notes' | 'pa4' | 'uc85' | 'uc85a' | 'decision' | 'mr_notice' | 'dwp_bundle' | 'other';
 export const DOC_KINDS: DocKind[] = ['evidence', 'notes', 'pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle', 'other'];
 /** Papers that record the DWP's position rather than the client's evidence. */
@@ -39,12 +40,13 @@ export async function listCases(me: Me): Promise<CaseRow[]> {
     order by c.created_at desc`)).rows);
 }
 
-export async function createCase(me: Me, ref: string, benefit: Benefit): Promise<string> {
+export async function createCase(me: Me, ref: string, benefit: Benefit, claimantId: string | null = null): Promise<string> {
   const clean = ref.trim().slice(0, 40);
   if (!/^[A-Za-z0-9][A-Za-z0-9 _\-\/]*$/.test(clean)) throw new Error('Use letters, numbers, spaces, hyphens or slashes for the case reference. Don’t use the client’s name.');
   return asAgency(me.agencyId, async c => {
-    const r = await c.query('insert into cases (agency_id, ref, benefit, adviser_id, dataset_version) values ($1, $2, $3, $4, $5) returning id',
-      [me.agencyId, clean, benefit, me.userId, datasetVersion(benefit)]);
+    if (claimantId) await storeGate(c, null, claimantId);
+    const r = await c.query('insert into cases (agency_id, ref, benefit, adviser_id, dataset_version, claimant_id) values ($1, $2, $3, $4, $5, $6) returning id',
+      [me.agencyId, clean, benefit, me.userId, datasetVersion(benefit), claimantId]);
     await audit(c, me.agencyId, me.userId, r.rows[0].id, 'Case created');
     return r.rows[0].id;
   });
@@ -79,6 +81,7 @@ export async function addDocument(me: Me, caseId: string, file: File, docKind: D
   const kind = ALLOWED_TYPES[file.type] ?? (file.name.endsWith('.md') ? 'text' : undefined);
   if (!kind) throw new Error('Upload a PDF, Word document, photo (JPEG, PNG, TIFF) or a text test file.');
   if (file.size > MAX_BYTES) throw new Error('Files must be 20 MB or smaller.');
+  await asAgency(me.agencyId, c => storeGate(c, caseId));   // check consent before anything is stored
   const bytes = new Uint8Array(await file.arrayBuffer());
   const docId = randomUUID();
   const path = `${me.agencyId}/${caseId}/${docId}`;
@@ -86,6 +89,7 @@ export async function addDocument(me: Me, caseId: string, file: File, docKind: D
   await asAgency(me.agencyId, async c => {
     const owns = await c.query('select 1 from cases where id = $1', [caseId]);
     if (!owns.rowCount) throw new Error('Case not found.');
+    await storeGate(c, caseId);
     await c.query('insert into documents (id, agency_id, case_id, name, kind, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
       [docId, me.agencyId, caseId, file.name.slice(0, 200), docKind, file.type || 'text/markdown', file.size, path, me.userId]);
     await audit(c, me.agencyId, me.userId, caseId, `Document added (${kind === 'text' ? 'text' : 'scan or file'})`);
@@ -141,7 +145,8 @@ export async function readAndReview(me: Me, caseId: string) {
   const input = await readPages(me, caseId, evidenceKinds);
   if (!input.length) return;
 
-  const result = await extractEvidence(cs.benefit, input);
+  const { names } = await aiGate(me, caseId);
+  const result = await extractEvidence(cs.benefit, input, { names });
   await asAgency(me.agencyId, async c => {
     // Keep everything the adviser has already decided; replace only open suggestions.
     await c.query("delete from evidence where case_id = $1 and source = 'ai' and status = 'suggested'", [caseId]);
