@@ -15,9 +15,29 @@ Healthcare professional: Disability Assessor, Registered Mental Health Nurse
 
 The available evidence was considered sufficient to give advice without a face-to-face or telephone assessment.
 
-## Summary of evidence
+## Conditions
 
-The claimant has bipolar affective disorder. She had an informal admission from July to September 2026 for a depressive episode. She is under the home treatment team. Medication: lithium and quetiapine. The GP reports she is compliant with medication and that her mood is improving. She lives alone; her sister visits. The UC50 reports she does not go out and does not answer the door to people she does not know. She reports poor concentration and that her sister prompts her to wash and eat.
+Bipolar affective disorder, recent severe depressive episode (GP report).
+
+## Treatment and professional input
+
+Informal hospital admission from July to September 2026 for a depressive episode. Under the home treatment team since discharge. Outpatient psychiatric follow-up arranged.
+
+## Medication
+
+Lithium and quetiapine. The GP reports she is compliant with medication.
+
+## Educational and vocational history (from the UC50)
+
+Worked as a team leader in a contact centre; redundant in 2026. No other information on education or training in the evidence considered.
+
+## Functional history (from the evidence)
+
+The GP reports her mood is improving. She lives alone; her sister visits. The UC50 reports she does not go out and does not answer the door to people she does not know. She reports poor concentration and that her sister prompts her to wash and eat.
+
+## Risk
+
+The GP report does not record current thoughts of self-harm or suicide, or any history of self-harm. No risk to others is recorded.
 
 --- Page 2 ---
 
