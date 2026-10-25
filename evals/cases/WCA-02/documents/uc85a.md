@@ -41,7 +41,10 @@ Waking: says most days she does not get up until the afternoon.
 Getting up: no physical difficulty described.
 Self care: says she means to shower and get dressed and does not.
 Food: her sister does her shopping and leaves meals in the freezer; says she sometimes forgets to eat.
-Rest of the day: stays at home; says she does not go out and does not answer the door to people she does not know.
+Rest of the day: stays at home. Says she finds it hard to read for long because she cannot concentrate. No information on television, phone or computer use.
+Door and post: does not answer the door unless she knows who it is; finds it hard when a new worker from the crisis team comes. Her sister opens her post.
+Appointments and changes: says her sister takes her to appointments. No information on who arranges them. Says that if something is different she gets stressed.
+People: says she does not go out, and does not want to see her friends at the moment. No information on speaking to staff at shops or appointments.
 
 ## Risk
 
