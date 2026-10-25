@@ -13,7 +13,7 @@ export type Quote = { docId: string; page: number; quote: string };
 export type ChoiceRow = {
   activity: string; letter: string | null; source: 'decision_letter' | 'pa4' | 'report' | 'adviser' | null;
   decision_quote: Quote | null; report_quote: Quote | null; justification: Quote | null;
-  departs: { pa4Letter: string; decisionLetter: string } | null; confirmed: boolean;
+  departs: { pa4Letter: string; decisionLetter: string } | null; confirmed: boolean; candidates?: string[] | null;
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -23,7 +23,7 @@ export async function getMr(me: Me, caseId: string) {
   const base = await getCase(me, caseId);
   if (!base) return null;
   const extra = await asAgency(me.agencyId, async c => ({
-    choices: (await c.query('select activity, letter, source, decision_quote, report_quote, justification, departs, confirmed from assessor_choices where case_id = $1', [caseId])).rows as ChoiceRow[],
+    choices: (await c.query('select activity, letter, source, decision_quote, report_quote, justification, departs, candidates, confirmed from assessor_choices where case_id = $1', [caseId])).rows as ChoiceRow[],
     run: (await c.query("select model, verified, rejected, identifiers_removed, created_at from extraction_runs where case_id = $1 and kind = 'assessment' order by created_at desc limit 1", [caseId])).rows[0] ?? null,
   }));
   const decisionDate = isoDate(base.case.decision_date);
@@ -35,15 +35,15 @@ export async function getMr(me: Me, caseId: string) {
 const stripQuote = (q?: { docId: string; page: number; quote: string }) => (q ? { docId: q.docId, page: q.page, quote: q.quote } : null);
 
 /** Store the DWP's position as read from the papers, leaving anything the adviser has confirmed alone. */
-export async function storeChoices(c: import('pg').PoolClient, me: Me, caseId: string, rows: Array<{ key: string; letter: string | null; source: ChoiceRow['source']; decision?: Quote; report?: Quote; justification?: Quote; departs?: unknown }>) {
+export async function storeChoices(c: import('pg').PoolClient, me: Me, caseId: string, rows: Array<{ key: string; letter: string | null; source: ChoiceRow['source']; decision?: Quote; report?: Quote; justification?: Quote; departs?: unknown; candidates?: string[] }>) {
   const confirmed = new Set((await c.query('select activity from assessor_choices where case_id = $1 and confirmed', [caseId])).rows.map(x => x.activity));
   for (const r of rows) {
     if (confirmed.has(r.key)) continue;
-    await c.query(`insert into assessor_choices (case_id, agency_id, activity, letter, source, decision_quote, report_quote, justification, departs, confirmed, updated_by)
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, $10)
+    await c.query(`insert into assessor_choices (case_id, agency_id, activity, letter, source, decision_quote, report_quote, justification, departs, candidates, confirmed, updated_by)
+      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false, $11)
       on conflict (case_id, activity) do update set letter = excluded.letter, source = excluded.source, decision_quote = excluded.decision_quote,
-        report_quote = excluded.report_quote, justification = excluded.justification, departs = excluded.departs, updated_by = excluded.updated_by, updated_at = now()`,
-      [caseId, me.agencyId, r.key, r.letter, r.letter ? r.source : null, stripQuote(r.decision), stripQuote(r.report), stripQuote(r.justification), r.departs ?? null, me.userId]);
+        report_quote = excluded.report_quote, justification = excluded.justification, departs = excluded.departs, candidates = excluded.candidates, updated_by = excluded.updated_by, updated_at = now()`,
+      [caseId, me.agencyId, r.key, r.letter, r.letter ? r.source : null, stripQuote(r.decision), stripQuote(r.report), stripQuote(r.justification), r.departs ?? null, r.candidates ?? null, me.userId]);
   }
 }
 
@@ -56,13 +56,13 @@ export async function readAssessment(me: Me, caseId: string) {
     return readWcaAssessment(me, caseId, base);
   }
   const papers = base.docs.filter(d => d.kind === 'pa4' || d.kind === 'decision');
-  if (!papers.length) throw new Error('Upload the decision letter and the PA4 assessment report first, marked as such.');
+  if (!papers.length) throw new Error('Upload the decision letter first (and the PA4 if you have it), marked as such.');
   await readUnread(me, caseId, papers);
   const docs = (await readPages(me, caseId, ['pa4', 'decision'])).map(d => ({ ...d, kind: d.kind as 'pa4' | 'decision' }));
   const r = await extractAssessor(docs);
 
   await asAgency(me.agencyId, async c => {
-    await storeChoices(c, me, caseId, r.activities.map(a => ({ key: `pip:${a.activity}`, letter: a.letter, source: a.source, decision: a.decisionQuote, report: a.pa4Quote, justification: a.justification, departs: a.departs })));
+    await storeChoices(c, me, caseId, r.activities.map(a => ({ key: `pip:${a.activity}`, letter: a.letter, source: a.source, decision: a.decisionQuote ?? a.pointsQuote, report: a.pa4Quote, justification: a.justification, departs: a.departs, candidates: a.candidates })));
     if (r.decisionDate) await c.query('update cases set decision_date = coalesce(decision_date, $2) where id = $1', [caseId, r.decisionDate.date]);
     await c.query("update cases set stage = 'mr' where id = $1 and stage in ('claim', 'assessment', 'decision')", [caseId]);
     const resolved = r.activities.filter(a => a.letter).length;

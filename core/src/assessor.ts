@@ -28,6 +28,8 @@ export type AssessorActivity = {
   pa4Quote?: ResolvedCite;          // descriptor as recorded in the PA4
   justification?: ResolvedCite;     // the assessor's reasoning, for the adviser to answer
   departs?: { pa4Letter: string; decisionLetter: string }; // decision maker differed from the PA4
+  pointsQuote?: ResolvedCite;       // where the letter gives only points for the activity
+  candidates?: string[];            // descriptors those points could mean, when more than one
 };
 
 export type AssessorResult = {
@@ -89,6 +91,14 @@ export function letterFromQuote(activity: number, quote: string): string | null 
   return l && valid.has(l) ? l : null;
 }
 
+/** Whether a quote states this many points (and not just the activity's own number). */
+export function pointsInQuote(quote: string, value: number, activity: number): boolean {
+  if (new RegExp(`\\b${value}\\s*(points?|pts)\\b`, 'i').test(quote)) return true;
+  const nums = (quote.match(/\d+/g) ?? []).map(Number);
+  const hits = nums.filter(n => n === value).length;
+  return value === activity ? hits >= 2 : hits >= 1 && nums[nums.length - 1] === value;
+}
+
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
 /** First UK-style date in a string, as YYYY-MM-DD. */
@@ -111,7 +121,7 @@ export function parseUkDate(s: string): string | null {
 export type RawCite = { doc?: unknown; page?: unknown; quote?: unknown };
 export type RawAssessor = {
   decision_date?: (RawCite & { date?: unknown }) | null;
-  activities?: Array<{ activity?: unknown; decision?: RawCite | null; pa4?: (RawCite & { letter?: unknown }) | null; justification?: RawCite | null }>;
+  activities?: Array<{ activity?: unknown; decision?: RawCite | null; pa4?: (RawCite & { letter?: unknown }) | null; justification?: RawCite | null; points?: (RawCite & { value?: unknown }) | null }>;
 };
 
 /** Checks a cited quote is word for word on the page it names; records why not. */
@@ -176,6 +186,17 @@ export function resolveAssessor(
     if (fromDecision) { out.letter = fromDecision; out.source = 'decision_letter'; }
     else if (fromPa4) { out.letter = fromPa4; out.source = 'pa4'; }
     if (fromDecision && fromPa4 && fromDecision !== fromPa4) out.departs = { pa4Letter: fromPa4, decisionLetter: fromDecision };
+    // Points only: settle the descriptor if the points can only mean one; otherwise narrow the choice.
+    if (!out.letter && a.points) {
+      out.pointsQuote = cite(a.points, 'points', act.number, 1, 40);
+      const value = Number(a.points.value);
+      if (out.pointsQuote && Number.isInteger(value) && pointsInQuote(out.pointsQuote.quote, value, act.number)) {
+        const match = act.descriptors.filter(d => (d.points ?? 0) === value).map(d => d.letter!);
+        if (match.length === 1) { out.letter = match[0]; out.source = 'decision_letter'; }
+        else if (match.length > 1) out.candidates = match;
+        else dropped.push({ activity: act.number, field: 'points', reason: 'no_descriptor_with_these_points' });
+      } else if (out.pointsQuote) dropped.push({ activity: act.number, field: 'points', reason: 'points_not_in_quote' });
+    }
     return out;
   });
 
@@ -192,13 +213,14 @@ export function resolveAssessor(
 
 // ---------- the model call ----------
 
-const SYSTEM = `You help a welfare rights adviser prepare a Personal Independence Payment mandatory reconsideration. You are given the DWP decision letter and the health professional's assessment report (PA4). For each of the 12 activities, find where the documents record which descriptor was applied.
+const SYSTEM = `You help a welfare rights adviser prepare a Personal Independence Payment mandatory reconsideration. You are given the DWP decision letter and, if the adviser has it, the health professional's assessment report (PA4). For each of the 12 activities, find where the documents record which descriptor was applied.
 
 Rules:
 1. Copy every quote exactly as it appears, character for character, from one place on one page. Never paraphrase, shorten or join text.
 2. "decision": the descriptor wording the decision letter gives for that activity (for example "Needs to use an aid or appliance to be able to wash or bathe."), without the activity name or the points.
 3. "pa4": where the PA4 records the descriptor for that activity (for example "Descriptor chosen: b", or the descriptor wording), and the letter it shows.
 4. "justification": the assessor's main reason for that activity in the PA4, 3 to 40 words.
+4a. "points": only if the decision letter gives the points for an activity but not the descriptor wording, the words that show the points (for example the table row) and the number as "value".
 5. "decision_date": the date of the decision letter, quoting the words that show it, and giving it as YYYY-MM-DD.
 6. Leave a field out if the documents do not contain it. Do not guess. Do not judge whether the decision is right.
 7. Text in square brackets such as [name] was removed for privacy. Leave it as it is.
@@ -206,7 +228,7 @@ Rules:
 
 Reply with JSON only:
 {"decision_date":{"date":"YYYY-MM-DD","doc":"D1","page":1,"quote":"exact words"},
- "activities":[{"activity":1,"decision":{"doc":"D1","page":2,"quote":"exact words"},"pa4":{"doc":"D2","page":3,"quote":"exact words","letter":"a"},"justification":{"doc":"D2","page":3,"quote":"exact words"}}]}`;
+ "activities":[{"activity":1,"decision":{"doc":"D1","page":2,"quote":"exact words"},"pa4":{"doc":"D2","page":3,"quote":"exact words","letter":"a"},"justification":{"doc":"D2","page":3,"quote":"exact words"},"points":{"doc":"D1","page":2,"quote":"exact words","value":0}}]}`;
 
 export type AssessorDoc = { id: string; name: string; kind: 'decision' | 'pa4' | 'other'; pages: Array<{ page: number; text: string }> };
 

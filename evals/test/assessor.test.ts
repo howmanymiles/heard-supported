@@ -93,3 +93,21 @@ test('dates are read in UK formats and impossible dates refused', () => {
   assert.equal(parseUkDate('3rd Sept 2026'), '2026-09-03');
   assert.equal(parseUkDate('31/02/2026'), null);
 });
+
+test('a letter giving only points: unique points settle the descriptor, shared points narrow it', () => {
+  const pages = [{ docId: 'dec', page: 1, text: '| 4 Washing and bathing | 2 |\n| 12 Moving around | 12 |\n| 1 Preparing food | 0 |\n| 3 Managing therapy | 1 |' }];
+  const r = resolveAssessor({ activities: [
+    { activity: 4, points: { doc: 'D1', page: 1, quote: '| 4 Washing and bathing | 2 |', value: 2 } },
+    { activity: 12, points: { doc: 'D1', page: 1, quote: '| 12 Moving around | 12 |', value: 12 } },
+    { activity: 1, points: { doc: 'D1', page: 1, quote: '| 1 Preparing food | 0 |', value: 0 } },
+    { activity: 3, points: { doc: 'D1', page: 1, quote: '| 3 Managing therapy | 1 |', value: 3 } },   // claims 3, the row says 1
+  ] }, pages, { D1: 'dec' });
+  const a = (n: number) => r.activities.find(x => x.activity === n)!;
+  assert.equal(a(4).letter, null);                   // 2 points on washing is 4b or 4c
+  assert.deepEqual(a(4).candidates, ['b', 'c', 'd']);   // 2 points on washing is 4b, 4c or 4d
+  assert.equal(a(12).letter, null);
+  assert.deepEqual(a(12).candidates, ['e', 'f']);
+  assert.equal(a(1).letter, 'a');                    // 0 points can only be 1a
+  assert.equal(a(3).letter, null);
+  assert.deepEqual(r.dropped.map(d => d.reason), ['points_not_in_quote']);
+});

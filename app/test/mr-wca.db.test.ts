@@ -141,3 +141,45 @@ test('a notice award that does not match the report is flagged', { skip }, async
   await mr.setAssessorChoice(me, caseId, 'sch7', '15(b)');
   assert.equal((await mr.getMr(me, caseId))!.choices.find(x => x.activity === 'sch7')!.letter, '15(b)');
 });
+
+test('WCA with only the decision notice: date and award read, request sets out the client’s position and asks for the report', { skip }, async () => {
+  const sc = (synthetic as any[]).find(s => s.id === 'WCA-02');
+  const caseId = await cases.createCase(me, `TEST-WCA-02-N${Date.now().toString(36).toUpperCase()}`, 'uc-wca');
+  const dec = sc.mrDocs.find((d: any) => d.kind === 'decision');
+  await db.asAgency(me.agencyId, async c => {
+    const id = (await c.query("insert into documents (agency_id, case_id, name, kind, content_type, size_bytes, blob_path, read_status, page_count) values ($1, $2, $3, 'decision', 'text/markdown', 1, 'none', 'read', 1) returning id", [me.agencyId, caseId, dec.name])).rows[0].id;
+    for (const p of splitTextPages(dec.text)) await c.query("insert into pages (document_id, agency_id, page_no, text, lines) values ($1, $2, $3, $4, '[]')", [id, me.agencyId, p.page, p.text]);
+  });
+  const p1 = splitTextPages(dec.text)[0].text;
+  answer = { decision_date: { doc: 'D1', page: 1, quote: p1.split('\n').find(l => l.startsWith('Date of this notice'))! }, outcome: { doc: 'D1', page: 1, quote: p1.match(/We have decided that you[^.]+\./)![0] } };
+  const r = await mr.readAssessment(me, caseId);
+  assert.equal(r.of, 20);
+  let m = (await mr.getMr(me, caseId))!;
+  assert.deepEqual([m.decisionDate, m.case.decision_outcome, m.choices.length], ['2026-11-17', 'none', 0]);
+
+  await cases.saveDecision(me, caseId, 'uc-wca', 'sch6:13', 'c', null);
+  await cases.saveDecision(me, caseId, 'uc-wca', 'sch6:16', 'c', null);
+  await cases.saveDecision(me, caseId, 'uc-wca', 'sch9:4', 'applies', null);
+  m = (await mr.getMr(me, caseId))!;
+  const { comparison: c, missing } = wca.buildWcaComparison(m.choices, m.decisions, m.evidence, m.case.decision_outcome, false);
+  assert.deepEqual(missing, []);
+  assert.equal(c!.mode, 'outcome_only');
+  assert.equal(c!.dwp, null);
+  assert.deepEqual(c!.challenges.map(x => x.key), ['sch9:4', 'sch6:13', 'sch6:16']);
+  assert.ok(c!.warnings.some(w => w.code === 'no_report'));
+  const draft = wca.buildWcaDraft({ ref: m.case.ref, decisionDate: m.decisionDate, timing: m.timing, lateReason: null, noticeOutcome: m.case.decision_outcome, reportName: 'UC85 report', comparison: c! });
+  assert.match(draft, /I have not seen the healthcare professional’s report/);
+  assert.match(draft, /Please send me a copy of the UC85 or UC85A/);
+  assert.match(draft, /We say descriptor 13\(c\) applies \(6 points\)/);
+  assert.doesNotMatch(draft, /The report applied/);
+
+  const letters = await import('../src/lib/letters.ts');
+  const text = letters.buildLetter('raise_mr', { benefit: 'uc-wca', ref: m.case.ref, decisionDate: m.decisionDate, timing: m.timing, lateReason: null, today: '2026-11-20', hasPaperBased: false }, { requestReport: true, holdForEvidence: true, authorityEnclosed: false, disputes: '' });
+  const id = await letters.addLetter(me, caseId, 'raise_mr', text);
+  await letters.saveLetter(me, caseId, id, text + '\nEdited.');
+  const ls = await letters.listLetters(me, caseId);
+  assert.equal(ls.length, 1);
+  assert.match(ls[0].text, /UC85 or UC85A[\s\S]*Edited\.$/);
+  const other = (await db.pool().query("insert into agencies (name) values ('Other') returning id")).rows[0].id;
+  assert.equal((await letters.listLetters({ ...me, agencyId: other }, caseId)).length, 0);
+});

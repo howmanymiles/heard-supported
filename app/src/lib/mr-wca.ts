@@ -28,13 +28,15 @@ export const OUTCOME_LABEL: Record<string, string> = { none: 'no limited capabil
 export async function readWcaAssessment(me: Me, caseId: string, base: Base) {
   const reportKinds = ['uc85', 'uc85a'];
   const papers = base.docs.filter(d => d.kind === 'decision' || reportKinds.includes(d.kind));
-  if (!papers.some(d => reportKinds.includes(d.kind))) throw new Error('Upload the UC85 or UC85A report first, marked as such. The decision notice alone does not give the descriptors.');
+  if (!papers.length) throw new Error('Upload the decision notice (and the UC85 or UC85A if you have it), marked as such.');
+  const hasReport = papers.some(d => reportKinds.includes(d.kind));
   await readUnread(me, caseId, papers);
   const docs = (await readPages(me, caseId, ['decision', 'uc85', 'uc85a'])).map(d => ({ ...d, kind: d.kind as WcaAssessorDoc['kind'] }));
   const r = await extractWcaAssessor(docs);
 
   await asAgency(me.agencyId, async c => {
-    await storeChoices(c, me, caseId, [
+    // Without the report the notice gives only the date and award: no descriptors to record.
+    if (hasReport) await storeChoices(c, me, caseId, [
       ...r.sch6.map(a => ({ key: `sch6:${a.activity}`, letter: a.letter, source: 'report' as const, report: a.chosen, justification: a.justification })),
       { key: 'sch7', letter: r.sch7.ids === null ? null : r.sch7.ids.length ? r.sch7.ids.join(',') : 'none', source: 'report', report: r.sch7.quotes[0] },
       { key: 'sch8:4', letter: r.sch8_4.value, source: 'report', report: r.sch8_4.quote, justification: r.sch8_4.justification },
@@ -83,15 +85,40 @@ export type WcaRow = {
   dwpText: string; adviserText: string | null;
 };
 export type WcaComparison = {
+  mode: 'full' | 'outcome_only';              // outcome_only: no UC85/UC85A yet, so the DWP's descriptors are unknown
   rows: WcaRow[]; challenges: WcaRow[]; agreed: WcaRow[];
-  dwp: WcaResult; adviser: WcaResult; dwpOutcome: string; adviserOutcome: string;
+  dwp: WcaResult | null; adviser: WcaResult; dwpOutcome: string; adviserOutcome: string;
   warnings: Array<{ code: string; message: string }>;
 };
 
 const outcomeOf = (r: WcaResult) => (r.lcwra.result ? 'lcwra' : r.lcw.result ? 'lcw' : 'none');
 
-export function buildWcaComparison(choices: ChoiceRow[], decisions: DecisionRow[], evidence: EvidenceRow[], noticeOutcome: string | null):
+const RANK: Record<string, number> = { none: 0, lcw: 1, lcwra: 2 };
+
+/** Without the report: the adviser's position, set against the award in the notice. */
+function positionOnly(decisions: DecisionRow[], evidence: EvidenceRow[], noticeOutcome: string | null): WcaComparison {
+  const refs = (key: string) => evidence.filter(e => e.status === 'accepted' && e.activities.includes(key)).map(e => ({ doc: e.doc_name, page: e.page_no, quote: e.quote }));
+  const adv = wcaInputs(decisions);
+  const advR = assessWca(data, adv);
+  const rows: WcaRow[] = [];
+  for (const a of advR.lcwra.descriptors) rows.push({ key: 'sch7', label: 'Schedule 7', group: 'lcwra', dwp: 'unknown', adviser: a.id, dwpPoints: 0, adviserPoints: 0, status: 'challenge', gain: 0, justification: null, evidence: refs(`sch7:${a.activity}`), dwpText: '', adviserText: `${a.id} ${a.text}` });
+  if (adv.treatedAsLcwra.length) rows.push({ key: 'sch9:4', label: RISK_KEYS['sch9:4'], group: 'lcwra', dwp: 'unknown', adviser: 'applies', dwpPoints: 0, adviserPoints: 0, status: 'challenge', gain: 0, justification: null, evidence: refs('sch9:4'), dwpText: '', adviserText: 'Applies' });
+  for (const x of advR.lcw.activities.filter(x => x.points > 0)) {
+    const key = `sch6:${x.activity}`;
+    rows.push({ key, label: `Activity ${x.activity}: ${shortName(x.activity, x.name)}`, group: 'lcw', dwp: 'unknown', adviser: x.descriptor!.letter, dwpPoints: 0, adviserPoints: x.points, status: 'challenge', gain: x.points, justification: null, evidence: refs(key), dwpText: '', adviserText: x.descriptor!.text });
+  }
+  if (adv.treatedAsLcw.length && !advR.lcw.byAssessment) rows.push({ key: 'sch8:4', label: RISK_KEYS['sch8:4'], group: 'lcw', dwp: 'unknown', adviser: 'applies', dwpPoints: 0, adviserPoints: 0, status: 'challenge', gain: 0, justification: null, evidence: refs('sch8:4'), dwpText: '', adviserText: 'Applies' });
+  const adviserOutcome = outcomeOf(advR);
+  const warnings: WcaComparison['warnings'] = [{ code: 'no_report', message: 'No UC85 or UC85A yet, so the descriptors the decision maker applied are not known. The request can set out your client’s position and ask for the report.' }];
+  if (noticeOutcome && RANK[adviserOutcome] <= RANK[noticeOutcome]) warnings.push({ code: 'no_improvement', message: `Your position (${OUTCOME_LABEL[adviserOutcome]}) is no better than the award in the notice (${OUTCOME_LABEL[noticeOutcome]}).` });
+  const noEv = rows.filter(r => r.evidence.length === 0);
+  if (noEv.length) warnings.push({ code: 'challenge_without_evidence', message: `${noEv.map(r => r.key.startsWith('sch6:') ? `Activity ${r.key.split(':')[1]}` : r.label.split(' (')[0]).join(', ')}: no accepted evidence yet.` });
+  return { mode: 'outcome_only', rows, challenges: rows, agreed: [], dwp: null, adviser: advR, dwpOutcome: noticeOutcome ?? 'none', adviserOutcome, warnings };
+}
+
+export function buildWcaComparison(choices: ChoiceRow[], decisions: DecisionRow[], evidence: EvidenceRow[], noticeOutcome: string | null, hasReport = true):
   { comparison: WcaComparison | null; missing: string[]; unconfirmed: string[] } {
+  if (!hasReport) return { comparison: positionOnly(decisions, evidence, noticeOutcome), missing: [], unconfirmed: [] };
   const get = (k: string) => choices.find(c => c.activity === k);
   const keys = [...sch6.map(a => `sch6:${a.number}`), 'sch7', 'sch8:4', 'sch9:4'];
   const missing = keys.filter(k => !get(k)?.letter);
@@ -173,7 +200,7 @@ export function buildWcaComparison(choices: ChoiceRow[], decisions: DecisionRow[
   const challenges = rows.filter(r => r.status === 'challenge' && !(r.key === 'sch8:4' && advR.lcw.byAssessment))
     .sort((a, b) => rank(a) - rank(b) || b.gain - a.gain || a.key.localeCompare(b.key, undefined, { numeric: true }));
   const agreed = rows.filter(r => r.status === 'agree');
-  return { comparison: { rows, challenges, agreed, dwp: dwpR, adviser: advR, dwpOutcome, adviserOutcome, warnings }, missing, unconfirmed };
+  return { comparison: { mode: 'full', rows, challenges, agreed, dwp: dwpR, adviser: advR, dwpOutcome, adviserOutcome, warnings }, missing, unconfirmed };
 }
 
 const long = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -192,24 +219,26 @@ export function buildWcaDraft(input: { ref: string; decisionDate: string | null;
   out.push(`I am asking for a mandatory reconsideration of the decision${input.decisionDate ? ` dated ${long(input.decisionDate)}` : ''} ${NOTICE[input.noticeOutcome ?? cmp.dwpOutcome] ?? NOTICE.lcwra}.`);
   if (input.timing?.status === 'late') out.push('', `This request is made more than one month after the decision. ${input.lateReason ? `It is late because ${input.lateReason.replace(/\.?$/, '.')}` : '[Explain why the request is late.]'}`);
   const pts = (r: WcaResult) => `${r.lcw.totalPoints} points (${r.lcw.physicalPoints} physical, ${r.lcw.mentalPoints} mental)`;
-  out.push('', `The ${input.reportName} gave ${pts(cmp.dwp)}. On the evidence, the claimant scores ${pts(cmp.adviser)} against the threshold of 15, and has ${OUTCOME_LABEL[cmp.adviserOutcome]}.`);
+  if (cmp.dwp) out.push('', `The ${input.reportName} gave ${pts(cmp.dwp)}. On the evidence, the claimant scores ${pts(cmp.adviser)} against the threshold of 15, and has ${OUTCOME_LABEL[cmp.adviserOutcome]}.`);
+  else out.push('', `I have not seen the healthcare professional’s report, so I do not know which descriptors were applied. Please send me a copy of the UC85 or UC85A and of any other evidence used to make the decision. On the evidence I have, the claimant scores ${pts(cmp.adviser)} against the threshold of 15, and has ${OUTCOME_LABEL[cmp.adviserOutcome]}. The descriptors that apply are set out below.`);
 
   const section = (title: string, rows: WcaRow[]) => {
     if (!rows.length) return;
     out.push('', title);
     for (const r of rows) {
       out.push('');
+      const known = r.dwp !== 'unknown';
       if (r.key.startsWith('sch6:')) {
         const n = r.key.split(':')[1];
         out.push(r.label);
-        out.push(`The report applied descriptor ${n}(${r.dwp}) (${r.dwpPoints} points): "${r.dwpText}"`);
+        if (known) out.push(`The report applied descriptor ${n}(${r.dwp}) (${r.dwpPoints} points): "${r.dwpText}"`);
         out.push(`We say descriptor ${n}(${r.adviser}) applies (${r.adviserPoints} points): "${r.adviserText}"`);
       } else if (r.key === 'sch7') {
         out.push('Schedule 7');
-        out.push(`The report found ${r.dwp === 'none' ? 'that no Schedule 7 descriptor applies' : `descriptor ${r.dwp}`}. We say ${r.adviserText}`);
+        out.push(known ? `The report found ${r.dwp === 'none' ? 'that no Schedule 7 descriptor applies' : `descriptor ${r.dwp}`}. We say ${r.adviserText}` : `We say ${r.adviserText}`);
       } else {
         out.push(r.label);
-        out.push(`The report found that it does not apply. We say there would be a substantial risk to the physical or mental health of any person if the claimant were found not to have ${r.key === 'sch8:4' ? 'limited capability for work' : 'limited capability for work-related activity'}.`);
+        out.push(`${known ? 'The report found that it does not apply. ' : ''}We say there would be a substantial risk to the physical or mental health of any person if the claimant were found not to have ${r.key === 'sch8:4' ? 'limited capability for work' : 'limited capability for work-related activity'}.`);
       }
       if (r.justification) out.push(`The report said: "${r.justification.quote}" (${input.reportName}, page ${r.justification.page}).`);
       if (r.evidence.length) { out.push('The evidence shows:'); for (const e of r.evidence) out.push(`- "${e.quote}" (${docTitle(e.doc)}, page ${e.page})`); }

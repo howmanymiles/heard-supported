@@ -177,7 +177,7 @@ export async function draftAction(_: ActionState, form: FormData): Promise<Actio
   if (!mr) return { error: 'Case not found.' };
   if (mr.case.benefit === 'uc-wca') {
     const { buildWcaComparison, buildWcaDraft } = await import('@/lib/mr-wca');
-    const w = buildWcaComparison(mr.choices, mr.decisions, mr.evidence, mr.case.decision_outcome);
+    const w = buildWcaComparison(mr.choices, mr.decisions, mr.evidence, mr.case.decision_outcome, mr.docs.some(d => d.kind === 'uc85' || d.kind === 'uc85a'));
     if (!w.comparison) return { error: `The DWP finding is still missing for ${w.missing.join(', ')}.` };
     if (w.unconfirmed.length) return { error: `Confirm the DWP finding for ${w.unconfirmed.join(', ')} first.` };
     const report = mr.docs.find(d => d.kind === 'uc85a') ? 'UC85A report' : 'UC85 report';
@@ -271,4 +271,27 @@ export async function aiSubmissionAction(_: ActionState, form: FormData): Promis
     revalidatePath(`/cases/${caseId}/${stage}`);
     return { ok: `Letter drafted: ${r.kept} sentences${r.dropped.length ? `; ${r.dropped.length} dropped because they failed the checks` : ''}. ${r.argument.length ? `${r.argument.length} sentences of argument have no citation: check them below.` : ''}` };
   } catch (e) { return { error: msg(e) }; }
+}
+
+export async function letterAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const kind = form.get('kind') === 'request_report' ? 'request_report' : 'raise_mr';
+  const { buildLetter, addLetter } = await import('@/lib/letters');
+  const mr = await getMr(me, caseId);
+  if (!mr) return { error: 'Case not found.' };
+  const text = buildLetter(kind, { benefit: mr.case.benefit, ref: mr.case.ref, decisionDate: mr.decisionDate, timing: mr.timing, lateReason: mr.case.late_reason, today: new Date().toISOString().slice(0, 10), hasPaperBased: mr.docs.some(d => d.kind === 'uc85a') },
+    { requestReport: form.get('requestReport') === 'yes', holdForEvidence: form.get('hold') === 'yes', authorityEnclosed: form.get('authority') === 'yes', disputes: String(form.get('disputes') ?? '').slice(0, 300) });
+  await addLetter(me, caseId, kind, text);
+  revalidatePath(`/cases/${caseId}/mr`);
+  return { ok: mr.decisionDate ? 'Letter drafted below. Edit it and save.' : 'Letter drafted below. Add the decision date above so the letter and the time limit are right.' };
+}
+
+export async function saveLetterAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const { saveLetter } = await import('@/lib/letters');
+  await saveLetter(me, caseId, String(form.get('id')), String(form.get('text') ?? ''));
+  revalidatePath(`/cases/${caseId}/mr`);
+  return { ok: 'Saved.' };
 }

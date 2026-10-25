@@ -8,6 +8,8 @@ import { UploadForm, AssessForm, MrDatesForm, DraftForm, SaveDraftForm, AiSubmis
 import { SubmissionReview } from '../review';
 import { choiceAction, confirmAllAction, loadSyntheticMrAction } from '../../../actions';
 import { CaseTabs } from '../tabs';
+import { listLetters } from '@/lib/letters';
+import { LetterForm, SaveLetterForm } from '../../../forms';
 import { WcaComparisonView } from './wca-view';
 import { buildWcaComparison } from '@/lib/mr-wca';
 
@@ -27,14 +29,16 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
   const syntheticOnly = process.env.DATA_MODE === 'synthetic-only';
 
   const isPip = cs.benefit === 'pip';
+  const letters = await listLetters(me, id);
   const paperKinds = isPip ? ['decision', 'pa4'] : ['uc85', 'uc85a', 'decision'];
   const papers = docs.filter(d => paperKinds.includes(d.kind));
   const unreadPapers = papers.filter(d => d.read_status !== 'read').length;
   const synthId = /^TEST-((?:PIP|WCA)-\d\d)-/.exec(cs.ref)?.[1];
   const pip = isPip ? buildComparison(choices, decisions, evidence) : null;
-  const wca = isPip ? null : buildWcaComparison(choices, decisions, evidence, cs.decision_outcome);
+  const hasReport = docs.some(d => d.kind === 'uc85' || d.kind === 'uc85a');
+  const wca = isPip ? null : buildWcaComparison(choices, decisions, evidence, cs.decision_outcome, hasReport);
   const { comparison: cmp, missing, unconfirmed } = pip ?? { comparison: null, missing: [] as number[], unconfirmed: [] as number[] };
-  const ready = isPip ? !!cmp && !unconfirmed.length : !!wca?.comparison && !wca.unconfirmed.length;
+  const ready = isPip ? !!cmp && !unconfirmed.length : !!wca?.comparison && !wca.unconfirmed.length && wca.comparison.challenges.length > 0;
   const acts = activityList('pip');
   const choiceFor = (key: string) => choices.find(c => c.activity === key) as ChoiceRow | undefined;
   const docName = (docId: string) => docs.find(d => d.id === docId)?.name ?? 'document';
@@ -62,6 +66,18 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
         <MrDatesForm caseId={id} decisionDate={mr.decisionDate} requestDate={mr.requestDate} lateReason={cs.late_reason} outcome={isPip ? undefined : (cs.decision_outcome ?? null)} />
       </section>
 
+      <section className="panel stack" aria-label="Letters">
+        <h2 className="eyebrow">Letters on your client’s behalf</h2>
+        <p className="soft small">Send these with just the decision letter: one raises the reconsideration in time with reasons to follow, the other asks for the {isPip ? 'PA4' : 'UC85 or UC85A'}. Built by the app from the case details, not by AI.</p>
+        <LetterForm caseId={id} isPip={isPip} />
+        {letters.map(l => (
+          <details key={l.id} className="panel">
+            <summary><b>{l.kind === 'raise_mr' ? 'Acting on behalf: reconsideration request' : 'Request for the assessment report'}</b> <span className="soft small">· {l.updated_at}</span></summary>
+            <SaveLetterForm caseId={id} id={l.id} text={l.text} />
+          </details>
+        ))}
+      </section>
+
       <section className="panel stack" aria-label="Decision papers">
         <h2 className="eyebrow">Decision papers</h2>
         {papers.length ? <ul className="plain">{papers.map(d => (
@@ -79,7 +95,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
         <p className="soft small">The AI only points to where the descriptor is written. The letter is worked out from the regulations’ wording, and you confirm each one.</p>
       </section>
 
-      {!isPip && choices.length > 0 && wca && <WcaComparisonView id={id} docs={docs} choices={choices} result={wca} />}
+      {!isPip && (choices.length > 0 || !hasReport) && wca && <WcaComparisonView id={id} docs={docs} choices={choices} result={wca} />}
 
       {isPip && choices.length > 0 && (
         <section className="stack" aria-label="Comparison">
@@ -119,6 +135,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
                         {ch?.confirmed ? <span className="chip chip-confirmed">Confirmed</span> : ch?.letter ? <span className="chip chip-plain">To check</span> : null}
                       </form>
                       {ch?.source && <p className="soft small">{SOURCE[ch.source]}{q ? <> · <Link href={quoteLink(q)}>{docName(q.docId)}, p{q.page}</Link></> : null}</p>}
+                      {!ch?.letter && ch?.candidates?.length ? <p className="warn small">The letter gives only the points, which could be {ch.candidates.map(c => `${a.key.split(':')[1]}${c}`).join(' or ')}. Choose from the PA4 or the reasons.</p> : null}
                       {ch?.departs && <p className="warn small">The decision maker used {a.key.split(':')[1]}{ch.departs.decisionLetter}; the PA4 advised {a.key.split(':')[1]}{ch.departs.pa4Letter}.</p>}
                     </td>
                     <td data-label="Assessor’s reason">{ch?.justification
@@ -148,7 +165,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
               <div className="row"><DraftForm caseId={id} hasDraft={!!cs.mr_draft} /><AiSubmissionForm caseId={id} stage="mr" /></div>
               <SubmissionReview review={cs.submission_review} stage="mr" />
             </>
-          : <p className="soft">{isPip ? 'Confirm the DWP descriptor for all 12 activities to draft the request.' : 'Confirm every DWP finding (17 Schedule 6 activities, Schedule 7 and both substantial-risk paragraphs) to draft the request.'}</p>}
+          : <p className="soft">{isPip ? 'Confirm the DWP descriptor for all 12 activities to draft the full request.' : hasReport ? 'Confirm every DWP finding (17 Schedule 6 activities, Schedule 7 and both substantial-risk paragraphs) to draft the full request.' : 'Choose your descriptors on the evidence tab to draft the full request.'} To protect the time limit now, use a letter above.</p>}
         {cs.mr_draft && <SaveDraftForm caseId={id} draft={cs.mr_draft} />}
       </section>
     </div>

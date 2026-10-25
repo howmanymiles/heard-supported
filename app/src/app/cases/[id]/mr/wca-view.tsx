@@ -51,17 +51,26 @@ export function WcaComparisonView({ id, docs, choices, result }: { id: string; d
         <h2 className="h2">DWP position and yours</h2>
         {unconfirmed.length > 0 && <form action={confirmAllAction}><input type="hidden" name="caseId" value={id} /><button className="btn">Confirm all {unconfirmed.length} found</button></form>}
       </div>
-      {cmp && (
+      {cmp?.mode === 'outcome_only' && (
+        <div className="panel stack">
+          <p className="totals"><span><span className="eyebrow">Decision notice</span><b>{OUTCOME_LABEL[cmp.dwpOutcome]}</b></span>
+            <span><span className="eyebrow">Yours</span><b className="big">{cmp.adviser.lcw.totalPoints}</b> points ({cmp.adviser.lcw.physicalPoints} physical, {cmp.adviser.lcw.mentalPoints} mental) · {OUTCOME_LABEL[cmp.adviserOutcome]}</span></p>
+          {cmp.warnings.map(w => <p key={w.code} className="msg msg-error" role="note">{w.message}</p>)}
+          {cmp.rows.length ? <ul className="plain stack">{cmp.rows.map(r => <li key={r.key + r.adviser}><b>{r.label}</b> · <span className="mono">{r.key.startsWith('sch6:') ? `${r.key.split(':')[1]}(${r.adviser}) · ${r.adviserPoints} pts` : r.adviser}</span> · <span className="soft small">{r.evidence.length} accepted evidence</span></li>)}</ul>
+            : <p className="soft">No descriptors chosen yet on the evidence tab.</p>}
+        </div>
+      )}
+      {cmp?.mode === 'full' && cmp.dwp && (
         <div className="panel totals">
           <div><span className="eyebrow">Report</span><p><b className="big">{cmp.dwp.lcw.totalPoints}</b> points ({cmp.dwp.lcw.physicalPoints} physical, {cmp.dwp.lcw.mentalPoints} mental) · {OUTCOME_LABEL[cmp.dwpOutcome]}</p></div>
           <div><span className="eyebrow">Yours</span><p><b className="big">{cmp.adviser.lcw.totalPoints}</b> points ({cmp.adviser.lcw.physicalPoints} physical, {cmp.adviser.lcw.mentalPoints} mental) · {OUTCOME_LABEL[cmp.adviserOutcome]}</p></div>
           <p className="soft small full">Your position comes from the descriptors and substantial-risk findings you chose on the evidence tab. Threshold 15 points (reg 39(3)); highest descriptor per activity counts (reg 39(5)).</p>
         </div>
       )}
-      {cmp?.warnings.map(w => <p key={w.code} className="msg msg-error" role="note">{w.message}</p>)}
+      {cmp?.mode === 'full' && cmp.warnings.map(w => <p key={w.code} className="msg msg-error" role="note">{w.message}</p>)}
       {missing.length > 0 && <p className="msg msg-error" role="note">No DWP finding yet for {missing.join(', ')}. Choose it from the report.</p>}
 
-      <div className="table-wrap panel">
+      {cmp?.mode !== 'outcome_only' && <div className="table-wrap panel">
         <table className="list cmp">
           <thead><tr><th>Item</th><th>DWP finding (report)</th><th>Report’s reasoning</th><th>Yours</th><th>Difference</th></tr></thead>
           <tbody>
@@ -96,7 +105,7 @@ export function WcaComparisonView({ id, docs, choices, result }: { id: string; d
             ))}
           </tbody>
         </table>
-      </div>
+      </div>}
     </section>
   );
 }

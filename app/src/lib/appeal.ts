@@ -53,22 +53,24 @@ export function issuesFor(a: NonNullable<Awaited<ReturnType<typeof getAppeal>>>)
       blocked: null,
     };
   }
-  const { comparison: c, missing, unconfirmed } = buildWcaComparison(a.choices, a.decisions, a.evidence, a.case.decision_outcome);
+  const hasReport = a.docs.some(d => d.kind === 'uc85' || d.kind === 'uc85a');
+  const { comparison: c, missing, unconfirmed } = buildWcaComparison(a.choices, a.decisions, a.evidence, a.case.decision_outcome, hasReport);
   if (!c) return { issues: [], summary: null, blocked: `The DWP finding is missing for ${missing.join(', ')}. Complete the reconsideration tab first.` };
   if (unconfirmed.length) return { issues: [], summary: null, blocked: `Confirm the DWP finding for ${unconfirmed.join(', ')} on the reconsideration tab.` };
   return {
     issues: c.challenges.map(r => ({
       key: r.key, label: r.key === 'sch7' ? 'Schedule 7' : r.label,
-      dwp: r.key.startsWith('sch6:') ? `The decision maker applied descriptor ${r.key.split(':')[1]}(${r.dwp}) (${r.dwpPoints} points).`
+      dwp: r.dwp === 'unknown' ? `The decision found ${OUTCOME_LABEL[c.dwpOutcome]}; the descriptor applied is not known, as the report has not been seen.`
+        : r.key.startsWith('sch6:') ? `The decision maker applied descriptor ${r.key.split(':')[1]}(${r.dwp}) (${r.dwpPoints} points).`
         : r.key === 'sch7' ? `The decision maker found ${r.dwp === 'none' ? 'that no Schedule 7 descriptor applies' : `descriptor ${r.dwp}`}.`
           : 'The decision maker found that it does not apply.',
       ours: r.key.startsWith('sch6:') ? `The appellant says descriptor ${r.key.split(':')[1]}(${r.adviser}) applies (${r.adviserPoints} points): "${r.adviserText}"`
         : r.key === 'sch7' ? `The appellant says ${r.adviserText}`
           : `The appellant says there would be a substantial risk to the physical or mental health of any person if the appellant were found not to have ${r.key === 'sch8:4' ? 'limited capability for work' : 'limited capability for work-related activity'}.`,
-      refs: r.key.startsWith('sch6:') ? [`${r.key.split(':')[1]}(${r.dwp})`, `${r.key.split(':')[1]}(${r.adviser})`] : r.key === 'sch7' ? [r.dwp, ...(r.adviser ?? '').split(/,\s*/)].filter(x => x && x !== 'none') : [],
+      refs: r.key.startsWith('sch6:') ? [r.dwp === 'unknown' ? '' : `${r.key.split(':')[1]}(${r.dwp})`, `${r.key.split(':')[1]}(${r.adviser})`].filter(Boolean) : r.key === 'sch7' ? [r.dwp, ...(r.adviser ?? '').split(/,\s*/)].filter(x => x && x !== 'none') : [],
       assessorReason: r.justification, evidence: r.evidence,
     })),
-    summary: `The decision maker found ${OUTCOME_LABEL[c.dwpOutcome]} (${c.dwp.lcw.totalPoints} points). The appellant says they score ${c.adviser.lcw.totalPoints} points and has ${OUTCOME_LABEL[c.adviserOutcome]}.`,
+    summary: `The decision maker found ${OUTCOME_LABEL[c.dwpOutcome]}${c.dwp ? ` (${c.dwp.lcw.totalPoints} points)` : ''}. The appellant says they score ${c.adviser.lcw.totalPoints} points and have ${OUTCOME_LABEL[c.adviserOutcome]}.`,
     blocked: null,
   };
 }

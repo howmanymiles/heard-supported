@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { createCaseAction, uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, type ActionState } from './actions';
+import { createCaseAction, uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, letterAction, saveLetterAction, type ActionState } from './actions';
 
 function Submit({ children, pending: pendingText, primary = true }: { children: React.ReactNode; pending: string; primary?: boolean }) {
   const { pending } = useFormStatus();
@@ -200,6 +200,42 @@ export function AiSubmissionForm({ caseId, stage }: { caseId: string; stage: 'mr
     <form action={action} className="stack">
       <input type="hidden" name="caseId" value={caseId} /><input type="hidden" name="stage" value={stage} />
       <div><Submit pending="Writing… this can take a minute">Write the letter with AI</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+export function LetterForm({ caseId, isPip }: { caseId: string; isPip: boolean }) {
+  const [state, action] = useActionState(letterAction, {});
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="caseId" value={caseId} />
+      <fieldset className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
+        <legend className="small"><b>Letter</b></legend>
+        <label className="check"><input type="radio" name="kind" value="raise_mr" defaultChecked /> Acting on behalf: ask for a reconsideration, reasons to follow</label>
+        <label className="check"><input type="radio" name="kind" value="request_report" /> Ask for a copy of the {isPip ? 'PA4' : 'UC85 or UC85A'} only</label>
+      </fieldset>
+      <div className="row">
+        <label className="check"><input type="checkbox" name="requestReport" value="yes" defaultChecked /> Also ask for the {isPip ? 'PA4' : 'report'}</label>
+        <label className="check"><input type="checkbox" name="hold" value="yes" defaultChecked /> Ask them to wait for reasons and evidence</label>
+        <label className="check"><input type="checkbox" name="authority" value="yes" /> Signed authority enclosed</label>
+      </div>
+      <label className="field">What your client disputes, if you want to say now <span className="hint">For example: preparing food and moving around</span>
+        <input name="disputes" maxLength={300} />
+      </label>
+      <div><Submit pending="Drafting…" primary={false}>Draft the letter</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+export function SaveLetterForm({ caseId, id, text }: { caseId: string; id: string; text: string }) {
+  const [state, action] = useActionState(saveLetterAction, {});
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="caseId" value={caseId} /><input type="hidden" name="id" value={id} />
+      <label className="field">Letter<textarea name="text" rows={16} defaultValue={text} className="draft" key={text} /></label>
+      <div><Submit pending="Saving…" primary={false}>Save</Submit></div>
       <Status state={state} />
     </form>
   );
