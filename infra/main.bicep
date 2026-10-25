@@ -137,6 +137,7 @@ resource pgTls 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2024-08
   parent: pg
   name: 'require_secure_transport'
   properties: { value: 'on', source: 'user-override' }
+  dependsOn: [pgDb, pgFirewallAzure]   // the server takes one change at a time
 }
 
 resource pgTlsMin 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2024-08-01' = {
