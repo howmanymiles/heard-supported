@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { createCaseAction, uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, letterAction, saveLetterAction, type ActionState } from './actions';
+import { createCaseAction, uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, letterAction, saveLetterAction, outcomeAction, closeAction, type ActionState } from './actions';
 
 function Submit({ children, pending: pendingText, primary = true }: { children: React.ReactNode; pending: string; primary?: boolean }) {
   const { pending } = useFormStatus();
@@ -236,6 +236,71 @@ export function SaveLetterForm({ caseId, id, text }: { caseId: string; id: strin
       <input type="hidden" name="caseId" value={caseId} /><input type="hidden" name="id" value={id} />
       <label className="field">Letter<textarea name="text" rows={16} defaultValue={text} className="draft" key={text} /></label>
       <div><Submit pending="Saving…" primary={false}>Save</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+type AwardV = { daily_living?: string; mobility?: string; wca?: string } | null;
+const RATES = [['', 'Not recorded'], ['none', 'No award'], ['standard', 'Standard'], ['enhanced', 'Enhanced']];
+const WCA_OPTS = [['', 'Not recorded'], ['none', 'No LCW'], ['lcw', 'LCW'], ['lcwra', 'LCWRA']];
+
+function AwardFields({ prefix, label, benefit, value }: { prefix: string; label: string; benefit: string; value: AwardV }) {
+  return (
+    <fieldset className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
+      <legend className="small"><b>{label}</b></legend>
+      {benefit === 'pip' ? (
+        <div className="row">
+          <label className="field small-field">Daily living<select name={`${prefix}_dl`} defaultValue={value?.daily_living ?? ''}>{RATES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
+          <label className="field small-field">Mobility<select name={`${prefix}_mob`} defaultValue={value?.mobility ?? ''}>{RATES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
+        </div>
+      ) : (
+        <label className="field small-field">Outcome<select name={`${prefix}_wca`} defaultValue={value?.wca ?? ''}>{WCA_OPTS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
+      )}
+    </fieldset>
+  );
+}
+
+export function OutcomeForm({ caseId, benefit, c, beforeDefault }: { caseId: string; benefit: string; c: Record<string, any>; beforeDefault: AwardV }) {
+  const [state, action] = useActionState(outcomeAction, {});
+  const d = (x: unknown) => (typeof x === 'string' ? x.slice(0, 10) : '');
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="caseId" value={caseId} />
+      <div className="row">
+        <label className="field">Reconsideration result
+          <select name="mrOutcome" defaultValue={c.mr_outcome ?? ''}><option value="">Not yet / not asked for</option><option value="revised">Revised in full</option><option value="revised_in_part">Revised in part</option><option value="unchanged">Not changed</option></select>
+        </label>
+        <label className="field">Date of the MR notice<input type="date" name="mrOutcomeDate" defaultValue={d(c.mr_outcome_date) || d(c.mr_notice_date)} /></label>
+      </div>
+      <div className="row">
+        <label className="field">Appeal result
+          <select name="appealOutcome" defaultValue={c.appeal_outcome ?? ''}><option value="">Not yet / no appeal</option><option value="allowed">Allowed</option><option value="allowed_in_part">Allowed in part</option><option value="dismissed">Dismissed</option><option value="lapsed_revised">Lapsed: DWP revised before the hearing</option><option value="withdrawn">Withdrawn</option><option value="struck_out">Struck out</option></select>
+        </label>
+        <label className="field">Date of the result<input type="date" name="appealOutcomeDate" defaultValue={d(c.appeal_outcome_date)} /></label>
+      </div>
+      <div className="row">
+        <AwardFields prefix="before" label="Award before (the decision challenged)" benefit={benefit} value={c.award_before ?? beforeDefault} />
+        <AwardFields prefix="after" label="Award after" benefit={benefit} value={c.award_after} />
+      </div>
+      <div><Submit pending="Saving…" primary={false}>Save outcome</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+export function CloseForm({ caseId }: { caseId: string }) {
+  const [state, action] = useActionState(closeAction, {});
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="caseId" value={caseId} />
+      <div className="row">
+        <label className="field small-field">Reason
+          <select name="reason" defaultValue="outcome"><option value="outcome">Outcome reached</option><option value="client_withdrew">Client withdrew</option><option value="no_contact">Lost contact</option><option value="referred">Referred elsewhere</option><option value="other">Other</option></select>
+        </label>
+        <label className="field">Note (optional)<input name="note" maxLength={500} /></label>
+      </div>
+      <div><Submit pending="Closing…" primary={false}>Close the case</Submit></div>
       <Status state={state} />
     </form>
   );

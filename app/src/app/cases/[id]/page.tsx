@@ -7,6 +7,7 @@ import { score, descriptorsFor } from '@/lib/score';
 import { UploadForm, ReviewForm } from '../../forms';
 import { evidenceAction, gapAction, decisionAction } from '../../actions';
 import { CaseTabs } from './tabs';
+import { AssignBox } from './assign';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +46,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
         <h1><span className="mono">{cs.ref}</span></h1>
         <p className="soft">{cs.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit · Work Capability Assessment'} · Descriptor data {cs.dataset_version}</p>
       </div>
+      <AssignBox caseId={id} adviserId={cs.adviser_id} adviserName={cs.adviser_name} />
       <CaseTabs id={id} benefit={cs.benefit} current="evidence" />
 
       <section className="panel totals" aria-label="Totals from your decisions">

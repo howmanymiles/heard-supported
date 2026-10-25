@@ -5,7 +5,8 @@ import { putDocument, getDocument } from './storage.ts';
 import type { Me } from './auth.ts';
 
 export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number;
-  decision_date: string | null; mr_request_date: string | null; mr_notice_date: string | null; appeal_sent_date: string | null };
+  decision_date: string | null; mr_request_date: string | null; mr_notice_date: string | null; appeal_sent_date: string | null;
+  adviser_id?: string | null; closed_on?: string | null; closed_reason?: string | null };
 export type DocKind = 'evidence' | 'notes' | 'pa4' | 'uc85' | 'uc85a' | 'decision' | 'mr_notice' | 'dwp_bundle' | 'other';
 export const DOC_KINDS: DocKind[] = ['evidence', 'notes', 'pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle', 'other'];
 /** Papers that record the DWP's position rather than the client's evidence. */

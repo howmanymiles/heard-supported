@@ -1,0 +1,58 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { requireMe } from '@/lib/auth';
+import { getMr, buildComparison } from '@/lib/mr';
+import { CLOSE_REASONS, awardChange } from '@/lib/casework';
+import { OutcomeForm, CloseForm } from '../../../forms';
+import { reopenAction } from '../../../actions';
+import { CaseTabs } from '../tabs';
+
+export const dynamic = 'force-dynamic';
+
+export default async function OutcomePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const me = await requireMe();
+  const m = await getMr(me, id);
+  if (!m) notFound();
+  const cs = m.case;
+  // The award challenged, as far as the app knows it: the DWP position for PIP, the notice for WCA.
+  let beforeDefault: { daily_living?: string; mobility?: string; wca?: string } | null = null;
+  if (cs.benefit === 'pip') {
+    const { comparison } = buildComparison(m.choices, m.decisions, m.evidence);
+    if (comparison) beforeDefault = { daily_living: comparison.dailyLiving.assessor.rate, mobility: comparison.mobility.assessor.rate };
+  } else if (cs.decision_outcome) beforeDefault = { wca: cs.decision_outcome };
+  const change = awardChange(cs.benefit, cs.award_before, cs.award_after);
+
+  return (
+    <div className="stack-lg">
+      <p className="crumbs"><Link href="/">← Cases</Link></p>
+      <div className="head">
+        <h1><span className="mono">{cs.ref}</span></h1>
+        <p className="soft">{cs.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit · Work Capability Assessment'} · Outcome</p>
+      </div>
+      <CaseTabs id={id} benefit={cs.benefit} current="outcome" />
+
+      <section className="panel stack" aria-label="Outcome">
+        <h2 className="eyebrow">Results</h2>
+        <p className="soft small">Recorded for your agency’s reports. “Award before” is filled in from the decision papers where the app has read them; check it.</p>
+        <OutcomeForm caseId={id} benefit={cs.benefit} c={cs} beforeDefault={beforeDefault} />
+        {change && <p className="small">Change in award: <b>{change === 'better' ? 'better' : change === 'worse' ? 'worse' : 'no overall change'}</b>.</p>}
+      </section>
+
+      <section className="panel stack" aria-label="Close">
+        <h2 className="eyebrow">{cs.closed_at ? 'Closed' : 'Close the case'}</h2>
+        {cs.closed_at ? (
+          <>
+            <p>Closed on {new Date(cs.closed_at).toISOString().slice(0, 10)}: {CLOSE_REASONS[cs.closed_reason as keyof typeof CLOSE_REASONS] ?? cs.closed_reason}{cs.closed_note ? `. ${cs.closed_note}` : ''}</p>
+            <form action={reopenAction}><input type="hidden" name="caseId" value={id} /><button className="btn">Reopen the case</button></form>
+          </>
+        ) : (
+          <>
+            <p className="soft small">A closed case leaves the open caseload and its deadlines. Everything on it is kept, and it can be reopened.</p>
+            <CloseForm caseId={id} />
+          </>
+        )}
+      </section>
+    </div>
+  );
+}

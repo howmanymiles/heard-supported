@@ -295,3 +295,48 @@ export async function saveLetterAction(_: ActionState, form: FormData): Promise<
   revalidatePath(`/cases/${caseId}/mr`);
   return { ok: 'Saved.' };
 }
+
+// ---------- casework ----------
+
+export async function assignAction(form: FormData) {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const { assignCase } = await import('@/lib/casework');
+  await assignCase(me, caseId, String(form.get('userId') || me.userId));
+  revalidatePath(`/cases/${caseId}`);
+  revalidatePath('/');
+}
+
+export async function outcomeAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const v = (k: string) => { const x = String(form.get(k) ?? '').trim(); return x === '' ? null : x; };
+  const award = (p: string) => ({ daily_living: v(`${p}_dl`) ?? undefined, mobility: v(`${p}_mob`) ?? undefined, wca: v(`${p}_wca`) ?? undefined });
+  try {
+    const { saveOutcome } = await import('@/lib/casework');
+    await saveOutcome(me, caseId, { mrOutcome: v('mrOutcome'), mrOutcomeDate: v('mrOutcomeDate'), appealOutcome: v('appealOutcome'), appealOutcomeDate: v('appealOutcomeDate'), before: award('before'), after: award('after') });
+  } catch (e) { return { error: msg(e) }; }
+  revalidatePath(`/cases/${caseId}/outcome`);
+  return { ok: 'Outcome saved.' };
+}
+
+export async function closeAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  try {
+    const { closeCase } = await import('@/lib/casework');
+    await closeCase(me, caseId, String(form.get('reason') ?? ''), String(form.get('note') ?? ''));
+  } catch (e) { return { error: msg(e) }; }
+  revalidatePath(`/cases/${caseId}/outcome`);
+  revalidatePath('/');
+  return { ok: 'Case closed. It no longer appears in the open caseload.' };
+}
+
+export async function reopenAction(form: FormData) {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const { reopenCase } = await import('@/lib/casework');
+  await reopenCase(me, caseId);
+  revalidatePath(`/cases/${caseId}/outcome`);
+  revalidatePath('/');
+}
