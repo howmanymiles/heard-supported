@@ -3,6 +3,7 @@ import { requireMe } from '@/lib/auth';
 import { canManage } from '@/lib/casework';
 import { listOffices } from '@/lib/offices';
 import { listPeople, listInvites, ROLES } from '@/lib/access';
+import { checkAudit } from '@/lib/auditlog';
 import { AddOfficeForm, RenameOfficeForm, UserOfficeForm, InviteForm, RoleForm, DeactivateButton, ReactivateButton, RevokeInviteButton } from './forms';
 
 export const dynamic = 'force-dynamic';
@@ -15,6 +16,7 @@ export default async function Team() {
   const officeName = Object.fromEntries(offices.map(o => [o.id, o.name]));
   const active = people.filter(p => p.active), removed = people.filter(p => !p.active);
   const orphaned = removed.filter(p => p.open_cases > 0);
+  const chain = admin ? await checkAudit(me) : null;
 
   return (
     <div className="stack-lg">
@@ -72,6 +74,17 @@ export default async function Team() {
         )}
         {manage && <AddOfficeForm />}
       </section>
+
+      {chain && (
+        <section className="panel stack" aria-label="Audit record">
+          <h2 className="eyebrow">Audit record</h2>
+          {chain.intact
+            ? <p className="msg msg-ok">Intact: all {chain.checked.toLocaleString('en-GB')} entries check out. Nothing has been changed or removed.</p>
+            : <p className="msg msg-error" role="alert">{chain.problem} (entry {chain.badId}). Contact us straight away: this may mean someone has tampered with the record.</p>}
+          <p className="soft small">Every change, and every time someone opens a client’s record, case or document, is recorded. Each entry is sealed with the one before, so an entry can’t be altered or removed without it showing here.
+            {chain.lastHash && <> Latest seal <span className="mono">{chain.lastHash.slice(0, 16)}</span>.</>}</p>
+        </section>
+      )}
     </div>
   );
 }

@@ -4,7 +4,7 @@
 // and the client's names are removed from every page before the AI sees it.
 
 import type { PoolClient } from 'pg';
-import { asAgency, audit } from './db.ts';
+import { asAgency, audit, viewed } from './db.ts';
 import type { Me } from './auth.ts';
 import { limit, LIMITS } from './ratelimit.ts';
 
@@ -57,7 +57,7 @@ async function insertConsent(c: PoolClient, me: Me, claimantId: string, k: Conse
   await c.query(`insert into consents (agency_id, claimant_id, statement_version, method, given_on, store_data, ai_processing, act_on_behalf, recorded_by)
     values ($1, $2, $3, $4, $5, true, $6, $7, $8)`, [me.agencyId, claimantId, CONSENT_STATEMENT.version, k.method, given, k.aiProcessing, k.actOnBehalf, me.userId]);
   const what = [k.aiProcessing ? 'AI help' : 'no AI', k.actOnBehalf ? 'authority to act' : 'no authority to act'].join(', ');
-  await audit(c, me.agencyId, me.userId, null, `Consent recorded (${CONSENT_STATEMENT.version}; storing information, ${what})`);
+  await audit(c, me.agencyId, me.userId, null, `Consent recorded (${CONSENT_STATEMENT.version}; storing information, ${what})`, claimantId);
 }
 
 /** Consent first, then the record: both in one transaction, so there is never a record without consent. */
@@ -68,7 +68,7 @@ export async function createClaimant(me: Me, p: ClaimantInput, k: ConsentInput, 
     const id = (await c.query('insert into claimants (agency_id, name, preferred_name, date_of_birth, agency_ref, created_by) values ($1, $2, $3, $4, $5, $6) returning id',
       [me.agencyId, x.name, x.preferred, x.dob, x.ref, me.userId])).rows[0].id;
     await insertConsent(c, me, id, k, given);
-    await audit(c, me.agencyId, me.userId, null, 'Client record created');
+    await audit(c, me.agencyId, me.userId, null, 'Client record created', id);
     return id;
   });
 }
@@ -78,7 +78,7 @@ export async function updateClaimant(me: Me, id: string, p: ClaimantInput, today
   await asAgency(me.agencyId, async c => {
     const r = await c.query('update claimants set name = $2, preferred_name = $3, date_of_birth = $4, agency_ref = $5 where id = $1', [id, x.name, x.preferred, x.dob, x.ref]);
     if (!r.rowCount) throw new Error('Client not found.');
-    await audit(c, me.agencyId, me.userId, null, 'Client details changed');
+    await audit(c, me.agencyId, me.userId, null, 'Client details changed', id);
   });
 }
 
@@ -97,7 +97,7 @@ export async function withdrawConsent(me: Me, claimantId: string, note: string) 
   await asAgency(me.agencyId, async c => {
     const r = await c.query('update consents set withdrawn_at = now(), withdrawn_by = $2, withdrawn_note = $3 where claimant_id = $1 and withdrawn_at is null', [claimantId, me.userId, note.trim().slice(0, 300) || null]);
     if (!r.rowCount) throw new Error('There is no current consent to withdraw.');
-    await audit(c, me.agencyId, me.userId, null, 'Consent withdrawn');
+    await audit(c, me.agencyId, me.userId, null, 'Consent withdrawn', claimantId);
   });
 }
 
@@ -126,6 +126,7 @@ export async function getClaimant(me: Me, id: string) {
       u.name as recorded_by_name, n.recorded_at, n.withdrawn_at, n.withdrawn_note
       from consents n left join users u on u.id = n.recorded_by where n.claimant_id = $1 order by n.recorded_at desc`, [id])).rows as ConsentRow[];
     const cases = (await c.query("select id, ref, external_ref, benefit, stage, to_char(closed_at, 'YYYY-MM-DD') as closed_on from cases where claimant_id = $1 order by created_at desc", [id])).rows;
+    await viewed(c, me.agencyId, me.userId, { claimantId: id, action: 'Opened the client record' });
     return { claimant: k, consents, current: consents.find(n => !n.withdrawn_at) ?? null, cases };
   });
 }

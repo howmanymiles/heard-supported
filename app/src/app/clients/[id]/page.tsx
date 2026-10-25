@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireMe } from '@/lib/auth';
 import { getClaimant, CONSENT_STATEMENT, CONSENT_METHODS } from '@/lib/claimants';
+import { clientHistory } from '@/lib/auditlog';
 import { EditClientForm, NewConsentForm, WithdrawForm, ClientCaseForm } from '../forms';
 
 export const dynamic = 'force-dynamic';
@@ -14,6 +15,7 @@ export default async function Client({ params }: { params: Promise<{ id: string 
   const { id } = await params;
   const me = await requireMe();
   const data = await getClaimant(me, id);
+  const history = data && (me.role === 'admin' || me.role === 'supervisor') ? await clientHistory(me, id) : null;
   if (!data) notFound();
   const { claimant: k, consents, current, cases } = data;
   const today = new Date().toISOString().slice(0, 10);
@@ -54,6 +56,21 @@ export default async function Client({ params }: { params: Promise<{ id: string 
       </section>
 
       <section className="panel stack" aria-label="Details"><h2 className="eyebrow">Details</h2><EditClientForm claimant={k} /></section>
+      {history && (
+        <section className="panel stack" aria-label="Who has used this record">
+          <details>
+            <summary><h2 className="eyebrow" style={{ display: 'inline' }}>Who has used this record</h2> <span className="soft small">({history.length}{history.length === 200 ? '+' : ''})</span></summary>
+            <p className="soft small">Every change, and every time someone opened this client’s record, a case or a document. Use this to answer a subject access request or check access.</p>
+            <div className="table-wrap"><table className="list">
+              <thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">What</th><th scope="col">Case</th></tr></thead>
+              <tbody>{history.map((h, i) => (
+                <tr key={i}><td className="mono small">{new Date(h.at).toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'short', timeStyle: 'short' })}</td><td>{h.who ?? '–'}</td>
+                  <td>{h.kind === 'access' ? <span className="soft">{h.action}</span> : h.action}</td><td className="mono small">{h.case_ref ?? ''}</td></tr>
+              ))}</tbody>
+            </table></div>
+          </details>
+        </section>
+      )}
     </div>
   );
 }

@@ -32,6 +32,20 @@ export async function asAgency<T>(agencyId: string, fn: (c: PoolClient) => Promi
   }
 }
 
-export async function audit(c: PoolClient, agencyId: string, userId: string | null, caseId: string | null, action: string) {
-  await c.query('insert into audit (agency_id, case_id, user_id, action) values ($1, $2, $3, $4)', [agencyId, caseId, userId, action]);
+/** Record a change. The database chains each entry to the one before (see 015_audit_chain.sql). */
+export async function audit(c: PoolClient, agencyId: string, userId: string | null, caseId: string | null, action: string, claimantId: string | null = null) {
+  await c.query('insert into audit (agency_id, case_id, user_id, action, claimant_id) values ($1, $2, $3, $4, $5)', [agencyId, caseId, userId, action, claimantId]);
+}
+
+/**
+ * Record that someone looked at a client's information. Repeat views of the same thing by
+ * the same person within 10 minutes are recorded once, so moving between tabs isn't noise.
+ */
+export async function viewed(c: PoolClient, agencyId: string, userId: string, what: { caseId?: string | null; claimantId?: string | null; action: string }) {
+  const recent = await c.query(`select 1 from audit where agency_id = $1 and user_id = $2 and kind = 'access' and action = $3
+    and case_id is not distinct from $4 and claimant_id is not distinct from $5 and at > now() - interval '10 minutes' limit 1`,
+    [agencyId, userId, what.action, what.caseId ?? null, what.claimantId ?? null]);
+  if (recent.rowCount) return;
+  await c.query(`insert into audit (agency_id, case_id, user_id, claimant_id, kind, action) values ($1, $2, $3, $4, 'access', $5)`,
+    [agencyId, what.caseId ?? null, userId, what.claimantId ?? null, what.action]);
 }

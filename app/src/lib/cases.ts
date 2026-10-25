@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readDocument, extractEvidence, splitTextPages, activityList, datasetVersion, type Benefit } from '@hs/core';
-import { asAgency, audit } from './db.ts';
+import { asAgency, audit, viewed } from './db.ts';
 import { putDocument, getDocument } from './storage.ts';
 import type { Me } from './auth.ts';
 import { aiGate, storeGate } from './claimants.ts';
@@ -71,7 +71,8 @@ export async function getCase(me: Me, id: string) {
     const gaps = (await c.query('select id, activity, gap, status from gaps where case_id = $1 order by created_at', [id])).rows as GapRow[];
     const decisions = (await c.query('select activity, satisfied, days_per_week from decisions where case_id = $1', [id])).rows as DecisionRow[];
     const runs = (await c.query('select model, verified, rejected, identifiers_removed, created_at from extraction_runs where case_id = $1 order by created_at desc limit 1', [id])).rows;
-    const log = (await c.query(`select a.action, a.at, u.name from audit a left join users u on u.id = a.user_id where a.case_id = $1 order by a.at desc limit 50`, [id])).rows;
+    const log = (await c.query(`select a.action, a.at, u.name from audit a left join users u on u.id = a.user_id where a.case_id = $1 and a.kind = 'change' order by a.at desc limit 50`, [id])).rows;
+    await viewed(c, me.agencyId, me.userId, { caseId: id, claimantId: cs.rows[0].claimant_id, action: 'Opened the case' });
     return { case: cs.rows[0], docs, evidence, gaps, decisions, lastRun: runs[0] ?? null, log };
   });
 }
@@ -81,6 +82,8 @@ export async function getDocumentPages(me: Me, caseId: string, docId: string) {
     const d = await c.query('select id, name from documents where id = $1 and case_id = $2', [docId, caseId]);
     if (!d.rowCount) return null;
     const pages = (await c.query('select page_no, text, lines from pages where document_id = $1 order by page_no', [docId])).rows;
+    const owner = (await c.query('select claimant_id from cases where id = $1', [caseId])).rows[0]?.claimant_id ?? null;
+    await viewed(c, me.agencyId, me.userId, { caseId, claimantId: owner, action: `Read the document “${d.rows[0].name}”` });
     return { doc: d.rows[0], pages };
   });
 }
