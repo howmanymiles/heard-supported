@@ -70,7 +70,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
 
       <section className="panel stack" aria-label="Letters">
         <h2 className="eyebrow">Letters on your client’s behalf</h2>
-        <p className="soft small">Send these with just the {t.decision}: one raises the {t.mr} in time with reasons to follow, the other asks for the {isPip ? rep : 'UC85 or UC85A'}{scot ? ' and supporting information' : ''}. Built by the app from the case details, not by AI.</p>
+        <p className="soft small">Send these with just the {t.decision}: one raises the {t.mr} in time with reasons to follow, the other asks for the {isPip ? rep : 'UC85 or UC85A'}{scot ? ' and supporting information' : ''}. Built by the system from the case details, not by AI.</p>
         <LetterForm caseId={id} isPip={isPip} scot={scot} />
         {letters.map(l => (
           <details key={l.id} className="panel">

@@ -18,7 +18,7 @@ export default async function OutcomePage({ params }: { params: Promise<{ id: st
   const m = await getMr(me, id);
   if (!m) notFound();
   const cs = m.case;
-  // The award challenged, as far as the app knows it: the DWP position for PIP, the notice for WCA.
+  // The award challenged, as far as the system knows it: the DWP position for PIP, the notice for WCA.
   let beforeDefault: { daily_living?: string; mobility?: string; wca?: string } | null = null;
   if (cs.benefit !== 'uc-wca') {
     const { comparison } = buildComparison(m.choices, m.decisions, m.evidence, cs.benefit);
@@ -44,7 +44,7 @@ export default async function OutcomePage({ params }: { params: Promise<{ id: st
 
       <section className="panel stack" aria-label="Outcome">
         <h2 className="eyebrow">Results</h2>
-        <p className="soft small">Recorded for your agency’s reports. “Award before” is filled in from the decision papers where the app has read them; check it.</p>
+        <p className="soft small">Recorded for your agency’s reports. “Award before” is filled in from the decision papers where the system has read them; check it.</p>
         <OutcomeForm caseId={id} benefit={cs.benefit} c={cs} beforeDefault={beforeDefault} />
         {change && <p className="small">Change in award: <b>{change === 'better' ? 'better' : change === 'worse' ? 'worse' : 'no overall change'}</b>.
           {gain ? <> Worth about <b>{pounds(gain.gain)} a year</b> at {gain.year} rates{cs.benefit === 'uc-wca' ? ' (the most it adds: UC is means-tested)' : ''}.</> : cs.benefit === 'uc-wca' && cs.award_after?.wca === 'lcwra' ? ' Choose which LCWRA amount applies to see its value.' : ''}</p>}

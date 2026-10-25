@@ -103,7 +103,7 @@ export default async function AppealPage({ params }: { params: Promise<{ id: str
 
       <section className="panel stack" aria-label="Grounds of appeal">
         <h2 className="eyebrow">Grounds and submission</h2>
-        <p className="soft small"><b>Grounds</b> are built by the app from the confirmed {scot ? 'Social Security Scotland' : 'DWP'} position, your decisions and accepted evidence, with bundle pages once the bundle is read: no AI. <b>The submission letter</b> is written by the AI from the same facts only. Every sentence is checked: quotations must be word for word from the evidence they cite, numbers must come from that evidence, no case law, only listed regulations, and descriptors only as on either side. Anything that fails is removed. Your interview notes are written in your voice. Drafting either replaces the text below.</p>
+        <p className="soft small"><b>Grounds</b> are built by the system from the confirmed {scot ? 'Social Security Scotland' : 'DWP'} position, your decisions and accepted evidence, with bundle pages once the bundle is read: no AI. <b>The submission letter</b> is written by the AI from the same facts only. Every sentence is checked: quotations must be word for word from the evidence they cite, numbers must come from that evidence, no case law, only listed regulations, and descriptors only as on either side. Anything that fails is removed. Your interview notes are written in your voice. Drafting either replaces the text below.</p>
         {!blocked && issues.length > 0 && <div className="row">
           <ActionButton caseId={id} which="grounds" label="Draft the grounds" pending="Drafting…" />
           <AiSubmissionForm caseId={id} stage="appeal" />
