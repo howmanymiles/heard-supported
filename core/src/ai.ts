@@ -6,6 +6,10 @@ import { cognitiveToken } from './azure.ts';
 
 export type ChatMessage = { role: 'system' | 'user'; content: string };
 
+// Tests point AI_ENDPOINT at a local stub and swap the Entra token for a dummy.
+let tokenProvider: () => Promise<string> = cognitiveToken;
+export function setTokenProviderForTests(fn: () => Promise<string>) { tokenProvider = fn; }
+
 export async function chatJson<T>(messages: ChatMessage[], opts: { endpoint?: string; deployment?: string } = {}): Promise<{ data: T; model: string }> {
   const endpoint = (opts.endpoint ?? process.env.AI_ENDPOINT ?? '').replace(/\/$/, '');
   const deployment = opts.deployment ?? process.env.AI_DEPLOYMENT;
@@ -18,7 +22,7 @@ export async function chatJson<T>(messages: ChatMessage[], opts: { endpoint?: st
   for (let attempt = 0; attempt < 4; attempt++) {
     const r = await fetch(`${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${await cognitiveToken()}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${await tokenProvider()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (r.status === 429 || r.status >= 500) {

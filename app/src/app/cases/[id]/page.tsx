@@ -6,6 +6,7 @@ import { getCase, type EvidenceRow } from '@/lib/cases';
 import { score, descriptorsFor } from '@/lib/score';
 import { UploadForm, ReviewForm } from '../../forms';
 import { evidenceAction, gapAction, decisionAction } from '../../actions';
+import { CaseTabs } from './tabs';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,8 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
   const me = await requireMe();
   const data = await getCase(me, id);
   if (!data) notFound();
-  const { case: cs, docs, evidence, gaps, decisions, lastRun, log } = data;
+  const { case: cs, evidence, gaps, decisions, lastRun, log } = data;
+  const docs = data.docs.filter(d => d.kind === 'evidence' || d.kind === 'other'); // decision papers live on the MR tab
   const acts = activityList(cs.benefit);
   const s = score(cs.benefit, decisions);
   const unread = docs.filter(d => d.read_status !== 'read').length;
@@ -43,6 +45,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
         <h1><span className="mono">{cs.ref}</span></h1>
         <p className="soft">{cs.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit · Work Capability Assessment'} · Descriptor data {cs.dataset_version}</p>
       </div>
+      <CaseTabs id={id} benefit={cs.benefit} current="evidence" />
 
       <section className="panel totals" aria-label="Totals from your decisions">
         {s.kind === 'pip' ? (<>
@@ -82,7 +85,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
           const chosen = Array.isArray(dec?.satisfied) && dec!.satisfied.length ? (typeof dec!.satisfied[0] === 'string' ? dec!.satisfied[0] as string : (dec!.satisfied[0] as { letter: string }).letter) : '';
           const options = descriptorsFor(a.key);
           return (
-            <details key={a.key} className="panel act" open={ev.length > 0 || g.length > 0}>
+            <details key={a.key} id={a.key.replace(':', '-')} className="panel act" open={ev.length > 0 || g.length > 0}>
               <summary><span className="act-title">{a.label}</span><span className="soft small">{ev.filter(e => e.status === 'suggested').length} to check · {ev.filter(e => e.status === 'accepted').length} accepted{g.length ? ` · ${g.length} gaps` : ''}{chosen ? ` · descriptor ${chosen}` : ''}</span></summary>
               <div className="act-body">
                 <div className="stack">

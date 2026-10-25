@@ -31,3 +31,21 @@ test('scores recall, wrong-activity hits, noise and gaps', () => {
   assert.equal(s.dropRate, 0.25);
   assert.deepEqual(s.gapActivities, { expected: 1, raised: 1 });
 });
+
+test('MR scoring: a wrong descriptor counts against, a missing one is left for the adviser', async () => {
+  const { scoreAssessor } = await import('../score.ts');
+  const mr = { pa4: { activities: [
+    { activity: 1, letter: 'a', justification_quote: { page: 3, quote: 'cooks the evening meal most nights' } },
+    { activity: 2, letter: 'a' }, { activity: 3, letter: 'b' },
+  ] } };
+  const s = scoreAssessor(mr, {
+    activities: [
+      { activity: 1, letter: 'a', source: 'decision_letter', justification: { doc: 'D2', page: 3, quote: 'The claimant cooks the evening meal most nights', docId: 'pa4' } },
+      { activity: 2, letter: 'c', source: 'pa4' },
+      { activity: 3, letter: null, source: null },
+    ],
+    decisionDate: { date: '2026-12-07', cite: { doc: 'D1', page: 1, quote: 'x', docId: 'dec' } },
+    dropped: [],
+  }, '2026-12-07', 'pa4');
+  assert.deepEqual([s.lettersCorrect, s.lettersWrong, s.lettersMissing, s.justificationsFound, s.dateCorrect], [1, 1, 1, 1, true]);
+});

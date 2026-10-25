@@ -14,7 +14,11 @@ for (const id of fs.readdirSync(root).sort()) {
   }));
   // Claim-stage documents only: the PA4, decision and appeal papers belong to later stages.
   const claimDocs = docs.filter(d => !/ (pa4|decision|mr request|mr notice|sscs1|dwp response)\.md$/.test(d.name));
-  out.push({ id, benefit: c.benefit, title: c.title, docs: claimDocs });
+  // The MR papers, loaded separately on the reconsideration page.
+  const mrDocs = [['pa4', 'pa4'], ['decision', 'decision']]
+    .filter(([f]) => fs.existsSync(path.join(root, id, 'documents', `${f}.md`)))
+    .map(([f, kind]) => ({ name: `${id} ${f === 'pa4' ? 'PA4 assessment report' : 'decision letter'}.md`, kind, text: fs.readFileSync(path.join(root, id, 'documents', `${f}.md`), 'utf8') }));
+  out.push({ id, benefit: c.benefit, title: c.title, docs: claimDocs, mrDocs });
 }
 const target = path.resolve(import.meta.dirname, '../src/data/synthetic.json');
 fs.mkdirSync(path.dirname(target), { recursive: true });

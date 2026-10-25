@@ -1,6 +1,6 @@
 // Scores one extraction run against a synthetic case's answer file.
 // Pure: no network, so it is unit-tested and reused by the runner.
-import { normalise, type VerifiedEvidence, type Gap } from '@hs/core';
+import { normalise, type VerifiedEvidence, type Gap, type AssessorResult } from '@hs/core';
 
 export type MustFind = { doc: string; page: number; quote: string };
 export type CaseActivity = { key: string; evidence_status: string; must_find: MustFind[]; gaps: string[] };
@@ -59,4 +59,22 @@ export function scoreCase(c: CaseFile, docIdFor: (doc: string) => string, verifi
     suggested: verified.length, dropped: droppedCount, dropRate: total ? droppedCount / total : 0,
     noise, gapActivities: { expected: expectedGaps.size, raised: raised.size }, misses,
   };
+}
+
+// ---------- MR stage: reading the DWP's position ----------
+
+export type MrAnswer = { pa4: { activities: Array<{ activity: number; letter: string; justification_quote?: { page: number; quote: string } }> } };
+
+export function scoreAssessor(mr: MrAnswer, r: Pick<AssessorResult, 'activities' | 'decisionDate' | 'dropped'>, letterDate: string | null, pa4DocId: string) {
+  let lettersCorrect = 0, lettersWrong = 0, lettersMissing = 0, justificationsFound = 0;
+  const wrong: Array<{ activity: number; got: string; want: string }> = [];
+  for (const want of mr.pa4.activities) {
+    const got = r.activities.find(a => a.activity === want.activity);
+    if (!got?.letter) lettersMissing++;
+    else if (got.letter === want.letter) lettersCorrect++;
+    else { lettersWrong++; wrong.push({ activity: want.activity, got: got.letter, want: want.letter }); }
+    const j = want.justification_quote;
+    if (j && got?.justification && got.justification.docId === pa4DocId && got.justification.page === j.page && samePassage(got.justification.quote, j.quote)) justificationsFound++;
+  }
+  return { lettersCorrect, lettersWrong, lettersMissing, wrong, justificationsFound, dateCorrect: !!letterDate && r.decisionDate?.date === letterDate, dropped: r.dropped.length };
 }

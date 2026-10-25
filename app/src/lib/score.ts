@@ -3,14 +3,18 @@ import descriptors from '@hs/engine/descriptors.json' with { type: 'json' };
 import type { Benefit } from '@hs/core';
 import type { DecisionRow } from './cases.ts';
 
-const data = descriptors as unknown as Dataset;
+export const data = descriptors as unknown as Dataset;
+
+/** The adviser's PIP decisions in the engine's input shape. */
+export function pipInputs(decisions: DecisionRow[]) {
+  return decisions.filter(d => d.activity.startsWith('pip:') && Array.isArray(d.satisfied) && d.satisfied.length)
+    .map(d => ({ activity: Number(d.activity.split(':')[1]), satisfied: d.satisfied as Array<{ letter: string; daysPercent?: number }> }));
+}
 
 /** Works the adviser's decisions through the regulations. Never chooses anything itself. */
 export function score(benefit: Benefit, decisions: DecisionRow[]) {
   if (benefit === 'pip') {
-    const inputs = decisions.filter(d => d.activity.startsWith('pip:') && Array.isArray(d.satisfied) && d.satisfied.length)
-      .map(d => ({ activity: Number(d.activity.split(':')[1]), satisfied: d.satisfied as Array<{ letter: string; daysPercent?: number }> }));
-    const r = assessPip(data, inputs);
+    const r = assessPip(data, pipInputs(decisions));
     return { kind: 'pip' as const, result: r };
   }
   const lcw = decisions.filter(d => d.activity.startsWith('sch6:') && Array.isArray(d.satisfied) && d.satisfied.length)

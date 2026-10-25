@@ -111,3 +111,15 @@ test('text documents split on page markers, and page 1 needs none', async () => 
   assert.deepEqual(p, [{ page: 1, text: 'First page' }, { page: 2, text: 'Second' }, { page: 3, text: 'Third' }]);
   assert.deepEqual(splitTextPages('--- Page 2 ---\nOnly'), [{ page: 2, text: 'Only' }]);
 });
+
+test('MR time limits: one calendar month, late up to 13 months', async () => {
+  const { addMonths, mrTiming } = await import('../src/deadlines.ts');
+  assert.equal(addMonths('2026-01-31', 1), '2026-02-28');
+  assert.equal(addMonths('2027-12-07', 1), '2028-01-07');
+  assert.equal(addMonths('2026-12-07', 13), '2028-01-07');
+  assert.deepEqual(mrTiming('2026-12-07', '2027-01-07').status, 'in_time');
+  assert.equal(mrTiming('2026-12-07', '2027-01-07').daysLeft, 0);
+  assert.equal(mrTiming('2026-12-07', '2027-01-08').status, 'late');
+  assert.equal(mrTiming('2026-12-07', '2028-01-07').status, 'late');
+  assert.equal(mrTiming('2026-12-07', '2028-01-08').status, 'out_of_time');
+});

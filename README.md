@@ -12,7 +12,7 @@ It reads the client's documents (including handwriting), suggests passages of ev
 |---|---|
 | `engine/` | Rules engine: PIP (reg 4(2A), reg 7, 8/12 thresholds) and UC WCA (Schedules 6–9, reg 39/40). Descriptor data from legislation.gov.uk. No AI. |
 | `core/` | The AI pipeline: identifier scrubbing → model → citation check. A suggested quote is kept only if it appears word for word on the page it cites. Also Document Intelligence (OCR and handwriting) and page handling. |
-| `app/` | Next.js web app for advisers: sign-in with Microsoft Entra ID, cases, document upload, review, decisions, totals, audit log. PostgreSQL with row-level security per agency. |
+| `app/` | Next.js web app for advisers: sign-in with Microsoft Entra ID, cases, document upload, evidence review, decisions, totals, audit log, and the PIP mandatory reconsideration stage (time limits, the DWP's position from the PA4 and decision letter, comparison, draft request). PostgreSQL with row-level security per agency. |
 | `evals/` | Six fictional cases with expected answers, and a harness that scores the real pipeline against them. |
 | `infra/` | Azure template (Bicep) and the one-off setup script. |
 | `.github/workflows/` | `deploy.yml` tests and deploys on every push to `main`; `evals.yml` runs the evaluation on demand. |
@@ -60,6 +60,8 @@ npm run typecheck -w app
 npm run build -w app
 ```
 
+To try the app locally without Azure, `DATABASE_URL=... node app/scripts/seed-dev.ts` creates a fictional PIP case at the reconsideration stage.
+
 The database tests run when `TEST_DATABASE_URL` points at a disposable PostgreSQL database, connected as a **non-superuser** (superusers bypass row-level security). CI does this with a PostgreSQL service container.
 
 To run the app locally against Azure, copy `app/.env.example` to `app/.env.local`, fill it in, sign in with `az login`, and run `npm run dev -w app`.
@@ -70,4 +72,5 @@ To run the app locally against Azure, copy `app/.env.example` to `app/.env.local
 - **Quotes are checked.** Every suggested passage must appear word for word on the cited page (allowing for curly quotes, dashes, line breaks and case). Anything else is dropped and counted.
 - **No scoring by the model.** The model is told not to suggest descriptors or points, and the app never asks it to. Totals come only from the adviser's choices, through the rules engine.
 - **Documents are data.** The model is told to treat anything in a document that looks like an instruction as content, not as an instruction.
+- **The DWP's position is read, not guessed.** At reconsideration the model only points to where a descriptor is written in the decision letter or PA4. The code checks the quote is on that page and matches it to the regulations' wording to get the letter; anything it can't match is left for the adviser, who confirms all twelve. The draft request is assembled from confirmed facts, with no AI-written text.
 - **Low-confidence reading is shown.** Lines Document Intelligence was unsure of, and handwritten lines, are marked in the document viewer so the adviser checks them against the original.

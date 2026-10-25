@@ -7,6 +7,11 @@ on:
         description: "Case IDs to run, space separated (blank = all)"
         required: false
         default: ""
+      stage:
+        description: "Which stage to evaluate"
+        type: choice
+        options: [both, evidence, mr]
+        default: both
 
 permissions:
   id-token: write
@@ -31,9 +36,16 @@ jobs:
           AI=$(az cognitiveservices account list -g "${{ vars.RESOURCE_GROUP }}" --query "[?kind=='AIServices'].properties.endpoints.\"OpenAI Language Model Instance API\" | [0]" -o tsv)
           echo "AI_ENDPOINT=$AI" >> "$GITHUB_ENV"
           echo "AI_DEPLOYMENT=review-model" >> "$GITHUB_ENV"
-      - name: Run evaluation
-        run: npm run evals -w evals -- ${{ github.event.inputs.cases }}
+      - name: Evidence stage
+        if: inputs.stage != 'mr'
+        env: { CASES: "${{ inputs.cases }}" }
+        run: npm run evals -w evals -- $CASES
+      - name: Reconsideration stage (PA4 and decision letter)
+        if: always() && inputs.stage != 'evidence'
+        env: { CASES: "${{ inputs.cases }}" }
+        run: npm run evals -w evals -- --mr $CASES
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: eval-results
           path: evals/results/

@@ -5,7 +5,9 @@ import { putDocument, getDocument } from './storage.ts';
 import type { Me } from './auth.ts';
 
 export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number };
-export type DocRow = { id: string; name: string; content_type: string; size_bytes: number; read_status: string; page_count: number | null; low_confidence_lines: number | null; created_at: Date };
+export type DocKind = 'evidence' | 'pa4' | 'decision' | 'other';
+export const DOC_KINDS: DocKind[] = ['evidence', 'pa4', 'decision', 'other'];
+export type DocRow = { id: string; name: string; kind: DocKind; content_type: string; size_bytes: number; read_status: string; page_count: number | null; low_confidence_lines: number | null; created_at: Date };
 export type EvidenceRow = { id: string; document_id: string; doc_name: string; page_no: number; quote: string; activities: string[]; note: string | null; status: string; source: string };
 export type GapRow = { id: string; activity: string; gap: string; status: string };
 export type DecisionRow = { activity: string; satisfied: Array<{ letter: string; daysPercent?: number }> | string[]; days_per_week: string | null };
@@ -46,7 +48,7 @@ export async function getCase(me: Me, id: string) {
   return asAgency(me.agencyId, async c => {
     const cs = await c.query(`select c.*, u.name as adviser_name from cases c left join users u on u.id = c.adviser_id where c.id = $1`, [id]);
     if (!cs.rowCount) return null;
-    const docs = (await c.query('select id, name, content_type, size_bytes, read_status, page_count, low_confidence_lines, created_at from documents where case_id = $1 order by created_at', [id])).rows as DocRow[];
+    const docs = (await c.query('select id, name, kind, content_type, size_bytes, read_status, page_count, low_confidence_lines, created_at from documents where case_id = $1 order by created_at', [id])).rows as DocRow[];
     const evidence = (await c.query(`select e.id, e.document_id, d.name as doc_name, e.page_no, e.quote, e.activities, e.note, e.status, e.source
       from evidence e join documents d on d.id = e.document_id where e.case_id = $1 order by d.created_at, e.page_no`, [id])).rows as EvidenceRow[];
     const gaps = (await c.query('select id, activity, gap, status from gaps where case_id = $1 order by created_at', [id])).rows as GapRow[];
@@ -66,7 +68,8 @@ export async function getDocumentPages(me: Me, caseId: string, docId: string) {
   });
 }
 
-export async function addDocument(me: Me, caseId: string, file: File) {
+export async function addDocument(me: Me, caseId: string, file: File, docKind: DocKind = 'evidence') {
+  if (!DOC_KINDS.includes(docKind)) throw new Error('Unknown document type.');
   const kind = ALLOWED_TYPES[file.type] ?? (file.name.endsWith('.md') ? 'text' : undefined);
   if (!kind) throw new Error('Upload a PDF, Word document, photo (JPEG, PNG, TIFF) or a text test file.');
   if (file.size > MAX_BYTES) throw new Error('Files must be 20 MB or smaller.');
@@ -77,18 +80,15 @@ export async function addDocument(me: Me, caseId: string, file: File) {
   await asAgency(me.agencyId, async c => {
     const owns = await c.query('select 1 from cases where id = $1', [caseId]);
     if (!owns.rowCount) throw new Error('Case not found.');
-    await c.query('insert into documents (id, agency_id, case_id, name, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8)',
-      [docId, me.agencyId, caseId, file.name.slice(0, 200), file.type || 'text/markdown', file.size, path, me.userId]);
+    await c.query('insert into documents (id, agency_id, case_id, name, kind, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      [docId, me.agencyId, caseId, file.name.slice(0, 200), docKind, file.type || 'text/markdown', file.size, path, me.userId]);
     await audit(c, me.agencyId, me.userId, caseId, `Document added (${kind === 'text' ? 'text' : 'scan or file'})`);
   });
 }
 
-/** Read any unread documents, then extract evidence across the whole case. */
-export async function readAndReview(me: Me, caseId: string) {
-  const { case: cs, docs } = (await getCase(me, caseId)) ?? {};
-  if (!cs) throw new Error('Case not found.');
-
-  for (const d of docs!.filter(d => d.read_status !== 'read')) {
+/** Read (OCR or split) any documents of the given kinds not yet read, storing their pages. */
+export async function readUnread(me: Me, caseId: string, docs: DocRow[]) {
+  for (const d of docs.filter(d => d.read_status !== 'read')) {
     await asAgency(me.agencyId, c => c.query("update documents set read_status = 'reading' where id = $1", [d.id]));
     try {
       const blobPath = (await asAgency(me.agencyId, c => c.query('select blob_path from documents where id = $1', [d.id]))).rows[0].blob_path;
@@ -111,15 +111,28 @@ export async function readAndReview(me: Me, caseId: string) {
       throw e;
     }
   }
+}
 
-  const input = await asAgency(me.agencyId, async c => {
-    const ds = (await c.query("select id, name from documents where case_id = $1 and read_status = 'read' order by created_at", [caseId])).rows;
+/** Pages of read documents of the given kinds, for the AI. */
+export async function readPages(me: Me, caseId: string, kinds: DocKind[]) {
+  return asAgency(me.agencyId, async c => {
+    const ds = (await c.query("select id, name, kind from documents where case_id = $1 and read_status = 'read' and kind = any($2) order by created_at, name", [caseId, kinds])).rows;
     return Promise.all(ds.map(async d => ({
       id: d.id as string,
       name: d.name as string,
+      kind: d.kind as DocKind,
       pages: (await c.query('select page_no as page, text from pages where document_id = $1 order by page_no', [d.id])).rows as Array<{ page: number; text: string }>,
     })));
   });
+}
+
+/** Read any unread evidence, then extract evidence across the whole case. The PA4 and decision letter are not evidence. */
+export async function readAndReview(me: Me, caseId: string) {
+  const { case: cs, docs } = (await getCase(me, caseId)) ?? {};
+  if (!cs) throw new Error('Case not found.');
+  const evidenceKinds: DocKind[] = ['evidence', 'other'];
+  await readUnread(me, caseId, docs!.filter(d => evidenceKinds.includes(d.kind)));
+  const input = await readPages(me, caseId, evidenceKinds);
   if (!input.length) return;
 
   const result = await extractEvidence(cs.benefit, input);

@@ -3,7 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireMe } from '@/lib/auth';
-import { createCase, addDocument, readAndReview, setEvidenceStatus, setGapStatus, saveDecision } from '@/lib/cases';
+import { createCase, addDocument, readAndReview, setEvidenceStatus, setGapStatus, saveDecision, DOC_KINDS, type DocKind } from '@/lib/cases';
+import { readAssessment, setAssessorChoice, confirmAllChoices, saveMrDates, saveMrDraft, getMr, buildComparison, buildMrDraft } from '@/lib/mr';
+import { activityList } from '@hs/core';
 import { putDocument } from '@/lib/storage';
 import { asAgency, audit } from '@/lib/db';
 import synthetic from '@/data/synthetic.json';
@@ -11,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import type { Benefit } from '@hs/core';
 
 export type ActionState = { error?: string; ok?: string };
+type Synthetic = { id: string; benefit: Benefit; title: string; docs: Array<{ name: string; text: string }>; mrDocs: Array<{ name: string; kind: DocKind; text: string }> };
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Try again.');
 
@@ -29,7 +32,7 @@ export async function createCaseAction(_: ActionState, form: FormData): Promise<
 
 export async function loadSyntheticAction(form: FormData) {
   const me = await requireMe();
-  const sc = (synthetic as Array<{ id: string; benefit: Benefit; title: string; docs: Array<{ name: string; text: string }> }>).find(s => s.id === form.get('id'));
+  const sc = (synthetic as Synthetic[]).find(s => s.id === form.get('id'));
   if (!sc) return;
   const ref = `TEST-${sc.id}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
   const caseId = await createCase(me, ref, sc.benefit);
@@ -53,13 +56,16 @@ export async function uploadAction(_: ActionState, form: FormData): Promise<Acti
   }
   const files = form.getAll('file').filter((f): f is File => f instanceof File && f.size > 0);
   if (!files.length) return { error: 'Choose a file to upload.' };
+  const kind = String(form.get('kind') ?? 'evidence') as DocKind;
+  if (!DOC_KINDS.includes(kind)) return { error: 'Choose what kind of document this is.' };
   try {
-    for (const f of files) await addDocument(me, caseId, f);
+    for (const f of files) await addDocument(me, caseId, f, kind);
   } catch (e) {
     return { error: msg(e) };
   }
   revalidatePath(`/cases/${caseId}`);
-  return { ok: `${files.length} ${files.length === 1 ? 'document' : 'documents'} added. Select “Read and review” to check them.` };
+  revalidatePath(`/cases/${caseId}/mr`);
+  return { ok: `${files.length} ${files.length === 1 ? 'document' : 'documents'} added.` };
 }
 
 export async function reviewAction(_: ActionState, form: FormData): Promise<ActionState> {
@@ -98,4 +104,90 @@ export async function decisionAction(form: FormData) {
   const days = String(form.get('days') ?? '').trim();
   await saveDecision(me, caseId, form.get('benefit') === 'uc-wca' ? 'uc-wca' : 'pip', String(form.get('activity')), String(form.get('letter') ?? ''), days === '' ? null : Number(days));
   revalidatePath(`/cases/${caseId}`);
+}
+
+// ---------- mandatory reconsideration ----------
+
+export async function loadSyntheticMrAction(form: FormData) {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const id = String(form.get('syntheticId'));
+  const sc = (synthetic as Synthetic[]).find(s => s.id === id);
+  if (!sc?.mrDocs.length) return;
+  for (const d of sc.mrDocs) {
+    const docId = randomUUID();
+    const path = `${me.agencyId}/${caseId}/${docId}`;
+    const bytes = new TextEncoder().encode(d.text);
+    await putDocument(path, bytes, 'text/markdown');
+    await asAgency(me.agencyId, c => c.query('insert into documents (id, agency_id, case_id, name, kind, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      [docId, me.agencyId, caseId, d.name, d.kind, 'text/markdown', bytes.length, path, me.userId]));
+  }
+  await asAgency(me.agencyId, c => audit(c, me.agencyId, me.userId, caseId, `Loaded fictional decision papers for ${sc.id}`));
+  revalidatePath(`/cases/${caseId}/mr`);
+}
+
+export async function assessAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  try {
+    const r = await readAssessment(me, caseId);
+    revalidatePath(`/cases/${caseId}/mr`);
+    const found = r.activities.filter(a => a.letter).length;
+    return { ok: `DWP descriptor found for ${found} of 12 activities. Check each one against the papers and confirm.` };
+  } catch (e) {
+    return { error: msg(e) };
+  }
+}
+
+export async function choiceAction(form: FormData) {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  await setAssessorChoice(me, caseId, String(form.get('activity')), String(form.get('letter') ?? ''));
+  revalidatePath(`/cases/${caseId}/mr`);
+}
+
+export async function confirmAllAction(form: FormData) {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  await confirmAllChoices(me, caseId);
+  revalidatePath(`/cases/${caseId}/mr`);
+}
+
+export async function mrDatesAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const d = (k: string) => { const v = String(form.get(k) ?? '').trim(); return v === '' ? null : v; };
+  try {
+    await saveMrDates(me, caseId, d('decisionDate'), d('requestDate'), String(form.get('lateReason') ?? ''));
+  } catch (e) {
+    return { error: msg(e) };
+  }
+  revalidatePath(`/cases/${caseId}/mr`);
+  return { ok: 'Dates saved.' };
+}
+
+export async function draftAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const mr = await getMr(me, caseId);
+  if (!mr) return { error: 'Case not found.' };
+  const { comparison, missing, unconfirmed } = buildComparison(mr.choices, mr.decisions, mr.evidence);
+  if (!comparison || missing.length) return { error: `The DWP descriptor is still missing for activity ${missing.join(', ')}.` };
+  if (unconfirmed.length) return { error: `Confirm the DWP descriptor for activity ${unconfirmed.join(', ')} first.` };
+  const labels = Object.fromEntries(activityList('pip').map(a => [Number(a.key.split(':')[1]), a.label]));
+  const text = buildMrDraft({
+    ref: mr.case.ref, decisionDate: mr.decisionDate, timing: mr.timing, lateReason: mr.case.late_reason,
+    comparison, decisions: mr.decisions, labels,
+  });
+  await saveMrDraft(me, caseId, text);
+  revalidatePath(`/cases/${caseId}/mr`);
+  return { ok: 'Draft created from the comparison. Edit it below and save.' };
+}
+
+export async function saveDraftAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  await saveMrDraft(me, caseId, String(form.get('draft') ?? ''));
+  revalidatePath(`/cases/${caseId}/mr`);
+  return { ok: 'Draft saved.' };
 }
