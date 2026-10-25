@@ -8,22 +8,23 @@ import { csp } from './lib/csp';
 // Every page needs sign-in, except sign-in itself, the sign-in problem page, invitation
 // links and agency sign-up. Sign-in attempts are limited per connection.
 
-const PUBLIC = /^\/(api\/auth|access|invite|signup|terms)(\/|$)/;
+const PUBLIC = /^\/(api\/auth|access|invite|signup|signin|terms)(\/|$)/;
 
 function secure(req: NextRequest, run: (headers: Headers) => NextResponse | Response | Promise<NextResponse | Response>) {
   const nonce = btoa(crypto.randomUUID());
   const policy = csp(nonce);
   const headers = new Headers(req.headers);
   headers.set('x-nonce', nonce);
+  headers.set('x-pathname', req.nextUrl.pathname + req.nextUrl.search);   // so sign-in can return here
   headers.set('content-security-policy', policy);   // Next.js reads the nonce from this
   return Promise.resolve(run(headers)).then(res => { res.headers.set('Content-Security-Policy', policy); return res; });
 }
 
-const auth = withAuth({ pages: { signIn: '/api/auth/signin' } });
+const auth = withAuth({ pages: { signIn: '/signin' } });
 
 export default async function middleware(req: NextRequest, ev: Parameters<typeof auth>[1]) {
   const path = req.nextUrl.pathname;
-  if (path.startsWith('/api/auth/signin') || path.startsWith('/api/auth/callback')) {
+  if (path.startsWith('/api/auth/signin') || path.startsWith('/api/auth/callback') || path === '/signin') {
     if (!hit(`signin:${clientIp(req.headers)}`, LIMITS.signInPerIp.max, LIMITS.signInPerIp.window).ok)
       return new NextResponse('Too many sign-in attempts from this connection. Wait ten minutes and try again.', { status: 429, headers: { 'Retry-After': '600' } });
   }

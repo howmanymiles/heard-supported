@@ -2,7 +2,7 @@ import type { NextAuthOptions } from 'next-auth';
 import AzureADProvider from 'next-auth/providers/azure-ad';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { resolveSignIn, currentUser, AccessError, type Identity } from './access.ts';
 import { pool } from './db.ts';
 import { SESSION_MAX_SECONDS, sessionState, mfaRequired, usedMfa } from './session.ts';
@@ -17,9 +17,11 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.AZURE_AD_CLIENT_SECRET ?? '',
       // 'organizations' lets advisers from any agency's Microsoft 365 sign in; the invitation decides who gets in.
       tenantId: process.env.AZURE_AD_TENANT_ID ?? 'organizations',
+      // Always show Microsoft's account picker, so someone signed in to a personal account can pick their work one.
+      authorization: { params: { scope: 'openid profile email', prompt: 'select_account' } },
     }),
   ],
-  pages: { error: '/access' },
+  pages: { signIn: '/signin', error: '/access' },
   session: { strategy: 'jwt', maxAge: SESSION_MAX_SECONDS },
   callbacks: {
     async signIn({ profile }) {
@@ -51,14 +53,19 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
+/** Where the person was, so sign-in can bring them back (set by the middleware). */
+async function here() {
+  try { const p = (await headers()).get('x-pathname') ?? '/'; return p.startsWith('/') && !p.startsWith('//') ? p : '/'; } catch { return '/'; }
+}
+
 export async function requireMe(): Promise<Me> {
   const s = (await getServerSession(authOptions)) as { me?: Me } | null;
-  if (!s?.me?.userId) redirect('/api/auth/signin');
+  if (!s?.me?.userId) redirect(`/signin?callbackUrl=${encodeURIComponent(await here())}`);
   // Checked on every request, so removed access and role changes take effect at once.
   const u = await currentUser(s.me.userId);
   if (!u) redirect('/access?problem=removed');
   const st = sessionState(Number((s.me as Me & { signedInAt?: number }).signedInAt ?? 0), u.last_active_at ?? null);
-  if (st === 'expired') redirect('/access?problem=expired_session');
+  if (st === 'expired') redirect(`/signin/expired?from=${encodeURIComponent(await here())}`);
   await touch(u.id, st === 'touch');
   return { userId: u.id, agencyId: u.agency_id, role: u.role, name: u.name ?? s.me.name };
 }

@@ -31,6 +31,7 @@ a { color: var(--accent); }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; color: var(--ink); text-decoration: none; }
 .brand .ring-a { color: var(--accent); }
 .who { display: flex; gap: 16px; align-items: center; font-size: 14px; color: var(--ink-soft); }
+.linklike { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); text-decoration: underline; cursor: pointer; }
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .soft { color: var(--ink-soft); }
 .small { font-size: 14px; }

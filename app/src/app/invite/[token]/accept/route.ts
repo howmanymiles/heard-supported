@@ -6,5 +6,5 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   const { token } = await params;
   if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) return new Response('Not a valid invitation.', { status: 400 });
   (await cookies()).set(INVITE_COOKIE, token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 60 * 60 });
-  return Response.redirect(new URL('/api/auth/signin?callbackUrl=%2F', req.url), 303);
+  return Response.redirect(new URL('/signin?callbackUrl=%2F&auto=1', req.url), 303);
 }
