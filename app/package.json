@@ -10,6 +10,7 @@
     "test": "DATA_MODE=synthetic-only node --test test/*.test.ts",
     "predev": "node scripts/bundle-cases.mjs",
     "prebuild": "node scripts/bundle-cases.mjs",
+    "pretest": "node scripts/bundle-cases.mjs",
     "pretypecheck": "node scripts/bundle-cases.mjs"
   },
   "dependencies": {
