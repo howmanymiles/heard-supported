@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { readDocument, extractEvidence, splitTextPages, activityList, datasetVersion, type Benefit } from '@hs/core';
 import { asAgency, audit, viewed } from './db.ts';
+import { detectFile } from './filetype.ts';
 import { putDocument, getDocument } from './storage.ts';
 import type { Me } from './auth.ts';
 import { aiGate, storeGate } from './claimants.ts';
@@ -19,15 +20,6 @@ export type EvidenceRow = { id: string; document_id: string; doc_name: string; p
 export type GapRow = { id: string; activity: string; gap: string; status: string };
 export type DecisionRow = { activity: string; satisfied: Array<{ letter: string; daysPercent?: number }> | string[]; days_per_week: string | null };
 
-export const ALLOWED_TYPES: Record<string, 'read' | 'text'> = {
-  'application/pdf': 'read',
-  'image/jpeg': 'read',
-  'image/png': 'read',
-  'image/tiff': 'read',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'read',
-  'text/plain': 'text',
-  'text/markdown': 'text',
-};
 export const MAX_BYTES = 20 * 1024 * 1024;
 
 /** Text test documents use "--- Page N ---" lines between pages, like the synthetic cases. */
@@ -90,21 +82,23 @@ export async function getDocumentPages(me: Me, caseId: string, docId: string) {
 
 export async function addDocument(me: Me, caseId: string, file: File, docKind: DocKind = 'evidence') {
   if (!DOC_KINDS.includes(docKind)) throw new Error('Unknown document type.');
-  const kind = ALLOWED_TYPES[file.type] ?? (file.name.endsWith('.md') ? 'text' : undefined);
-  if (!kind) throw new Error('Upload a PDF, Word document, photo (JPEG, PNG, TIFF) or a text test file.');
   if (file.size > MAX_BYTES) throw new Error('Files must be 20 MB or smaller.');
   await asAgency(me.agencyId, c => storeGate(c, caseId));   // check consent before anything is stored
   const bytes = new Uint8Array(await file.arrayBuffer());
+  // Judge the file by its contents, not the type the browser reports.
+  const found = detectFile(bytes);
+  if ('error' in found) throw new Error(`${file.name.slice(0, 80)}: ${found.error}`);
+  const kind = found.kind;
   const docId = randomUUID();
   const path = `${me.agencyId}/${caseId}/${docId}`;
-  await putDocument(path, bytes, file.type || 'text/markdown');
+  await putDocument(path, bytes, found.contentType);
   await asAgency(me.agencyId, async c => {
     const owns = await c.query('select 1 from cases where id = $1', [caseId]);
     if (!owns.rowCount) throw new Error('Case not found.');
     await storeGate(c, caseId);
     await c.query('insert into documents (id, agency_id, case_id, name, kind, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-      [docId, me.agencyId, caseId, file.name.slice(0, 200), docKind, file.type || 'text/markdown', file.size, path, me.userId]);
-    await audit(c, me.agencyId, me.userId, caseId, `Document added (${kind === 'text' ? 'text' : 'scan or file'})`);
+      [docId, me.agencyId, caseId, file.name.slice(0, 200), docKind, found.contentType, bytes.length, path, me.userId]);
+    await audit(c, me.agencyId, me.userId, caseId, `Document added (${found.label})`);
   });
 }
 
