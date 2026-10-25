@@ -50,6 +50,13 @@ test('case references that look like names are refused', { skip }, async () => {
   await assert.rejects(cases.createCase(me.a, "O'Neill, Mary", 'pip'));
 });
 
+test('a reference already in use says where, and another agency can use the same one', { skip }, async () => {
+  const ref = `DUP-${Date.now()}`;
+  await cases.createCase(me.a, ref, 'pip');
+  await assert.rejects(cases.createCase(me.a, ref, 'uc-wca'), new RegExp(`already has a case ${ref}.*different reference`));
+  await cases.createCase(me.b, ref, 'pip');
+});
+
 test('decisions store days as a share of the week, for the engine', { skip }, async () => {
   const id = await cases.createCase(me.a, `DEC-${Date.now()}`, 'pip');
   await cases.saveDecision(me.a, id, 'pip', 'pip:12', 'd', 4);

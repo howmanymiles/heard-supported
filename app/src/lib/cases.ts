@@ -45,6 +45,8 @@ export async function createCase(me: Me, ref: string, benefit: Benefit, claimant
   const clean = ref.trim().slice(0, 40);
   if (!/^[A-Za-z0-9][A-Za-z0-9 _\-\/]*$/.test(clean)) throw new Error('Use letters, numbers, spaces, hyphens or slashes for the case reference. Don’t use the client’s name.');
   return asAgency(me.agencyId, async c => {
+    const existing = (await c.query('select x.closed_at, k.name from cases x left join claimants k on k.id = x.claimant_id where x.ref = $1', [clean])).rows[0];
+    if (existing) throw new Error(`Your agency already has a case ${clean}${existing.name ? `, for ${existing.name}` : ''}${existing.closed_at ? ' (closed)' : ''}. Find it on the Cases page${existing.closed_at ? ' under Closed cases' : ''}, or use a different reference.`);
     if (claimantId) await storeGate(c, null, claimantId);
     const office = await officeOfUser(c, me.agencyId, me.userId);
     const r = await c.query('insert into cases (agency_id, ref, benefit, adviser_id, dataset_version, claimant_id, office_id) values ($1, $2, $3, $4, $5, $6, $7) returning id',
