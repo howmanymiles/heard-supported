@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, letterAction, saveLetterAction, outcomeAction, closeAction, type ActionState } from './actions';
+import { uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, letterAction, saveLetterAction, outcomeAction, closeAction, issueResultsAction, type ActionState } from './actions';
 
 export function Submit({ children, pending: pendingText, primary = true }: { children: React.ReactNode; pending: string; primary?: boolean }) {
   const { pending } = useFormStatus();
@@ -295,6 +295,29 @@ export function CloseForm({ caseId }: { caseId: string }) {
         <label className="field">Note (optional)<input name="note" maxLength={500} /></label>
       </div>
       <div><Submit pending="Closing…" primary={false}>Close the case</Submit></div>
+      <Status state={state} />
+    </form>
+  );
+}
+
+export function IssueResultsForm({ caseId, issues, saved, defaultStage }: { caseId: string; issues: Array<{ key: string; label: string; dwp: string; ours: string }>; saved: Record<string, { result: string; stage: string | null }>; defaultStage: 'mr' | 'appeal' }) {
+  const [state, action] = useActionState(issueResultsAction, {});
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="caseId" value={caseId} />
+      <div className="table-wrap"><table className="list">
+        <thead><tr><th scope="col">Disputed point</th><th scope="col">Result</th><th scope="col">Won at</th></tr></thead>
+        <tbody>{issues.map(i => (
+          <tr key={i.key}>
+            <td><input type="hidden" name="key" value={i.key} /><input type="hidden" name={`label:${i.key}`} value={i.label} /><b>{i.label}</b><br /><span className="soft small">{i.ours}</span></td>
+            <td><label className="field small-field"><span className="sr-only">Result for {i.label}</span>
+              <select name={`result:${i.key}`} defaultValue={saved[i.key]?.result ?? ''}><option value="">Not recorded</option><option value="won">Won</option><option value="part">Won in part</option><option value="lost">Not won</option></select></label></td>
+            <td><label className="field small-field"><span className="sr-only">Where {i.label} was won</span>
+              <select name={`stage:${i.key}`} defaultValue={saved[i.key]?.stage ?? defaultStage}><option value="mr">Reconsideration</option><option value="appeal">Appeal</option></select></label></td>
+          </tr>
+        ))}</tbody>
+      </table></div>
+      <div><Submit pending="Saving…" primary={false}>Save results</Submit></div>
       <Status state={state} />
     </form>
   );

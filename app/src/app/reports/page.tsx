@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requireMe } from '@/lib/auth';
 import { agencyReport, MR_OUTCOMES, APPEAL_OUTCOMES, CLOSE_REASONS } from '@/lib/casework';
 import { RATES_SOURCE } from '@hs/core';
@@ -44,7 +45,8 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
 
   return (
     <div className="stack-lg">
-      <div className="head"><h1>Reports</h1><p className="soft">Your agency’s figures. Outcomes and closures between {long(from)} and {long(to)}; the open caseload as it is today.</p></div>
+      <div className="head"><h1>Reports</h1><p className="soft">Your agency’s figures. Outcomes and closures between {long(from)} and {long(to)}; the open caseload as it is today.</p>
+        <p><Link className="btn" href={`/reports/outcomes?from=${from}&to=${to}`}>Successes and overturns in detail</Link></p></div>
 
       <form className="panel row" method="get" aria-label="Period">
         <label className="field small-field">From<input type="date" name="from" defaultValue={from} /></label>

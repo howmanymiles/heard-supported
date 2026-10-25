@@ -328,3 +328,16 @@ export async function reopenAction(form: FormData) {
   revalidatePath(`/cases/${caseId}/outcome`);
   revalidatePath('/');
 }
+
+export async function issueResultsAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const keys = form.getAll('key').map(String);
+  const items = keys.map(k => ({ key: k, label: String(form.get(`label:${k}`) ?? k), result: String(form.get(`result:${k}`) ?? '') || null, stage: String(form.get(`stage:${k}`) ?? '') || null }));
+  try {
+    const { saveIssueResults } = await import('@/lib/outcomes');
+    await saveIssueResults(me, caseId, items);
+  } catch (e) { return { error: msg(e) }; }
+  revalidatePath(`/cases/${caseId}/outcome`);
+  return { ok: 'Results saved.' };
+}
