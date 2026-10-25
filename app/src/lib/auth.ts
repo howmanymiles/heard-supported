@@ -2,57 +2,40 @@ import type { NextAuthOptions } from 'next-auth';
 import AzureADProvider from 'next-auth/providers/azure-ad';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { pool } from './db.ts';
+import { cookies } from 'next/headers';
+import { resolveSignIn, currentUser, AccessError, type Identity } from './access.ts';
 
 export type Me = { userId: string; agencyId: string; role: 'adviser' | 'supervisor' | 'admin'; name: string };
-
-/**
- * Development sign-in: one Entra tenant maps to one agency. The first person to
- * sign in from a tenant creates the agency and becomes its admin; later users
- * join as advisers. Multi-agency onboarding replaces this before the pilot.
- */
-async function ensureUser(oid: string, tid: string, name: string, email: string): Promise<Omit<Me, 'name'>> {
-  const c = await pool().connect();
-  try {
-    await c.query('begin');
-    const existing = await c.query('select id, agency_id, role from users where entra_oid = $1', [oid]);
-    if (existing.rowCount) {
-      await c.query('commit');
-      const r = existing.rows[0];
-      return { userId: r.id, agencyId: r.agency_id, role: r.role };
-    }
-    let agency = await c.query('select id from agencies where entra_tenant_id = $1', [tid]);
-    let role: Me['role'] = 'adviser';
-    if (!agency.rowCount) {
-      agency = await c.query("insert into agencies (name, entra_tenant_id) values ('Development agency', $1) returning id", [tid]);
-      role = 'admin';
-    }
-    const u = await c.query('insert into users (agency_id, entra_oid, name, email, role) values ($1, $2, $3, $4, $5) returning id', [agency.rows[0].id, oid, name, email, role]);
-    await c.query('commit');
-    return { userId: u.rows[0].id, agencyId: agency.rows[0].id, role };
-  } catch (e) {
-    await c.query('rollback').catch(() => {});
-    throw e;
-  } finally {
-    c.release();
-  }
-}
 
 export const authOptions: NextAuthOptions = {
   providers: [
     AzureADProvider({
       clientId: process.env.AZURE_AD_CLIENT_ID ?? '',
       clientSecret: process.env.AZURE_AD_CLIENT_SECRET ?? '',
-      tenantId: process.env.AZURE_AD_TENANT_ID,
+      // 'organizations' lets advisers from any agency's Microsoft 365 sign in; the invitation decides who gets in.
+      tenantId: process.env.AZURE_AD_TENANT_ID ?? 'organizations',
     }),
   ],
+  pages: { error: '/access' },
   session: { strategy: 'jwt', maxAge: 8 * 60 * 60 },
   callbacks: {
+    async signIn({ profile }) {
+      const id = identity(profile);
+      if (!id) return '/access?problem=denied';
+      try {
+        await resolveSignIn(id, await inviteToken());
+        return true;
+      } catch (e) {
+        if (e instanceof AccessError) return `/access?problem=${e.code}`;
+        throw e;
+      }
+    },
     async jwt({ token, profile }) {
       if (profile) {
-        const p = profile as { oid?: string; tid?: string; name?: string; email?: string; preferred_username?: string };
-        if (!p.oid || !p.tid) throw new Error('Sign-in did not return an Entra user.');
-        Object.assign(token, await ensureUser(p.oid, p.tid, p.name ?? '', p.email ?? p.preferred_username ?? ''));
+        const id = identity(profile);
+        if (!id) throw new Error('Sign-in did not return a Microsoft work account.');
+        Object.assign(token, await resolveSignIn(id, null));   // the invitation, if any, was used in signIn
+        try { (await cookies()).delete(INVITE_COOKIE); } catch { /* not in a route that can set cookies */ }
       }
       return token;
     },
@@ -65,6 +48,21 @@ export const authOptions: NextAuthOptions = {
 
 export async function requireMe(): Promise<Me> {
   const s = (await getServerSession(authOptions)) as { me?: Me } | null;
-  if (!s?.me?.agencyId) redirect('/api/auth/signin');
-  return s.me;
+  if (!s?.me?.userId) redirect('/api/auth/signin');
+  // Checked on every request, so removed access and role changes take effect at once.
+  const u = await currentUser(s.me.userId);
+  if (!u) redirect('/access?problem=removed');
+  return { userId: u.id, agencyId: u.agency_id, role: u.role, name: u.name ?? s.me.name };
+}
+
+export const INVITE_COOKIE = 'hs_invite';
+
+async function inviteToken(): Promise<string | null> {
+  try { return (await cookies()).get(INVITE_COOKIE)?.value ?? null; } catch { return null; }
+}
+
+function identity(profile: unknown): Identity | null {
+  const p = (profile ?? {}) as { oid?: string; tid?: string; name?: string; email?: string; preferred_username?: string };
+  if (!p.oid || !p.tid) return null;
+  return { oid: p.oid, tid: p.tid, name: p.name ?? '', email: p.email ?? p.preferred_username ?? '' };
 }

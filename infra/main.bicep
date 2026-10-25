@@ -61,6 +61,9 @@ param deployerPrincipalId string = ''
 @description('Email address for the monthly budget alert.')
 param budgetEmail string
 
+@description('The first admin: on a new installation, the only person who can sign in without an invitation.')
+param firstAdminEmail string = ''
+
 @description('Monthly budget in GBP-equivalent billing currency.')
 param budgetAmount int = 50
 
@@ -243,6 +246,7 @@ resource web 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'STORAGE_ACCOUNT', value: storage.name }
         { name: 'STORAGE_CONTAINER', value: docsContainer.name }
         { name: 'DATA_MODE', value: 'synthetic-only' }
+        { name: 'BOOTSTRAP_ADMIN_EMAIL', value: firstAdminEmail }
         { name: 'PORT', value: '8080' }
         { name: 'WEBSITES_PORT', value: '8080' }
         { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'false' }

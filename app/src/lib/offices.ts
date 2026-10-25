@@ -10,7 +10,7 @@ export type OfficeRow = { id: string; name: string; advisers: number; open_cases
 export async function listOffices(me: Me): Promise<OfficeRow[]> {
   return asAgency(me.agencyId, async c => (await c.query(`
     select o.id, o.name,
-      (select count(*)::int from users u where u.office_id = o.id and u.agency_id = o.agency_id) as advisers,
+      (select count(*)::int from users u where u.office_id = o.id and u.agency_id = o.agency_id and u.active) as advisers,
       (select count(*)::int from cases x where x.office_id = o.id and x.closed_at is null) as open_cases
     from offices o order by o.name`)).rows);
 }

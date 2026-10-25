@@ -1,22 +1,67 @@
+import Link from 'next/link';
 import { requireMe } from '@/lib/auth';
 import { canManage } from '@/lib/casework';
 import { listOffices } from '@/lib/offices';
-import { pool } from '@/lib/db';
-import { AddOfficeForm, RenameOfficeForm, UserOfficeForm } from './forms';
+import { listPeople, listInvites, ROLES } from '@/lib/access';
+import { AddOfficeForm, RenameOfficeForm, UserOfficeForm, InviteForm, RoleForm, DeactivateButton, ReactivateButton, RevokeInviteButton } from './forms';
 
 export const dynamic = 'force-dynamic';
-const ROLE: Record<string, string> = { adviser: 'Adviser', supervisor: 'Supervisor', admin: 'Admin' };
+const day = (d: Date | string | null) => (d ? new Date(d).toISOString().slice(0, 10) : '–');
 
 export default async function Team() {
   const me = await requireMe();
-  const manage = canManage(me);
-  const offices = await listOffices(me);
-  // users has no row-level security, so the agency is filtered here.
-  const people = (await pool().query('select u.id, u.name, u.role, u.office_id from users u where u.agency_id = $1 order by u.name', [me.agencyId])).rows;
+  const manage = canManage(me), admin = me.role === 'admin';
+  const [offices, people, invites] = await Promise.all([listOffices(me), listPeople(me), manage ? listInvites(me) : Promise.resolve([])]);
   const officeName = Object.fromEntries(offices.map(o => [o.id, o.name]));
+  const active = people.filter(p => p.active), removed = people.filter(p => !p.active);
+  const orphaned = removed.filter(p => p.open_cases > 0);
+
   return (
     <div className="stack-lg">
-      <div className="head"><h1>Team</h1><p className="soft">Your agency’s offices and who works from each. A case belongs to the office of the adviser holding it, and reports can be run by office.</p></div>
+      <div className="head"><h1>Team</h1><p className="soft">Who can use Heard &amp; Supported at your agency, and where they work. People get in only by an invitation from here.</p></div>
+
+      {orphaned.length > 0 && <p className="msg msg-error" role="status">{orphaned.map(p => `${p.name ?? p.email} (${p.open_cases})`).join(', ')}: open cases held by people who no longer have access. <Link href="/?view=all">Reassign them</Link>.</p>}
+
+      {manage && (
+        <section className="panel stack" aria-label="Invite">
+          <h2 className="eyebrow">Invite someone</h2>
+          <p className="soft small">They sign in with their Microsoft work account. The invitation only works for the email you enter here.{!admin ? ' Supervisors can invite advisers; an admin invites supervisors and admins.' : ''}</p>
+          <InviteForm offices={offices} canInviteAll={admin} />
+          {invites.length > 0 && (
+            <div className="table-wrap"><table className="list">
+              <thead><tr><th scope="col">Invited</th><th scope="col">Role</th><th scope="col">Office</th><th scope="col">Sent</th><th scope="col">Status</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
+              <tbody>{invites.map(i => <tr key={i.id}><td>{i.email}</td><td>{ROLES[i.role as keyof typeof ROLES]}</td><td>{i.office ?? '–'}</td><td>{day(i.created_at)}</td>
+                <td>{i.expired ? <span className="chip chip-lower">Expired</span> : `Waiting · expires ${day(i.expires_at)}`}</td><td><RevokeInviteButton inviteId={i.id} /></td></tr>)}</tbody>
+            </table></div>
+          )}
+        </section>
+      )}
+
+      <section className="panel stack" aria-label="People">
+        <h2 className="eyebrow">People with access</h2>
+        <div className="table-wrap"><table className="list">
+          <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Office</th><th scope="col">Open cases</th><th scope="col">Last signed in</th>{admin && <th scope="col"><span className="sr-only">Actions</span></th>}</tr></thead>
+          <tbody>{active.map(p => (
+            <tr key={p.id}>
+              <td>{p.name ?? '–'}<br /><span className="soft small">{p.email}</span></td>
+              <td>{admin && p.id !== me.userId ? <RoleForm userId={p.id} name={p.name ?? p.email} role={p.role} /> : ROLES[p.role as keyof typeof ROLES]}</td>
+              <td>{manage && offices.length ? <UserOfficeForm userId={p.id} name={p.name ?? 'this person'} officeId={p.office_id} offices={offices} /> : (officeName[p.office_id] ?? <span className="soft">No office set</span>)}</td>
+              <td className="mono">{p.open_cases}</td>
+              <td>{day(p.last_sign_in_at)}</td>
+              {admin && <td>{p.id !== me.userId && <DeactivateButton userId={p.id} name={p.name ?? p.email} />}</td>}
+            </tr>
+          ))}</tbody>
+        </table></div>
+        {manage && <p className="soft small">Moving someone to another office moves their open cases with them; closed cases stay with the office they were run from. Removing access takes effect on their next click; their cases stay and need reassigning.</p>}
+      </section>
+
+      {removed.length > 0 && (
+        <section className="panel stack" aria-label="Access removed">
+          <h2 className="eyebrow">Access removed</h2>
+          <ul className="plain">{removed.map(p => <li key={p.id}>{p.name ?? p.email} <span className="soft small">{p.email} · {p.open_cases} open cases</span> {admin && <ReactivateButton userId={p.id} />}</li>)}</ul>
+        </section>
+      )}
+
       <section className="panel stack" aria-label="Offices">
         <h2 className="eyebrow">Offices</h2>
         {offices.length === 0 ? <p className="soft small">No offices yet.</p> : (
@@ -26,17 +71,6 @@ export default async function Team() {
           </table></div>
         )}
         {manage && <AddOfficeForm />}
-      </section>
-      <section className="panel stack" aria-label="People">
-        <h2 className="eyebrow">People</h2>
-        <div className="table-wrap"><table className="list">
-          <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Office</th></tr></thead>
-          <tbody>{people.map(p => (
-            <tr key={p.id}><td>{p.name ?? 'Unnamed'}</td><td>{ROLE[p.role] ?? p.role}</td>
-              <td>{manage && offices.length ? <UserOfficeForm userId={p.id} name={p.name ?? 'this person'} officeId={p.office_id} offices={offices} /> : (officeName[p.office_id] ?? <span className="soft">No office set</span>)}</td></tr>
-          ))}</tbody>
-        </table></div>
-        {manage && <p className="soft small">Moving someone moves their open cases with them. Closed cases stay with the office they were run from, so past results don’t move.</p>}
       </section>
     </div>
   );

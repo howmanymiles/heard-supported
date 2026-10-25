@@ -42,7 +42,7 @@ You need: an Azure subscription that is **yours, not an employer's**; a GitHub a
    ```
    It asks you to confirm the subscription, then creates the resource group, the deploy identity, the sign-in app and the secrets. When it lists the available models, pick a current GPT model offered as DataZoneStandard.
 4. **Deploy.** In GitHub, go to Actions → Deploy → Run workflow (or push any commit to `main`). The first run takes about 15 minutes, mostly the database.
-5. **Sign in** at the address the workflow prints (`https://hs-dev-xxxxxx.azurewebsites.net`). The first person to sign in becomes the admin of the development agency.
+5. **Sign in** at the address the workflow prints (`https://hs-dev-xxxxxx.azurewebsites.net`). Sign in with the email you gave the set-up script (or the `FIRST_ADMIN_EMAIL` repository variable): on a new installation that person becomes the admin of the development agency. Everyone else needs an invitation from the Team page.
 6. **Try it.** Load one of the fictional test cases from the home page, press *Read and review*, and work through the suggestions.
 
 ### Running the evaluation

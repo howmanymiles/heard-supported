@@ -74,6 +74,7 @@ jobs:
               dbAdminPassword="${{ secrets.DB_ADMIN_PASSWORD }}" \
               deployerPrincipalId="${{ vars.DEPLOYER_PRINCIPAL_ID }}" \
               budgetEmail="${{ vars.BUDGET_EMAIL }}" \
+              firstAdminEmail="${{ vars.FIRST_ADMIN_EMAIL || vars.BUDGET_EMAIL }}" \
               budgetStart="${{ vars.BUDGET_START }}" \
             --output none
 

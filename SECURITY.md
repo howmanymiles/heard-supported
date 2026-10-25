@@ -24,7 +24,7 @@ Technical:
 3. **Database**: Entra-only authentication for the app (no password), zone-redundant high availability, backups checked by a restore test.
 4. **Storage**: soft delete and versioning; a retention schedule that deletes documents when a case closes.
 5. **Logging**: Application Insights and diagnostic logs to a Log Analytics workspace in UK South, with alerts. Confirm no document text reaches logs.
-6. **Agency onboarding**: replace the development rule (first user from a tenant becomes admin) with explicit agency set-up and role assignment, including the supervisor role.
+6. **Agency onboarding**: built (sign-up, our approval, invitation-only access tied to the invited email, roles, removal checked on every request). Before the pilot: switch the sign-in app to multi-tenant (`AzureADMultipleOrgs`, `AZURE_AD_TENANT_ID=organizations`) so other agencies' Microsoft accounts can sign in; agree the data processing terms that sign-up accepts; send invitations by email rather than copied links.
 7. **Penetration test** by an independent tester, and fixes.
 8. **Rotate development secrets**: issue a new sign-in client secret, database password and NextAuth secret, since the development ones have been displayed during setup.
 9. **Dependency review**: `npm audit` at each release. Known at the time of writing: advisories in `postcss` (build time only, no user-supplied CSS), `sharp` (image optimisation, not used by the app) and `@azure/msal-node` (affects the authorisation-code flow; the app's sign-in uses next-auth, and MSAL is used only for managed identity). Upgrade when patched releases are available on the versions in use.

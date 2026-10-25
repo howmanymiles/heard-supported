@@ -11,14 +11,14 @@ export type UserRow = { id: string; name: string | null; role: string };
 
 /** The agency's people. The users table has no row-level security, so the agency is filtered here. */
 export async function listUsers(me: Me): Promise<UserRow[]> {
-  return (await pool().query('select id, name, role from users where agency_id = $1 order by name', [me.agencyId])).rows;
+  return (await pool().query('select id, name, role from users where agency_id = $1 and active order by name', [me.agencyId])).rows;
 }
 
 /** Supervisors and admins can give a case to anyone in the agency; an adviser can take a case themselves. */
 export async function assignCase(me: Me, caseId: string, userId: string) {
   if (!canManage(me) && userId !== me.userId) throw new Error('Only a supervisor or admin can give a case to someone else. You can take it yourself.');
-  const u = (await pool().query('select id, name from users where id = $1 and agency_id = $2', [userId, me.agencyId])).rows[0];
-  if (!u) throw new Error('That person is not in your agency.');
+  const u = (await pool().query('select id, name from users where id = $1 and agency_id = $2 and active', [userId, me.agencyId])).rows[0];
+  if (!u) throw new Error('That person is not in your agency, or no longer has access.');
   await asAgency(me.agencyId, async c => {
     // The case goes to the new adviser's office, unless it is closed (its results stay where they were won).
     const r = await c.query('update cases set adviser_id = $2, office_id = case when closed_at is null then (select office_id from users where id = $2) else office_id end where id = $1', [caseId, userId]);
