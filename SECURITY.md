@@ -86,6 +86,8 @@ Assurance and organisational:
 
 ## Costed infrastructure plan
 
+**Decision (October 2026): deferred until a pilot is agreed.** Until then the environment stays fictional-data only.
+
 Azure list prices for UK South in GBP, October 2026, excluding VAT, from the Azure retail prices API. Monthly at pilot volumes.
 
 | Change | Monthly | Notes |
