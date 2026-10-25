@@ -26,7 +26,8 @@ Technical:
 5. **Logging**: Application Insights and diagnostic logs to a Log Analytics workspace in UK South, with alerts. Confirm no document text reaches logs.
 6. **Agency onboarding**: replace the development rule (first user from a tenant becomes admin) with explicit agency set-up and role assignment, including the supervisor role.
 7. **Penetration test** by an independent tester, and fixes.
-8. **Dependency review**: `npm audit` at each release. Known at the time of writing: advisories in `postcss` (build time only, no user-supplied CSS), `sharp` (image optimisation, not used by the app) and `@azure/msal-node` (affects the authorisation-code flow; the app's sign-in uses next-auth, and MSAL is used only for managed identity). Upgrade when patched releases are available on the versions in use.
+8. **Rotate development secrets**: issue a new sign-in client secret, database password and NextAuth secret, since the development ones have been displayed during setup.
+9. **Dependency review**: `npm audit` at each release. Known at the time of writing: advisories in `postcss` (build time only, no user-supplied CSS), `sharp` (image optimisation, not used by the app) and `@azure/msal-node` (affects the authorisation-code flow; the app's sign-in uses next-auth, and MSAL is used only for managed identity). Upgrade when patched releases are available on the versions in use.
 
 Organisational:
 

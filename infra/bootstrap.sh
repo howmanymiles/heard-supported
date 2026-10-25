@@ -38,12 +38,24 @@ az group create -n "$RG" -l "$LOCATION" --tags project=heard-supported env="$ENV
 echo "== GitHub deploy identity (OIDC, no stored password)"
 DEPLOY_APP_ID="$(az ad app create --display-name "hs-${ENV_NAME}-github-deploy" --query appId -o tsv)"
 DEPLOY_SP_ID="$(az ad sp create --id "$DEPLOY_APP_ID" --query id -o tsv 2>/dev/null || az ad sp show --id "$DEPLOY_APP_ID" --query id -o tsv)"
-az ad app federated-credential create --id "$DEPLOY_APP_ID" --parameters "{
-  \"name\": \"github-env-dev\",
+# GitHub presents either a name-based subject or, for newer repositories, one
+# that also carries the owner and repository IDs. Register both.
+GH_IDS="$(curl -fsSL "https://api.github.com/repos/${REPO}" | python3 -c 'import json,sys; r=json.load(sys.stdin); print(r["owner"]["id"], r["id"])' || true)"
+SUBJECTS=("repo:${REPO}:environment:${ENV_NAME}")
+if [[ -n "$GH_IDS" ]]; then
+  read -r OWNER_ID REPO_ID <<<"$GH_IDS"
+  SUBJECTS+=("repo:${REPO%%/*}@${OWNER_ID}/${REPO##*/}@${REPO_ID}:environment:${ENV_NAME}")
+fi
+i=0
+for subject in "${SUBJECTS[@]}"; do
+  az ad app federated-credential create --id "$DEPLOY_APP_ID" --parameters "{
+  \"name\": \"github-env-${ENV_NAME}-${i}\",
   \"issuer\": \"https://token.actions.githubusercontent.com\",
-  \"subject\": \"repo:${REPO}:environment:${ENV_NAME}\",
+  \"subject\": \"${subject}\",
   \"audiences\": [\"api://AzureADTokenExchange\"]
 }" -o none
+  i=$((i + 1))
+done
 # Jobs that use the GitHub "dev" environment present this subject, so only those
 # jobs can sign in. Rights are limited to this resource group: Contributor, plus
 # role assignment so the template can grant the web app its managed-identity roles.
