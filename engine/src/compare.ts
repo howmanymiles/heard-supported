@@ -5,7 +5,7 @@
 // works both through the same scoring rules, and lists where they differ,
 // ordered by what a successful challenge would be worth.
 
-import { assessPip, InputError, type Dataset, type PipActivity, type PipActivityInput, type Rate, type Flag } from './engine.ts';
+import { assessPip, InputError, type Dataset, type PipActivity, type PipActivityInput, type Rate, type Flag, type PipLike } from './engine.ts';
 
 export type EvidenceRef = { doc: string; page: number; quote: string };
 
@@ -57,9 +57,10 @@ export function comparePip(
   assessor: AssessorChoice[],
   adviser: PipActivityInput[],
   evidence: Record<number, EvidenceRef[]> = {},
+  scheme: PipLike = 'pip',
 ): PipComparison {
-  const pip = data.benefits.find(b => b.id === 'pip');
-  if (!pip) throw new InputError('Dataset has no PIP benefit.');
+  const pip = data.benefits.find(b => b.id === scheme);
+  if (!pip) throw new InputError(`Dataset has no ${scheme} benefit.`);
   const acts = pip.activities as PipActivity[];
   const t = pip.thresholds!;
 
@@ -67,7 +68,7 @@ export function comparePip(
     throw new InputError('The assessor position must give exactly one descriptor for each of the 12 activities.');
   }
 
-  const adv = assessPip(data, adviser);
+  const adv = assessPip(data, adviser, scheme);
 
   const activities: ActivityComparison[] = acts.map(act => {
     const a = assessor.find(x => x.activity === act.number)!;

@@ -10,28 +10,36 @@ export type LetterOptions = { requestReport: boolean; holdForEvidence: boolean; 
 const long = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 export function reportName(benefit: string, hasPaperBased: boolean) {
+  if (benefit === 'adp') return 'any consultation report and the other supporting information used to make the determination';
   return benefit === 'pip' ? 'the health professional’s assessment report (PA4)' : hasPaperBased ? 'the healthcare professional’s report (UC85A)' : 'the healthcare professional’s report (UC85 or UC85A)';
 }
 
 export function buildLetter(kind: LetterKind, c: {
   benefit: string; ref: string; decisionDate: string | null; timing: MrTiming | null; lateReason: string | null; today: string; hasPaperBased: boolean;
 }, o: LetterOptions): string {
-  const benefit = c.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit (Work Capability Assessment)';
-  const decision = c.decisionDate ? `the decision dated ${long(c.decisionDate)}` : 'the recent decision [add the date]';
+  const benefit = c.benefit === 'pip' ? 'Personal Independence Payment' : c.benefit === 'adp' ? 'Adult Disability Payment' : 'Universal Credit (Work Capability Assessment)';
+  const scot = c.benefit === 'adp';
+  const decision = scot
+    ? (c.decisionDate ? `the determination my client was told of on ${long(c.decisionDate)}` : 'the recent determination [add the date]')
+    : (c.decisionDate ? `the decision dated ${long(c.decisionDate)}` : 'the recent decision [add the date]');
   const report = reportName(c.benefit, c.hasPaperBased);
   const out = [long(c.today), '', `${benefit}`, `Reference: ${c.ref}`, ''];
   out.push(`I act on behalf of my client, who has given their consent for me to do so.${o.authorityEnclosed ? ' Their signed authority is enclosed.' : ''}`);
   if (kind === 'raise_mr') {
-    out.push('', `I am writing to ask for a mandatory reconsideration of ${decision} on my client’s ${benefit} claim.`);
-    if (c.timing?.status === 'late') out.push('', `This request is made more than one month after the decision. ${c.lateReason ? `It is late because ${c.lateReason.replace(/\.?$/, '.')}` : '[Explain why the request is late.]'}`);
+    out.push('', scot
+      ? `I am writing to ask for a re-determination of my client’s entitlement to ${benefit}, following ${decision}.`
+      : `I am writing to ask for a mandatory reconsideration of ${decision} on my client’s ${benefit} claim.`);
+    if (c.timing?.status === 'late') out.push('', `${scot ? 'This request is made more than 42 days after my client was told of the determination.' : 'This request is made more than one month after the decision.'} ${c.lateReason ? `It is late because ${c.lateReason.replace(/\.?$/, '.')}` : '[Explain why the request is late.]'}`);
     out.push('', o.disputes.trim()
       ? `My client disagrees with the decision, in particular on ${o.disputes.trim().replace(/\.$/, '')}. Full reasons and further evidence will follow.`
       : 'My client disagrees with the decision. Full reasons and further evidence will follow.');
     if (o.requestReport) out.push('', `Please send me a copy of ${report}, and of any other evidence used to make the decision, so that I can give full reasons.`);
-    if (o.holdForEvidence) out.push('', 'Please do not make the reconsideration decision until you have received my client’s reasons and further evidence. If you are unable to wait, please contact me first.');
+    if (o.holdForEvidence) out.push('', scot
+      ? 'Please do not make the re-determination until you have received my client’s reasons and further evidence, or contact me first if that would take you past the 56 days you have to decide.'
+      : 'Please do not make the reconsideration decision until you have received my client’s reasons and further evidence. If you are unable to wait, please contact me first.');
   } else {
     out.push('', `I am writing to ask for a copy of ${report} used in ${decision}, and of any other evidence used to make the decision.`);
-    out.push('', 'My client is considering asking for a mandatory reconsideration. Please send the documents to me as well as to my client.');
+    out.push('', `My client is considering asking for a ${scot ? 're-determination' : 'mandatory reconsideration'}. Please send the documents to me as well as to my client.`);
   }
   out.push('', 'Please send all correspondence about this to me as well as to my client.', '', 'Yours faithfully,', '', '[Adviser name]', '[Agency]');
   return out.join('\n');

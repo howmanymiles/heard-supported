@@ -81,14 +81,15 @@ if (mrStage) {
       }
       continue;
     }
+    const adp = !!mr.determination;
     const docs = [
-      { id: `${id}/decision`, name: 'decision letter', kind: 'decision' as const, pages: splitTextPages(read('decision')) },
-      { id: `${id}/pa4`, name: 'PA4 assessment report', kind: 'pa4' as const, pages: splitTextPages(read('pa4')) },
+      { id: `${id}/decision`, name: adp ? 'notice of determination' : 'decision letter', kind: 'decision' as const, pages: splitTextPages(read('decision')) },
+      ...(adp && !fs.existsSync(path.join(casesDir, id, 'documents', 'pa4.md')) ? [] : [{ id: `${id}/pa4`, name: adp ? 'consultation report' : 'PA4 assessment report', kind: 'pa4' as const, pages: splitTextPages(read('pa4')) }]),
     ];
     const letterDate = parseUkDate(read('decision').split('\n').find(l => parseUkDate(l)) ?? '');
     process.stdout.write(`${id} … `);
     try {
-      const r = await extractAssessor(docs);
+      const r = await extractAssessor(docs, { scheme: adp ? 'adp' : 'pip' });
       const s = scoreAssessor(mr, r, letterDate, `${id}/pa4`);
       rows.push({ id, ...s, model: r.model });
       fs.writeFileSync(path.join(outDir, `${id}.json`), JSON.stringify({ score: s, result: r }, null, 2));

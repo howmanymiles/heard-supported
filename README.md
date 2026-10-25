@@ -1,6 +1,6 @@
 # Heard & Supported
 
-An adviser-facing tool for welfare rights and advice agencies working PIP and UC Work Capability Assessment cases from claim through mandatory reconsideration to First-tier Tribunal appeal.
+An adviser-facing tool for welfare rights and advice agencies working PIP, Adult Disability Payment (Scotland) and UC Work Capability Assessment cases from claim through mandatory reconsideration or re-determination to First-tier Tribunal appeal.
 
 It reads the client's documents (including handwriting), suggests passages of evidence for each activity with a citation to the exact page, points out gaps, and works the adviser's descriptor choices through the regulations. **It never chooses descriptors or points.** The adviser decides; the rules engine does the arithmetic.
 
@@ -10,7 +10,7 @@ It reads the client's documents (including handwriting), suggests passages of ev
 
 | Folder | What it is |
 |---|---|
-| `engine/` | Rules engine: PIP (reg 4(2A), reg 7, 8/12 thresholds) and UC WCA (Schedules 6–9, reg 39/40). Descriptor data from legislation.gov.uk. No AI. |
+| `engine/` | Rules engine: PIP (reg 4(2A), reg 7, 8/12 thresholds), Adult Disability Payment (SSI 2022/54 regs 7–10, its own Schedule 1 wording; `engine/scripts/transcribe-adp.py` rebuilds it and lists every difference from PIP) and UC WCA (Schedules 6–9, reg 39/40). Descriptor data from legislation.gov.uk. No AI. |
 | `core/` | The AI pipeline: identifier scrubbing → model → citation check. A suggested quote is kept only if it appears word for word on the page it cites. Also Document Intelligence (OCR and handwriting) and page handling. |
 | `app/` | Next.js web app for advisers: sign-in with Microsoft Entra ID, cases, document upload, evidence review, decisions, totals, audit log, and the mandatory reconsideration stage for PIP (PA4 and decision letter) and UC WCA (UC85 or UC85A, and the decision notice; Schedules 6 and 7, substantial risk under Schedules 8 and 9): time limits, the DWP's position, comparison, draft request; and the appeal stage (time limit from the MR notice, descriptors the notice revised, the decision maker's reasoning from the DWP response, evidence located by bundle page or flagged as missing from the bundle, draft grounds). The caseload lists cases by nearest deadline. PostgreSQL with row-level security per agency. |
 | `evals/` | Six fictional cases with expected answers, and a harness that scores the real pipeline against them. |
@@ -47,7 +47,7 @@ You need: an Azure subscription that is **yours, not an employer's**; a GitHub a
 
 ### Running the evaluation
 
-Actions → Evals → Run workflow. Leave *cases* blank for all six, or name some (`PIP-01 WCA-02`). Results are attached to the run as `eval-results`: recall against the expected evidence, how many suggestions the citation check dropped, and suggestions on activities where nothing should have been found.
+Actions → Evals → Run workflow. Leave *cases* blank for all seven, or name some (`PIP-01 WCA-02`). Results are attached to the run as `eval-results`: recall against the expected evidence, how many suggestions the citation check dropped, and suggestions on activities where nothing should have been found.
 
 ## Working on it locally
 

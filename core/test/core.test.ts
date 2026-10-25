@@ -254,3 +254,28 @@ test('scrub: the client’s own names from the claimant record, whole words only
   assert.equal(r.removed, 4);
   assert.equal(scrub('Nothing to see', []).text, 'Nothing to see');
 });
+
+test('ADP time limits: 42 days to ask for a re-determination, 31 days to appeal, both counting the day told', async () => {
+  const { mrTiming, appealTiming, nextDeadline, adpRedeterminationDue } = await import('../src/deadlines.ts');
+  const r = mrTiming('2026-11-12', '2026-12-23', 'adp');
+  assert.equal(r.deadline, '2026-12-23');            // 12 November is day 1, so day 42 is 23 December
+  assert.equal(r.status, 'in_time');
+  assert.equal(mrTiming('2026-11-12', '2026-12-24', 'adp').status, 'late');
+  assert.equal(r.lateLimit, '2027-11-12');           // within one year of being told
+  assert.equal(mrTiming('2026-11-12', '2027-11-13', 'adp').status, 'out_of_time');
+  const a = appealTiming('2027-01-05', '2027-02-04', 'adp');
+  assert.equal(a.deadline, '2027-02-04');            // 31 days beginning with 5 January
+  assert.equal(a.lateLimit, '2028-01-04');           // one year beginning with that day
+  assert.equal(adpRedeterminationDue('2026-12-01'), '2027-01-25');   // 56 days beginning with receipt
+  assert.equal(mrTiming('2026-11-12', '2026-12-23').deadline, '2026-12-12');   // PIP stays one calendar month
+  assert.equal(nextDeadline({ benefit: 'adp', decisionDate: '2026-11-12', mrRequestDate: null, mrNoticeDate: null, appealSentDate: null }, '2026-11-20')!.due, '2026-12-23');
+});
+
+test('terms: ADP is PIP-like, worded for Social Security Scotland', async () => {
+  const { terms, isPipLike, parseBenefit } = await import('../src/terms.ts');
+  assert.ok(isPipLike('adp') && isPipLike('pip') && !isPipLike('uc-wca'));
+  assert.equal(terms('adp').mr, 're-determination');
+  assert.match(terms('adp').tribunal, /First-tier Tribunal for Scotland/);
+  assert.equal(parseBenefit('adp'), 'adp');
+  assert.equal(parseBenefit('nonsense'), 'pip');
+});

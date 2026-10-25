@@ -4,6 +4,7 @@
 
 import { chatJson } from './ai.ts';
 import { scrub } from './scrub.ts';
+import { terms } from './terms.ts';
 import { makeCiteChecker, type RawCite, type ResolvedCite } from './assessor.ts';
 
 export type ResponseItem = { key: string; label: string };
@@ -23,7 +24,7 @@ export function resolveResponse(raw: { items?: Array<{ key?: unknown; reasoning?
   return { reasoning, dropped };
 }
 
-const SYSTEM = `You help a welfare rights adviser prepare a benefit appeal to the First-tier Tribunal. You are given the DWP's response bundle. For each disputed item listed, find the decision maker's main reason for their decision on it in the written response.
+const SYSTEM = `You help a welfare rights adviser prepare a benefit appeal to the {TRIBUNAL}. You are given {BUNDLE}. For each disputed item listed, find the decision maker's main reason for their decision on it in the written response.
 
 Rules:
 1. Copy the quote exactly as it appears, character for character, 5 to 60 words from one place on one page. Never paraphrase, shorten or join text.
@@ -34,10 +35,11 @@ Rules:
 
 Reply with JSON only: {"items":[{"key":"pip:12","reasoning":{"doc":"D1","page":3,"quote":"exact words"}}]}`;
 
-export async function extractResponseReasoning(bundle: { id: string; name: string; pages: Array<{ page: number; text: string }> }, items: ResponseItem[], opts: { endpoint?: string; deployment?: string; names?: string[] } = {}): Promise<ResponseResult> {
+export async function extractResponseReasoning(bundle: { id: string; name: string; pages: Array<{ page: number; text: string }> }, items: ResponseItem[], opts: { endpoint?: string; deployment?: string; names?: string[]; benefit?: string } = {}): Promise<ResponseResult> {
+  const t = terms(opts.benefit ?? 'pip');
   let identifiersRemoved = 0;
   const pages = bundle.pages.map(p => { const s = scrub(p.text, opts.names); identifiersRemoved += s.removed; return { docId: bundle.id, page: p.page, text: s.text }; });
-  const user = `Disputed items (key, name):\n${items.map(i => `${i.key}  ${i.label}`).join('\n')}\n\nDocuments:\n\n${pages.map(p => `=== D1: DWP response bundle (${bundle.name}), page ${p.page} ===\n${p.text}`).join('\n\n')}`;
-  const { data, model } = await chatJson<{ items?: Array<{ key?: unknown; reasoning?: RawCite | null }> }>([{ role: 'system', content: SYSTEM }, { role: 'user', content: user }], opts);
+  const user = `Disputed items (key, name):\n${items.map(i => `${i.key}  ${i.label}`).join('\n')}\n\nDocuments:\n\n${pages.map(p => `=== D1: ${t.bundle} (${bundle.name}), page ${p.page} ===\n${p.text}`).join('\n\n')}`;
+  const { data, model } = await chatJson<{ items?: Array<{ key?: unknown; reasoning?: RawCite | null }> }>([{ role: 'system', content: SYSTEM.replace('{TRIBUNAL}', t.tribunal).replace('{BUNDLE}', t.agency === 'the DWP' ? "the DWP's response bundle" : `${t.bundle}`) }, { role: 'user', content: user }], opts);
   return { ...resolveResponse(data ?? {}, items, pages, { D1: bundle.id }), model, identifiersRemoved };
 }

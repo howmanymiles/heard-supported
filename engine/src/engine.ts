@@ -1,6 +1,7 @@
 // Heard & Supported descriptor rules engine.
 //
-// Applies the scoring rules in the PIP Regulations 2013 (regs 4–7) and the
+// Applies the scoring rules in the PIP Regulations 2013 (regs 4–7), the
+// Adult Disability Payment Regulations 2022 (SSI 2022/54, regs 7–10), and the
 // Universal Credit Regulations 2013 (regs 39–40, Schedules 6–9) to the
 // descriptors an ADVISER has selected. It never chooses descriptors itself and
 // never reads evidence: its output is the adviser's own assessment, worked
@@ -106,10 +107,19 @@ function pipRate(points: number, t: { standard: number; enhanced: number }): Rat
 }
 
 /** Apply reg 7(1) to the descriptors claimed for one activity. */
+/** Where each rule sits: PIP and ADP have the same rules under different regulation numbers. */
+export const PIP_LIKE_REFS = {
+  pip: { frequency: 'reg 7(1)', reliability: 'reg 4(2A)' },
+  adp: { frequency: 'reg 10(1)', reliability: 'reg 7(2)(b)' },
+} as const;
+export type PipLike = keyof typeof PIP_LIKE_REFS;
+
 export function applyReg7(
   act: PipActivity,
   claimed: PipClaimedDescriptor[],
+  scheme: PipLike = 'pip',
 ): { descriptor: Descriptor | null; basis: string; flags: Flag[] } {
+  const ref = PIP_LIKE_REFS[scheme].frequency;
   const flags: Flag[] = [];
   const rows = claimed.map(c => {
     const d = act.descriptors.find(x => x.letter === c.letter);
@@ -126,7 +136,7 @@ export function applyReg7(
     flags.push({
       code: 'frequency_not_recorded',
       message: 'How often the descriptor is satisfied is not recorded. It is treated as over 50% of days; check the evidence supports that.',
-      ref: 'reg 7(1)',
+      ref,
     });
   }
   const pct = (r: { pct?: number }) => (r.pct === undefined ? 100 : r.pct);
@@ -155,23 +165,24 @@ export function applyReg7(
   flags.push({
     code: 'under_50_percent',
     message: 'No descriptor, alone or combined with others, is satisfied on over 50% of days, so no points score for this activity.',
-    ref: 'reg 7(1)',
+    ref,
   });
   return { descriptor: null, basis: 'Not satisfied on over 50% of days.', flags };
 }
 
-export function assessPip(data: Dataset, inputs: PipActivityInput[]): PipResult {
-  const pip = benefit(data, 'pip');
+/** PIP, or ADP with scheme 'adp': the same scoring, each from its own descriptor data. */
+export function assessPip(data: Dataset, inputs: PipActivityInput[], scheme: PipLike = 'pip'): PipResult {
+  const pip = benefit(data, scheme);
   const acts = pip.activities as PipActivity[];
   const seen = new Set<number>();
 
   const results: PipActivityResult[] = inputs.map(input => {
     const act = acts.find(a => a.number === input.activity);
-    if (!act) throw new InputError(`PIP has no activity ${input.activity}.`);
+    if (!act) throw new InputError(`${scheme === 'adp' ? 'ADP' : 'PIP'} has no activity ${input.activity}.`);
     if (seen.has(input.activity)) throw new InputError(`Activity ${input.activity} is listed twice.`);
     seen.add(input.activity);
 
-    const { descriptor, basis, flags } = applyReg7(act, input.satisfied);
+    const { descriptor, basis, flags } = applyReg7(act, input.satisfied, scheme);
 
     if (input.satisfied.length > 0) {
       const r = input.reliability ?? {};
@@ -180,7 +191,7 @@ export function assessPip(data: Dataset, inputs: PipActivityInput[]): PipResult 
         flags.push({
           code: 'reliability_not_addressed',
           message: `Evidence does not yet show whether the client can do this ${missing.join(', ')}.`,
-          ref: 'reg 4(2A)',
+          ref: PIP_LIKE_REFS[scheme].reliability,
         });
       }
     }

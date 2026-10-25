@@ -1,0 +1,265 @@
+{
+ "id": "ADP-01",
+ "benefit": "adp",
+ "title": "Unadapted bath and a sister's support",
+ "summary": "Woman in her 40s in Scotland with fibromyalgia and panic disorder, refused Adult Disability Payment on 6 daily living and 4 mobility points without a consultation. Three points turn on ADP's own wording: the unadapted bath in descriptor 4e, social support from someone experienced in assisting her in particular (her sister) in 9c, and prompting by another person to start any journey in 11b. Correct, she scores 11 and 8: the standard rate of both.",
+ "exercises": [
+  "ADP 4e: unadapted bath",
+  "ADP social support: a person experienced with the individual in particular",
+  "ADP 11b: prompting of another person",
+  "re-determination time limit: 42 days from being told",
+  "decision made without a consultation"
+ ],
+ "client": {
+  "ref": "HS-3101",
+  "age_band": "40-49",
+  "living": "Lives with husband in a council flat",
+  "conditions_in_documents": [
+   "Fibromyalgia",
+   "Anxiety and panic disorder",
+   "Low back pain"
+  ]
+ },
+ "documents": [
+  {
+   "id": "form",
+   "file": "documents/form.md",
+   "type": "application form",
+   "pages": 2
+  },
+  {
+   "id": "gp",
+   "file": "documents/gp.md",
+   "type": "gp",
+   "pages": 1
+  },
+  {
+   "id": "notes",
+   "file": "documents/notes.md",
+   "type": "notes",
+   "pages": 2
+  }
+ ],
+ "activities": [
+  {
+   "key": "pip:1",
+   "evidence_status": "good",
+   "must_find": [
+    {
+     "doc": "form",
+     "page": 2,
+     "quote": "I sit on a perching stool in the kitchen to cook."
+    }
+   ],
+   "gaps": [],
+   "draft_descriptor": {
+    "satisfied": [
+     {
+      "letter": "b",
+      "daysPercent": 100
+     }
+    ]
+   },
+   "draft_note": "Perching stool: 1b, as decided."
+  },
+  {
+   "key": "pip:2",
+   "evidence_status": "nodiff",
+   "must_find": [],
+   "gaps": [],
+   "draft_descriptor": null
+  },
+  {
+   "key": "pip:3",
+   "evidence_status": "nodiff",
+   "must_find": [],
+   "gaps": [],
+   "draft_descriptor": null
+  },
+  {
+   "key": "pip:4",
+   "evidence_status": "good",
+   "must_find": [
+    {
+     "doc": "form",
+     "page": 1,
+     "quote": "My husband has to help me get in and out of the bath because my legs give way"
+    },
+    {
+     "doc": "form",
+     "page": 1,
+     "quote": "We only have a bath with the shower over it, there is no walk-in shower and no rails."
+    },
+    {
+     "doc": "notes",
+     "page": 1,
+     "quote": "Tried to do it alone in March, slipped and bruised her hip."
+    },
+    {
+     "doc": "notes",
+     "page": 1,
+     "quote": "house is a council flat, bath with shower over, no rails, no seat, no adaptations."
+    }
+   ],
+   "gaps": [
+    "How often she needs help, as a share of days, is not stated: she bathes about 3 times a week and washes at the sink otherwise"
+   ],
+   "draft_descriptor": {
+    "satisfied": [
+     {
+      "letter": "e"
+     }
+    ]
+   },
+   "draft_note": "4e: assistance to get in or out of an unadapted bath. ADP's 4e names the unadapted bath in the descriptor itself. Whether sink-washing days count against the 50% rule needs the adviser's view."
+  },
+  {
+   "key": "pip:5",
+   "evidence_status": "nodiff",
+   "must_find": [],
+   "gaps": [],
+   "draft_descriptor": null
+  },
+  {
+   "key": "pip:6",
+   "evidence_status": "good",
+   "must_find": [
+    {
+     "doc": "form",
+     "page": 2,
+     "quote": "I use a long shoehorn and elastic laces because bending is painful."
+    }
+   ],
+   "gaps": [],
+   "draft_descriptor": {
+    "satisfied": [
+     {
+      "letter": "b",
+      "daysPercent": 100
+     }
+    ]
+   },
+   "draft_note": "6b, as decided."
+  },
+  {
+   "key": "pip:7",
+   "evidence_status": "nodiff",
+   "must_find": [],
+   "gaps": [],
+   "draft_descriptor": null
+  },
+  {
+   "key": "pip:8",
+   "evidence_status": "nodiff",
+   "must_find": [],
+   "gaps": [],
+   "draft_descriptor": null
+  },
+  {
+   "key": "pip:9",
+   "evidence_status": "good",
+   "must_find": [
+    {
+     "doc": "form",
+     "page": 1,
+     "quote": "my sister comes with me and does most of the talking."
+    },
+    {
+     "doc": "form",
+     "page": 1,
+     "quote": "She knows how my panic attacks start and she can calm me down before it gets bad."
+    },
+    {
+     "doc": "notes",
+     "page": 1,
+     "quote": "Sister has supported her through panic attacks for years and knows the signs"
+    },
+    {
+     "doc": "gp",
+     "page": 1,
+     "quote": "she has left the waiting room before being seen on two occasions in 2025 because of panic."
+    }
+   ],
+   "gaps": [
+    "No statement from the sister herself"
+   ],
+   "draft_descriptor": {
+    "satisfied": [
+     {
+      "letter": "c",
+      "daysPercent": 100
+     }
+    ]
+   },
+   "draft_note": "9c: social support. ADP defines social support as support from a person experienced in assisting people in general, or the individual in particular, so the sister's long experience of supporting her counts."
+  },
+  {
+   "key": "pip:10",
+   "evidence_status": "nodiff",
+   "must_find": [],
+   "gaps": [],
+   "draft_descriptor": null
+  },
+  {
+   "key": "pip:11",
+   "evidence_status": "good",
+   "must_find": [
+    {
+     "doc": "form",
+     "page": 2,
+     "quote": "My sister phones me in the morning on the days I have somewhere to be and talks me through getting ready and out of the door."
+    },
+    {
+     "doc": "notes",
+     "page": 2,
+     "quote": "This is needed every time, including familiar places like the local shop."
+    },
+    {
+     "doc": "form",
+     "page": 2,
+     "quote": "It is the panic that stops me."
+    }
+   ],
+   "gaps": [
+    "Whether the distress is 'overwhelming' psychological distress related to an enduring mental condition: the GP letter supports a long-standing anxiety disorder"
+   ],
+   "draft_descriptor": {
+    "satisfied": [
+     {
+      "letter": "b",
+      "daysPercent": 100
+     }
+    ]
+   },
+   "draft_note": "11b: needs the prompting of another person to undertake any journey, to avoid overwhelming psychological distress. Not 11d: she does not need someone with her to follow the route."
+  },
+  {
+   "key": "pip:12",
+   "evidence_status": "good",
+   "must_find": [
+    {
+     "doc": "gp",
+     "page": 1,
+     "quote": "She reports being able to walk about 150 metres before needing to stop."
+    }
+   ],
+   "gaps": [],
+   "draft_descriptor": {
+    "satisfied": [
+     {
+      "letter": "b",
+      "daysPercent": 100
+     }
+    ]
+   },
+   "draft_note": "12b, as decided."
+  }
+ ],
+ "must_not_claim": [
+  "That she had a consultation or was assessed by a practitioner",
+  "That she needs someone with her to follow the route of a journey",
+  "That she uses a walking aid",
+  "That her husband helps her dress"
+ ],
+ "expert_review": "Not yet reviewed. To check: ADP 4e and the 50% rule when she sometimes washes at the sink; whether the sister meets the ADP definition of social support; 11b against 11e."
+}

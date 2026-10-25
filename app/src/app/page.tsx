@@ -3,7 +3,7 @@ import { requireMe } from '@/lib/auth';
 import { findCases, listUsers } from '@/lib/casework';
 import { loadSyntheticAction } from './actions';
 import synthetic from '@/data/synthetic.json';
-import { nextDeadline, type NextDeadline } from '@hs/core';
+import { nextDeadline, terms, type NextDeadline } from '@hs/core';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +26,7 @@ export default async function Caseload({ searchParams }: { searchParams: Promise
   const users = await listUsers(me);
   const today = new Date().toISOString().slice(0, 10);
   const cases = (await findCases(me, { mine: view === 'mine', closed: view === 'closed', adviser: view === 'all' ? sp.adviser : undefined, stage: sp.stage, benefit: sp.benefit, q: sp.q }))
-    .map(c => ({ ...c, next: nextDeadline({ decisionDate: c.decision_date, mrRequestDate: c.mr_request_date, mrNoticeDate: c.mr_notice_date, appealSentDate: c.appeal_sent_date }, today) }))
+    .map(c => ({ ...c, next: nextDeadline({ benefit: c.benefit, decisionDate: c.decision_date, mrRequestDate: c.mr_request_date, mrNoticeDate: c.mr_notice_date, appealSentDate: c.appeal_sent_date }, today) }))
     .sort((a, b) => (a.next ? a.next.status === 'in_time' ? a.next.daysLeft : -1 : 1e6) - (b.next ? b.next.status === 'in_time' ? b.next.daysLeft : -1 : 1e6));
   const soon = cases.filter(c => c.next && (c.next.status !== 'in_time' || c.next.daysLeft <= SOON));
   const tests = synthetic as Array<{ id: string; title: string; benefit: string }>;
@@ -51,7 +51,7 @@ export default async function Caseload({ searchParams }: { searchParams: Promise
           <select name="stage" defaultValue={sp.stage ?? ''}><option value="">Any</option>{Object.entries(STAGE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         </label>
         <label className="field small-field">Benefit
-          <select name="benefit" defaultValue={sp.benefit ?? ''}><option value="">Both</option><option value="pip">PIP</option><option value="uc-wca">UC WCA</option></select>
+          <select name="benefit" defaultValue={sp.benefit ?? ''}><option value="">All</option><option value="pip">PIP</option><option value="adp">ADP</option><option value="uc-wca">UC WCA</option></select>
         </label>
         <label className="field small-field">Reference or client<input name="q" defaultValue={sp.q ?? ''} /></label>
         <div style={{ alignSelf: 'flex-end' }}><button className="btn" type="submit">Show</button></div>
@@ -66,7 +66,7 @@ export default async function Caseload({ searchParams }: { searchParams: Promise
               <tr key={c.id}>
                 <td><Link className="mono" href={`/cases/${c.id}`}>{c.ref}</Link>{c.external_ref ? <><br /><span className="soft small">{c.external_ref}</span></> : null}</td>
                 <td>{c.claimant_id ? <Link href={`/clients/${c.claimant_id}`}>{c.client_name}</Link> : <span className="soft">–</span>}</td>
-                <td>{c.benefit === 'pip' ? 'PIP' : 'UC WCA'}</td>
+                <td>{terms(c.benefit).short}</td>
                 <td>{STAGE[c.stage] ?? c.stage}</td>
                 <td>{view === 'closed' ? <span className="soft">{c.closed_on}</span> : <Deadline d={c.next} />}</td>
                 <td className="mono">{c.documents}</td>
@@ -85,7 +85,7 @@ export default async function Caseload({ searchParams }: { searchParams: Promise
           <p className="soft small">Creates a case with the synthetic documents already uploaded, ready to read and review.</p>
           <ul className="plain">{tests.map(t => (
             <li key={t.id}><form action={loadSyntheticAction} className="inline"><input type="hidden" name="id" value={t.id} />
-              <button className="btn btn-quiet" type="submit">{t.id}</button><span className="soft small">{t.benefit === 'pip' ? 'PIP' : 'UC WCA'} · {t.title}</span></form></li>
+              <button className="btn btn-quiet" type="submit">{t.id}</button><span className="soft small">{terms(t.benefit).short} · {t.title}</span></form></li>
           ))}</ul>
         </section>
       </div>

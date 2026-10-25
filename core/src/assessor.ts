@@ -1,4 +1,5 @@
-// Reading the DWP's position for a PIP mandatory reconsideration.
+// Reading the decision maker's position for a PIP mandatory reconsideration, or an
+// ADP re-determination (same activities, the ADP descriptor wording).
 //
 // The AI is asked only to point at where the position is written down: the
 // descriptor wording in the decision letter, the descriptor recorded in the PA4,
@@ -15,7 +16,8 @@ import { normalise } from './verify.ts';
 
 type D = { letter?: string; text: string; points?: number };
 type A = { number: number; name: string; descriptors: D[] };
-const pipActs = ((descriptors as unknown as { benefits: Array<{ id: string; activities: A[] }> }).benefits.find(b => b.id === 'pip')!).activities;
+type Scheme = 'pip' | 'adp';
+const actsFor = (scheme: Scheme) => ((descriptors as unknown as { benefits: Array<{ id: string; activities: A[] }> }).benefits.find(b => b.id === scheme)!).activities;
 
 export type Cite = { doc: string; page: number; quote: string };
 export type ResolvedCite = Cite & { docId: string };
@@ -73,17 +75,17 @@ export function matchAmong(options: Array<{ id: string; text: string }>, wording
 }
 
 /** Which descriptor of a PIP activity this wording is, if it clearly is one. */
-export function matchDescriptor(activity: number, wording: string): { letter: string; score: number } | null {
-  const act = pipActs.find(a => a.number === activity);
+export function matchDescriptor(activity: number, wording: string, scheme: Scheme = 'pip'): { letter: string; score: number } | null {
+  const act = actsFor(scheme).find(a => a.number === activity);
   return act ? matchAmong(act.descriptors.map(d => ({ id: d.letter!, text: d.text })), wording) : null;
 }
 
 /** A descriptor letter written in a PA4-style quote: "Descriptor chosen: c", "12b", or the descriptor's wording. */
-export function letterFromQuote(activity: number, quote: string): string | null {
-  const act = pipActs.find(a => a.number === activity);
+export function letterFromQuote(activity: number, quote: string, scheme: Scheme = 'pip'): string | null {
+  const act = actsFor(scheme).find(a => a.number === activity);
   if (!act) return null;
   const valid = new Set(act.descriptors.map(d => d.letter));
-  const byWords = matchDescriptor(activity, quote);
+  const byWords = matchDescriptor(activity, quote, scheme);
   if (byWords) return byWords.letter;
   const m = quote.match(/descriptor(?:\s+(?:chosen|choice|selected|applied))?\s*[:\-–]?\s*\(?([a-h])\)?(?![a-z])/i)
     ?? quote.match(new RegExp(`(?:^|[^0-9])${activity}\\s*\\.?\\s*\\(?([a-h])\\)?(?![a-z])`, 'i'));
@@ -147,6 +149,7 @@ export function resolveAssessor(
   raw: RawAssessor,
   pages: Array<{ docId: string; page: number; text: string }>,
   alias: Record<string, string>,
+  scheme: Scheme = 'pip',
 ): Omit<AssessorResult, 'model' | 'identifiersRemoved'> {
   const index = new Map(pages.map(p => [`${p.docId}:${p.page}`, normalise(p.text)]));
   const dropped: AssessorResult['dropped'] = [];
@@ -172,15 +175,15 @@ export function resolveAssessor(
     if (Number.isInteger(n) && n >= 1 && n <= 12 && !byActivity.has(n)) byActivity.set(n, a);
   }
 
-  const activities: AssessorActivity[] = pipActs.map(act => {
+  const activities: AssessorActivity[] = actsFor(scheme).map(act => {
     const a = byActivity.get(act.number);
     const out: AssessorActivity = { activity: act.number, letter: null, source: null };
     if (!a) return out;
     out.decisionQuote = cite(a.decision, 'decision', act.number, 2, 40);
     out.pa4Quote = cite(a.pa4, 'pa4', act.number, 2, 40);
     out.justification = cite(a.justification, 'justification', act.number, 3, 60);
-    const fromDecision = out.decisionQuote ? matchDescriptor(act.number, out.decisionQuote.quote)?.letter ?? null : null;
-    const fromPa4 = out.pa4Quote ? letterFromQuote(act.number, out.pa4Quote.quote) : null;
+    const fromDecision = out.decisionQuote ? matchDescriptor(act.number, out.decisionQuote.quote, scheme)?.letter ?? null : null;
+    const fromPa4 = out.pa4Quote ? letterFromQuote(act.number, out.pa4Quote.quote, scheme) : null;
     if (out.decisionQuote && !fromDecision) dropped.push({ activity: act.number, field: 'decision', reason: 'wording_not_matched' });
     if (out.pa4Quote && !fromPa4) dropped.push({ activity: act.number, field: 'pa4', reason: 'letter_not_found' });
     if (fromDecision) { out.letter = fromDecision; out.source = 'decision_letter'; }
@@ -213,7 +216,13 @@ export function resolveAssessor(
 
 // ---------- the model call ----------
 
-const SYSTEM = `You help a welfare rights adviser prepare a Personal Independence Payment mandatory reconsideration. You are given the DWP decision letter and, if the adviser has it, the health professional's assessment report (PA4). For each of the 12 activities, find where the documents record which descriptor was applied.
+const WORDS: Record<Scheme, { task: string; decision: string; report: string; short: string }> = {
+  pip: { task: 'a Personal Independence Payment mandatory reconsideration', decision: 'DWP decision letter', report: "health professional's assessment report (PA4)", short: 'PA4' },
+  adp: { task: 'an Adult Disability Payment re-determination request', decision: 'Social Security Scotland notice of determination', report: "practitioner's consultation report", short: 'consultation report' },
+};
+const system = (scheme: Scheme) => { const w = WORDS[scheme]; return SYSTEM.replace('__TASK__', w.task).replace('__DECISION__', w.decision).replace('__REPORT__', w.report).replaceAll('the PA4', `the ${w.short}`); };
+
+const SYSTEM = `You help a welfare rights adviser prepare __TASK__. You are given the __DECISION__ and, if the adviser has it, the __REPORT__. For each of the 12 activities, find where the documents record which descriptor was applied.
 
 Rules:
 1. Copy every quote exactly as it appears, character for character, from one place on one page. Never paraphrase, shorten or join text.
@@ -232,17 +241,18 @@ Reply with JSON only:
 
 export type AssessorDoc = { id: string; name: string; kind: 'decision' | 'pa4' | 'other'; pages: Array<{ page: number; text: string }> };
 
-export function buildAssessorMessages(docs: Array<{ label: string; name: string; kind: string; pages: Array<{ page: number; text: string }> }>) {
-  const kindName: Record<string, string> = { decision: 'DWP decision letter', pa4: 'PA4 assessment report', other: 'other document' };
-  const acts = pipActs.map(a => `${a.number}. ${a.name}`).join('\n');
+export function buildAssessorMessages(docs: Array<{ label: string; name: string; kind: string; pages: Array<{ page: number; text: string }> }>, scheme: Scheme = 'pip') {
+  const kindName: Record<string, string> = { decision: WORDS[scheme].decision, pa4: WORDS[scheme].report, other: 'other document' };
+  const acts = actsFor(scheme).map(a => `${a.number}. ${a.name}`).join('\n');
   const docText = docs.flatMap(d => d.pages.map(p => `=== ${d.label}: ${kindName[d.kind] ?? d.kind} (${d.name}), page ${p.page} ===\n${p.text}`)).join('\n\n');
   return [
-    { role: 'system' as const, content: SYSTEM },
+    { role: 'system' as const, content: system(scheme) },
     { role: 'user' as const, content: `Activities:\n${acts}\n\nDocuments:\n\n${docText}` },
   ];
 }
 
-export async function extractAssessor(docs: AssessorDoc[], opts: { endpoint?: string; deployment?: string; names?: string[] } = {}): Promise<AssessorResult> {
+export async function extractAssessor(docs: AssessorDoc[], opts: { endpoint?: string; deployment?: string; names?: string[]; scheme?: Scheme } = {}): Promise<AssessorResult> {
+  const scheme = opts.scheme ?? 'pip';
   let identifiersRemoved = 0;
   const labelled = docs.map((d, i) => ({
     id: d.id, label: `D${i + 1}`, name: d.name, kind: d.kind,
@@ -250,6 +260,6 @@ export async function extractAssessor(docs: AssessorDoc[], opts: { endpoint?: st
   }));
   const alias = Object.fromEntries(labelled.map(d => [d.label, d.id]));
   const pages = labelled.flatMap(d => d.pages.map(p => ({ docId: d.id, page: p.page, text: p.text })));
-  const { data, model } = await chatJson<RawAssessor>(buildAssessorMessages(labelled), opts);
-  return { ...resolveAssessor(data ?? {}, pages, alias), model, identifiersRemoved };
+  const { data, model } = await chatJson<RawAssessor>(buildAssessorMessages(labelled, scheme), opts);
+  return { ...resolveAssessor(data ?? {}, pages, alias, scheme), model, identifiersRemoved };
 }

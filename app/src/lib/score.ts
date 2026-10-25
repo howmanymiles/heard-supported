@@ -22,17 +22,17 @@ export function wcaInputs(decisions: DecisionRow[]) {
 
 /** Works the adviser's decisions through the regulations. Never chooses anything itself. */
 export function score(benefit: Benefit, decisions: DecisionRow[]) {
-  if (benefit === 'pip') {
-    const r = assessPip(data, pipInputs(decisions));
+  if (benefit === 'pip' || benefit === 'adp') {
+    const r = assessPip(data, pipInputs(decisions), benefit);
     return { kind: 'pip' as const, result: r };
   }
   return { kind: 'wca' as const, result: assessWca(data, wcaInputs(decisions)) };
 }
 
-export function descriptorsFor(activityKey: string) {
+export function descriptorsFor(activityKey: string, benefit: string = 'pip') {
   const [scheme, n] = activityKey.split(':');
   const num = Number(n);
-  if (scheme === 'pip') return data.benefits.find(b => b.id === 'pip')!.activities.find(a => a.number === num)!.descriptors.map(d => ({ id: d.letter!, text: d.text, points: d.points ?? 0 }));
+  if (scheme === 'pip') return data.benefits.find(b => b.id === (benefit === 'adp' ? 'adp' : 'pip'))!.activities.find(a => a.number === num)!.descriptors.map(d => ({ id: d.letter!, text: d.text, points: d.points ?? 0 }));
   const w = data.benefits.find(b => b.id === 'uc-wca')!;
   if (scheme === 'sch6') return w.activities.find(a => a.number === num)!.descriptors.map(d => ({ id: d.letter!, text: d.text, points: d.points ?? 0 }));
   return (w.lcwra_activities ?? []).find(a => a.number === num)!.descriptors.map(d => ({ id: d.number!, text: d.text, points: 0 }));

@@ -27,10 +27,11 @@ export type AwardValue = { daily_living?: string; mobility?: string; wca?: strin
 export type UcCategory = { lcwra: 'standard' | 'protected' | null; lcwLegacy: boolean };
 
 /** Yearly value of an award at a year's rates: PIP weekly x 52; UC monthly x 12 (maximum: UC is means-tested). */
-export function annualValue(benefit: 'pip' | 'uc-wca', a: AwardValue | null, year: RateYear, uc: UcCategory = { lcwra: null, lcwLegacy: false }): number | null {
+export function annualValue(benefit: 'pip' | 'adp' | 'uc-wca', a: AwardValue | null, year: RateYear, uc: UcCategory = { lcwra: null, lcwLegacy: false }): number | null {
   if (!a) return null;
   const r = RATES[year];
-  if (benefit === 'pip') {
+  // ADP's weekly rates are the same as PIP's (SSI 2022/54 reg 34, as revised for 2026/27).
+  if (benefit === 'pip' || benefit === 'adp') {
     const dl = a.daily_living === 'standard' || a.daily_living === 'enhanced' ? r.pip.daily_living[a.daily_living] : 0;
     const mob = a.mobility === 'standard' || a.mobility === 'enhanced' ? r.pip.mobility[a.mobility] : 0;
     return Math.round((dl + mob) * 52 * 100) / 100;
@@ -44,7 +45,7 @@ export function annualValue(benefit: 'pip' | 'uc-wca', a: AwardValue | null, yea
 }
 
 /** Yearly gain from before to after, or null if either side cannot be valued. */
-export function annualGain(benefit: 'pip' | 'uc-wca', before: AwardValue | null, after: AwardValue | null, year: RateYear, uc?: UcCategory): number | null {
+export function annualGain(benefit: 'pip' | 'adp' | 'uc-wca', before: AwardValue | null, after: AwardValue | null, year: RateYear, uc?: UcCategory): number | null {
   const b = annualValue(benefit, before, year, uc), a = annualValue(benefit, after, year, uc);
   return a === null || b === null ? null : Math.round((a - b) * 100) / 100;
 }

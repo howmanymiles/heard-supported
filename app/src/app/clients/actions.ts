@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireMe } from '@/lib/auth';
 import { createClaimant, updateClaimant, recordConsent, withdrawConsent, type ConsentInput } from '@/lib/claimants';
 import { createCase } from '@/lib/cases';
+import { parseBenefit } from '@hs/core';
 import type { ActionState } from '../actions';
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Try again.');
@@ -50,7 +51,7 @@ export async function clientCaseAction(_: ActionState, form: FormData): Promise<
   const me = await requireMe();
   let id: string;
   try {
-    id = await createCase(me, text(form, 'ref'), form.get('benefit') === 'uc-wca' ? 'uc-wca' : 'pip', text(form, 'claimantId'));
+    id = await createCase(me, text(form, 'ref'), parseBenefit(form.get('benefit')), text(form, 'claimantId'));
   } catch (e) { return { error: msg(e) }; }
   redirect(`/cases/${id}`);
 }

@@ -5,7 +5,7 @@ Usage: python3 -I validate_mr.py cases/PIP-01 [...]   (or no args for every case
 import json, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from validate import PIP, pages, norm, HERE
+from validate import PIP, ADP, pages, norm, HERE
 
 ERRORS = {'evidence_ignored', 'reliability_not_considered', 'observation_overrelied',
           'typical_day_overstretched', 'aid_or_prompting_missed', 'fluctuation_misapplied', 'other'}
@@ -24,7 +24,11 @@ def check(case_dir):
     except Exception as e:
         return [f'mr.json unreadable: {e}']
     docs = {doc['id']: pages((d / doc['file']).read_text()) for doc in case['documents']}
-    for extra in ('pa4', 'decision'):
+    if case['benefit'] == 'uc-wca':
+        return []   # WCA answer files have their own shape (mr.report), checked by the WCA tests
+    adp = case['benefit'] == 'adp'
+    # ADP decisions are often made without a consultation: the notice of determination alone.
+    for extra in (('decision',) if adp else ('pa4', 'decision')):
         p = d / 'documents' / f'{extra}.md'
         if not p.exists():
             errs.append(f'missing documents/{extra}.md')
@@ -40,9 +44,9 @@ def check(case_dir):
         elif norm(q['quote']) not in norm(pg):
             errs.append(f"{where}: quote not verbatim on {q['doc']} p{q['page']}: {q['quote']!r}")
 
-    acts = {a['number']: a for a in PIP['activities']}
+    acts = {a['number']: a for a in (ADP if adp else PIP)['activities']}
     chosen = {}
-    for a in mr['pa4']['activities']:
+    for a in (mr['determination'] if adp else mr['pa4'])['activities']:
         n = a['activity']
         if n in chosen:
             errs.append(f'pa4 activity {n} listed twice')
@@ -51,7 +55,11 @@ def check(case_dir):
             errs.append(f"pa4 activity {n}: letter {a['letter']} not in dataset")
             continue
         chosen[n] = desc
-        quote_ok(a['justification_quote'], f'pa4 activity {n}', True)
+        if 'justification_quote' in a or not adp:
+            quote_ok(a['justification_quote'], f'pa4 activity {n}', True)
+        if adp:   # the notice must state this descriptor word for word
+            if norm(desc['text']) not in norm(' '.join(docs['decision'].values())):
+                errs.append(f'activity {n}: notice does not give the ADP wording of {n}{desc["letter"]}')
     if set(chosen) != set(range(1, 13)):
         errs.append(f'pa4 must cover activities 1-12; has {sorted(chosen)}')
 

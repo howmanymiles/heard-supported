@@ -15,7 +15,7 @@ for (const id of fs.readdirSync(root).sort()) {
   // Claim-stage documents only: the PA4, decision and appeal papers belong to later stages.
   const claimDocs = docs.filter(d => !/ (pa4|uc85|uc85a|decision|mr request|mr notice|sscs1|dwp response)\.md$/.test(d.name));
   // The MR papers, loaded separately on the reconsideration page.
-  const paperName = { pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: c.benefit === 'pip' ? 'decision letter' : 'decision notice' };
+  const paperName = { pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: c.benefit === 'pip' ? 'decision letter' : c.benefit === 'adp' ? 'notice of determination' : 'decision notice' };
   const mrDocs = ['pa4', 'uc85', 'uc85a', 'decision']
     .filter(f => fs.existsSync(path.join(root, id, 'documents', `${f}.md`)))
     .map(f => ({ name: `${id} ${paperName[f]}.md`, kind: f, text: fs.readFileSync(path.join(root, id, 'documents', `${f}.md`), 'utf8') }));

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 const pct = (r: number | null) => (r === null ? '–' : `${r}%`);
 const pounds = (n: number) => `${n < 0 ? '−' : ''}£${Math.abs(Math.round(n)).toLocaleString('en-GB')}`;
 const long = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-const AW = (b: string, a: any) => !a ? '–' : b === 'pip' ? `DL ${a.daily_living ?? 'none'}, mob ${a.mobility ?? 'none'}` : (a.wca ?? '–').toUpperCase();
+const AW = (b: string, a: any) => !a ? '–' : b !== 'uc-wca' ? `DL ${a.daily_living ?? 'none'}, mob ${a.mobility ?? 'none'}` : (a.wca ?? '–').toUpperCase();
 function financialYear(today: string) { const [y, m] = today.split('-').map(Number); const s = m >= 4 ? y : y - 1; return { from: `${s}-04-01`, to: `${s + 1}-03-31` }; }
 
 function Rate({ t }: { t: { decided: number; overturned: number; rate: number | null } }) {
@@ -53,7 +53,7 @@ export default async function Outcomes({ searchParams }: { searchParams: Promise
       <div className="grid-2">
         <section className="panel stack"><h2 className="eyebrow">By benefit</h2>
           <table className="list"><thead><tr><th scope="col">Benefit</th><th scope="col">Reconsideration</th><th scope="col">Appeal</th></tr></thead><tbody>
-            {(['pip', 'uc-wca'] as const).filter(b => s.byBenefit[b]).map(b => <tr key={b}><td>{b === 'pip' ? 'PIP' : 'UC WCA'}</td><td><Rate t={s.byBenefit[b].mr} /></td><td><Rate t={s.byBenefit[b].appeal} /></td></tr>)}
+            {(['pip', 'adp', 'uc-wca'] as const).filter(b => s.byBenefit[b]).map(b => <tr key={b}><td>{b === 'pip' ? 'PIP' : b === 'adp' ? 'ADP' : 'UC WCA'}</td><td><Rate t={s.byBenefit[b].mr} /></td><td><Rate t={s.byBenefit[b].appeal} /></td></tr>)}
           </tbody></table>
         </section>
         <section className="panel stack"><h2 className="eyebrow">By adviser</h2>
@@ -86,7 +86,7 @@ export default async function Outcomes({ searchParams }: { searchParams: Promise
           <div className="table-wrap"><table className="list">
             <thead><tr><th scope="col">Activity</th><th scope="col">Disputed</th><th scope="col">Won</th><th scope="col">In part</th><th scope="col">Not won</th><th scope="col">Won at MR</th><th scope="col">Won at appeal</th><th scope="col">Success</th></tr></thead>
             <tbody>{issueRows.map(([k, x]) => { const n = x.won + x.part + x.lost; return (
-              <tr key={k}><td>{x.benefit === 'uc-wca' ? 'UC · ' : 'PIP · '}{x.label}</td><td className="mono">{n}</td><td className="mono">{x.won}</td><td className="mono">{x.part}</td><td className="mono">{x.lost}</td><td className="mono">{x.wonAtMr}</td><td className="mono">{x.wonAtAppeal}</td><td>{pct(n ? Math.round(((x.won + x.part) / n) * 1000) / 10 : null)}</td></tr>
+              <tr key={k}><td>{x.benefit === 'uc-wca' ? 'UC · ' : x.benefit === 'adp' ? 'ADP · ' : 'PIP · '}{x.label}</td><td className="mono">{n}</td><td className="mono">{x.won}</td><td className="mono">{x.part}</td><td className="mono">{x.lost}</td><td className="mono">{x.wonAtMr}</td><td className="mono">{x.wonAtAppeal}</td><td>{pct(n ? Math.round(((x.won + x.part) / n) * 1000) / 10 : null)}</td></tr>
             ); })}</tbody>
           </table></div>
         )}
@@ -98,7 +98,7 @@ export default async function Outcomes({ searchParams }: { searchParams: Promise
             <thead><tr><th scope="col">Case</th><th scope="col">Client</th><th scope="col">Reconsideration</th><th scope="col">Appeal</th><th scope="col">Award before → after</th><th scope="col">Yearly value</th></tr></thead>
             <tbody>{s.cases.map(c => (
               <tr key={c.id}>
-                <td><Link className="mono" href={`/cases/${c.id}/outcome`}>{c.ref}</Link><br /><span className="soft small">{c.benefit === 'pip' ? 'PIP' : 'UC WCA'} · {c.adviser ?? 'Unassigned'}{c.office ? ` · ${c.office}` : ''}</span></td>
+                <td><Link className="mono" href={`/cases/${c.id}/outcome`}>{c.ref}</Link><br /><span className="soft small">{c.benefit === 'pip' ? 'PIP' : c.benefit === 'adp' ? 'ADP' : 'UC WCA'} · {c.adviser ?? 'Unassigned'}{c.office ? ` · ${c.office}` : ''}</span></td>
                 <td>{c.client ?? '–'}</td>
                 <td>{c.mr_outcome ? <>{MR_OUTCOMES[c.mr_outcome as keyof typeof MR_OUTCOMES]}<br /><span className="soft small">{c.mr_outcome_date}{c.mrDays !== null ? ` · ${c.mrDays} days` : ''}</span></> : '–'}</td>
                 <td>{c.appeal_outcome ? <>{APPEAL_OUTCOMES[c.appeal_outcome as keyof typeof APPEAL_OUTCOMES]}<br /><span className="soft small">{c.appeal_outcome_date}{c.appealDays !== null ? ` · ${c.appealDays} days` : ''}</span></> : '–'}</td>
@@ -109,7 +109,7 @@ export default async function Outcomes({ searchParams }: { searchParams: Promise
           </table></div>
         )}
       </section>
-      <p className="soft small">Overturned means a reconsideration revised in full or in part, or an appeal allowed in full or in part, or lapsed because the DWP revised the decision before the hearing. Rates are overturned out of decided. Withdrawn and struck-out appeals are listed but not counted as decided. A case reaching both stages counts at each; it counts once in “any stage”. The award after is the final one, so a case revised in part at reconsideration and then won at appeal shows its full gain against the appeal. The money is the yearly value at that year’s DWP rates, without arrears.</p>
+      <p className="soft small">Overturned means a reconsideration revised in full or in part, or an appeal allowed in full or in part, or lapsed because the decision was revised the decision before the hearing. Rates are overturned out of decided. Withdrawn and struck-out appeals are listed but not counted as decided. A case reaching both stages counts at each; it counts once in “any stage”. The award after is the final one, so a case revised in part at reconsideration and then won at appeal shows its full gain against the appeal. The money is the yearly value at that year’s DWP rates, without arrears.</p>
     </div>
   );
 }

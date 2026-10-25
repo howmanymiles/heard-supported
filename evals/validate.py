@@ -9,6 +9,7 @@ HERE = Path(__file__).resolve().parent
 DATA = json.loads((HERE / 'descriptors.json').read_text())
 PIP = next(b for b in DATA['benefits'] if b['id'] == 'pip')
 WCA = next(b for b in DATA['benefits'] if b['id'] == 'uc-wca')
+ADP = next(b for b in DATA['benefits'] if b['id'] == 'adp')
 STATUSES = {'good', 'partial', 'conflict', 'not_on_form', 'nodiff'}
 PAGE = re.compile(r'^--- Page (\d+) ---\s*$', re.M)
 norm = lambda s: re.sub(r'\s+', ' ', s.replace('’', "'").replace('‘', "'").replace('“', '"').replace('”', '"')).strip()
@@ -49,10 +50,10 @@ def check(case_dir):
     keys = [a['key'] for a in c['activities']]
     if len(keys) != len(set(keys)):
         errs.append('duplicate activity keys')
-    if c['benefit'] == 'pip':
+    if c['benefit'] in ('pip', 'adp'):   # ADP shares PIP's activity keys
         want = {f'pip:{n}' for n in range(1, 13)}
         if set(keys) != want:
-            errs.append(f'PIP case must list exactly pip:1..pip:12; missing {sorted(want - set(keys))} extra {sorted(set(keys) - want)}')
+            errs.append(f'PIP or ADP case must list exactly pip:1..pip:12; missing {sorted(want - set(keys))} extra {sorted(set(keys) - want)}')
     elif c['benefit'] == 'uc-wca':
         want = {f'sch6:{n}' for n in range(1, 18)}
         if not want <= set(keys):
@@ -84,7 +85,7 @@ def check(case_dir):
         scheme, num = k.split(':')
         num = int(num)
         if scheme == 'pip':
-            act = next((x for x in PIP['activities'] if x['number'] == num), None)
+            act = next((x for x in (ADP if c['benefit'] == 'adp' else PIP)['activities'] if x['number'] == num), None)
             letters = {x['letter'] for x in act['descriptors']}
             for s in dd.get('satisfied', []):
                 if s.get('letter') not in letters:

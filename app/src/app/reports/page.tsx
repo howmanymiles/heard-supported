@@ -65,13 +65,13 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
 
       <div className="grid-2">
         <section className="panel stack"><h2 className="eyebrow">Open caseload by stage</h2><Rows data={r.open.byStage} labels={STAGE} total /></section>
-        <section className="panel stack"><h2 className="eyebrow">Open caseload by benefit</h2><Rows data={r.open.byBenefit} labels={{ pip: 'PIP', 'uc-wca': 'UC WCA' }} total /></section>
+        <section className="panel stack"><h2 className="eyebrow">Open caseload by benefit</h2><Rows data={r.open.byBenefit} labels={{ pip: 'PIP', adp: 'ADP', 'uc-wca': 'UC WCA' }} total /></section>
         <section className="panel stack"><h2 className="eyebrow">Reconsideration results</h2><Rows data={r.mr} labels={MR_OUTCOMES} total /></section>
         <section className="panel stack"><h2 className="eyebrow">Appeal results</h2><Rows data={r.appeal} labels={APPEAL_OUTCOMES} total /></section>
         <section className="panel stack">
           <h2 className="eyebrow">Awards at close</h2>
           <Rows data={{ better: r.awards.better, same: r.awards.same, worse: r.awards.worse, unknown: r.awards.unknown }} labels={{ better: 'Better', same: 'No overall change', worse: 'Worse', unknown: 'Not recorded' }} total />
-          <p className="small">PIP: daily living rate up in {r.awards.pip.dailyLivingUp}, mobility rate up in {r.awards.pip.mobilityUp}. UC WCA: moved to LCWRA in {r.awards.wca.toLcwra}, to LCW in {r.awards.wca.toLcw}.</p>
+          <p className="small">PIP and ADP: daily living rate up in {r.awards.pip.dailyLivingUp}, mobility rate up in {r.awards.pip.mobilityUp}. UC WCA: moved to LCWRA in {r.awards.wca.toLcwra}, to LCW in {r.awards.wca.toLcw}.</p>
         </section>
         <section className="panel stack">
           <h2 className="eyebrow">Money gained, a year</h2>

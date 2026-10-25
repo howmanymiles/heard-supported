@@ -183,3 +183,20 @@ test('results carry the dataset version they were worked from', () => {
   assert.match(assessPip(data, []).datasetVersion, /^pip-/);
   assert.match(assessWca(data, { lcw: [], lcwra: [] }).datasetVersion, /^uc-wca-/);
 });
+
+test('ADP: scored from its own descriptors, with ADP regulation references', () => {
+  const adp = (data as any).benefits.find((b: any) => b.id === 'adp');
+  assert.ok(adp, 'ADP is in the dataset');
+  assert.equal(adp.activities.length, 12);
+  assert.match(adp.activities.find((a: any) => a.number === 9).name, /Engaging socially/);
+  assert.match(adp.activities.find((a: any) => a.number === 4).descriptors.find((d: any) => d.letter === 'e').text, /unadapted bath/);
+  const r = assessPip(data as any, [{ activity: 1, satisfied: [{ letter: 'f' }] }, { activity: 4, satisfied: [{ letter: 'e', daysPercent: 40 }] }, { activity: 12, satisfied: [{ letter: 'e', daysPercent: 80 }] }], 'adp');
+  assert.equal(r.datasetVersion, adp.version);
+  assert.equal(r.dailyLiving.points, 8);
+  assert.equal(r.dailyLiving.rate, 'standard');
+  assert.equal(r.mobility.rate, 'enhanced');
+  const flags = r.activities.flatMap(a => a.flags);
+  assert.ok(flags.some(f => f.code === 'frequency_not_recorded' && f.ref === 'reg 10(1)'));
+  assert.ok(flags.some(f => f.code === 'under_50_percent' && f.ref === 'reg 10(1)'));
+  assert.ok(flags.every(f => f.code !== 'reliability_not_addressed' || f.ref === 'reg 7(2)(b)'));
+});

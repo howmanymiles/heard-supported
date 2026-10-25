@@ -13,16 +13,22 @@
 // references by code, not by the model.
 
 import { scrub } from './scrub.ts';
+import { terms } from './terms.ts';
 import { chatJson } from './ai.ts';
 import { normalise } from './verify.ts';
 import confirmed from '../data/caselaw-confirmed.json' with { type: 'json' };
 
 /** An authority a letter may cite. Only expert-confirmed entries are loaded. */
-export type Authority = { id: string; citation: string; name: string; court?: string; benefit: 'pip' | 'wca' | 'both'; topics: string[]; proposition: string; source_url: string };
+export type Authority = { id: string; citation: string; name: string; court?: string; benefit: 'pip' | 'adp' | 'wca' | 'both'; topics: string[]; proposition: string; source_url: string };
 export const CONFIRMED_AUTHORITIES = (confirmed as { authorities: Authority[] }).authorities;
 
-/** The authorities offered for a letter: confirmed ones for this benefit. */
-export function authoritiesFor(benefit: 'pip' | 'uc-wca', library: Authority[] = CONFIRMED_AUTHORITIES): Authority[] {
+/**
+ * The authorities offered for a letter: confirmed ones for this benefit. ADP gets only
+ * authorities confirmed for ADP: PIP decisions of the Upper Tribunal are not binding in
+ * Scotland's tribunals, so an expert decides which, if any, to rely on.
+ */
+export function authoritiesFor(benefit: 'pip' | 'adp' | 'uc-wca', library: Authority[] = CONFIRMED_AUTHORITIES): Authority[] {
+  if (benefit === 'adp') return library.filter(a => a.benefit === 'adp');
   const b = benefit === 'pip' ? 'pip' : 'wca';
   return library.filter(a => a.benefit === b || a.benefit === 'both');
 }
@@ -37,7 +43,7 @@ export type SubmissionIssue = {
   evidence: SubmissionEvidence[];
 };
 export type SubmissionFacts = {
-  stage: 'mr' | 'appeal'; benefit: 'pip' | 'uc-wca';
+  stage: 'mr' | 'appeal'; benefit: 'pip' | 'adp' | 'uc-wca';
   summary: string;             // the totals and outcome on each side, as already worked out
   issues: SubmissionIssue[];
   regulations: string[];       // the only regulation references the letter may use
@@ -132,7 +138,7 @@ export function renderSubmission(r: Pick<SubmissionResult, 'opening' | 'issues' 
     const ss = r.issues.find(x => x.key === i.key)?.sentences ?? [];
     out.push('', i.label, ss.length ? para(ss) : '[The draft for this issue did not pass the checks. Write it by hand.]');
     const notInBundle = i.evidence.filter(e => e.inBundle === false);
-    if (notInBundle.length) out.push(`Not in the DWP bundle, enclosed or set out above: ${[...new Set(notInBundle.map(e => e.source))].join('; ')}.`);
+    if (notInBundle.length) out.push(`Not in the ${facts.benefit === 'adp' ? 'appeal papers' : 'DWP bundle'}, enclosed or set out above: ${[...new Set(notInBundle.map(e => e.source))].join('; ')}.`);
   }
   if (r.closing.length) out.push('', para(r.closing));
   return out.join('\n');
@@ -155,14 +161,15 @@ Reply with JSON only:
 {"opening":[{"text":"...","cites":[],"authorities":[]}],"issues":[{"key":"pip:12","sentences":[{"text":"...","cites":["E1"],"authorities":["C1"]}]}],"closing":[{"text":"...","cites":[],"authorities":[]}]}`;
 
 export function buildSubmissionMessages(facts: SubmissionFacts) {
-  const sys = SYSTEM.replace('{STAGE}', facts.stage === 'appeal' ? 'appeal to the First-tier Tribunal' : 'mandatory reconsideration request')
+  const t = terms(facts.benefit);
+  const sys = SYSTEM.replace('{STAGE}', facts.stage === 'appeal' ? `appeal to the ${t.tribunal}` : `${t.mr} request`)
     .replace('{REGS}', facts.regulations.join('; '))
     .replace('{CASELAW}', facts.authorities?.length
       ? 'You may rely on the authorities listed under AUTHORITIES, and no others, where they genuinely support the point: put their ids in the sentence\'s "authorities", describe what they decide only as their summary says, and never write a case name or citation in the text yourself (it is added for you).'
       : 'Do not cite case law or any other authority.');
   const issues = facts.issues.map(i => [
     `ISSUE ${i.key}: ${i.label}`,
-    `DWP position: ${i.dwp}`,
+    `${t.agency === 'the DWP' ? 'DWP' : t.agency} position: ${i.dwp}`,
     `Client's position: ${i.ours}`,
     i.decisionMaker ? `Decision maker's reasoning: "${i.decisionMaker.quote}"` : 'Decision maker\'s reasoning: not given',
     'Evidence:',
@@ -170,7 +177,7 @@ export function buildSubmissionMessages(facts: SubmissionFacts) {
   ].join('\n')).join('\n\n');
   return [
     { role: 'system' as const, content: sys },
-    { role: 'user' as const, content: `Benefit: ${facts.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit Work Capability Assessment'}\n\nSummary: ${facts.summary}\n\n${issues}`
+    { role: 'user' as const, content: `Benefit: ${t.name}\n\nSummary: ${facts.summary}\n\n${issues}`
       + (facts.authorities?.length ? `\n\nAUTHORITIES:\n${facts.authorities.map(a => `${a.ref} [${a.topics.join(', ')}] ${a.proposition}`).join('\n')}` : '') },
   ];
 }
@@ -183,7 +190,9 @@ export async function draftSubmission(facts: SubmissionFacts, opts: { endpoint?:
 }
 
 /** The regulations a letter may refer to, by benefit. */
-export const SUBMISSION_REGULATIONS: Record<'pip' | 'uc-wca', string[]> = {
+export const SUBMISSION_REGULATIONS: Record<'pip' | 'adp' | 'uc-wca', string[]> = {
+  // SSI 2022/54: reg 7 (aids, the reliability test and its definitions), reg 10 (the 50% rule).
+  adp: ['regulation 7(1)', 'regulation 7(2)(b)', 'regulation 7(3)', 'regulation 10', 'regulation 10(1)(a)', 'regulation 10(1)(b)', 'regulation 10(1)(c)', 'regulation 10(2)'],
   pip: ['regulation 4(2A)', 'regulation 4(4)', 'regulation 7', 'regulation 7(1)(a)', 'regulation 7(1)(b)', 'regulation 7(1)(c)'],
   'uc-wca': ['regulation 39(3)', 'regulation 39(4)', 'regulation 39(5)', 'regulation 39(6)', 'regulation 39(7)', 'regulation 40(4)', 'regulation 40(5)', 'regulation 40(6)', 'Schedule 8 paragraph 4', 'Schedule 9 paragraph 4'],
 };

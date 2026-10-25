@@ -5,6 +5,7 @@
 import { chatJson } from './ai.ts';
 import { activityList, type Benefit } from './activities.ts';
 import { scrub } from './scrub.ts';
+import { terms } from './terms.ts';
 import { verifyEvidence, type ProposedEvidence, type Rejection, type VerifiedEvidence } from './verify.ts';
 
 export type ExtractionDoc = { id: string; name: string; pages: Array<{ page: number; text: string }> };
@@ -49,10 +50,10 @@ export function buildMessages(benefit: Benefit, docs: Array<{ label: string; nam
     + (benefit === 'uc-wca' ? '\n' + RISK_EVIDENCE_KEYS.map(r => `${r.key}  ${r.label}`).join('\n') : '');
   const docText = docs.flatMap(d => d.pages.map(p => `=== ${d.label}: ${d.name}, page ${p.page} ===\n${p.text}`)).join('\n\n');
   return [
-    { role: 'system' as const, content: [RULES_COMMON, benefit === 'pip' ? GAPS_PIP : GAPS_WCA, FORMAT].join('\n\n') },
+    { role: 'system' as const, content: [RULES_COMMON, benefit === 'uc-wca' ? GAPS_WCA : GAPS_PIP, FORMAT].join('\n\n') },
     {
       role: 'user' as const,
-      content: `Benefit: ${benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit Work Capability Assessment'}\n\nActivities (key, name, descriptors for reference):\n${actText}\n\nDocuments:\n\n${docText}`,
+      content: `Benefit: ${terms(benefit).name}\n\nActivities (key, name, descriptors for reference):\n${actText}\n\nDocuments:\n\n${docText}`,
     },
   ];
 }

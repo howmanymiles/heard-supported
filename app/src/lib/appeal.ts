@@ -2,7 +2,7 @@
 // position after reconsideration, where each piece of evidence sits in the DWP
 // response bundle (and what is missing from it), and draft grounds of appeal.
 
-import { appealTiming, extractAssessor, extractResponseReasoning, locateInBundle, parseUkDate, activityList, type MrTiming, type BundleHit } from '@hs/core';
+import { appealTiming, extractAssessor, extractResponseReasoning, locateInBundle, parseUkDate, activityList, terms, isPipLike, type MrTiming, type BundleHit } from '@hs/core';
 import { asAgency, audit } from './db.ts';
 import { readUnread, readPages, type EvidenceRow, type DocRow } from './cases.ts';
 import { getMr, buildComparison, docTitle, type ChoiceRow, type Quote } from './mr.ts';
@@ -28,7 +28,7 @@ export async function getAppeal(me: Me, caseId: string) {
   if (!mr) return null;
   const mrNoticeDate = isoDate(mr.case.mr_notice_date);
   const appealSentDate = isoDate(mr.case.appeal_sent_date);
-  const timing: MrTiming | null = mrNoticeDate ? appealTiming(mrNoticeDate, appealSentDate ?? today()) : null;
+  const timing: MrTiming | null = mrNoticeDate ? appealTiming(mrNoticeDate, appealSentDate ?? today(), mr.case.benefit) : null;
   const bundleDoc = mr.docs.find(d => d.kind === 'dwp_bundle' && d.read_status === 'read') ?? null;
   const bundle = bundleDoc ? (await readPages(me, caseId, ['dwp_bundle'])).find(d => d.id === bundleDoc.id)! : null;
   return { ...mr, mrNoticeDate, appealSentDate, appealTimingNow: timing, bundleDoc, bundle, responseReasoning: (mr.case.response_reasoning ?? {}) as Record<string, Quote> };
@@ -36,11 +36,13 @@ export async function getAppeal(me: Me, caseId: string) {
 
 /** The disputed items and the position on each side, from the current (post-MR) DWP position. */
 export function issuesFor(a: NonNullable<Awaited<ReturnType<typeof getAppeal>>>): { issues: Issue[]; summary: string | null; blocked: string | null } {
-  if (a.case.benefit === 'pip') {
-    const { comparison: c, missing, unconfirmed } = buildComparison(a.choices, a.decisions, a.evidence);
-    if (!c) return { issues: [], summary: null, blocked: `The DWP descriptor is missing for activity ${missing.join(', ')}. Complete the reconsideration tab first.` };
-    if (unconfirmed.length) return { issues: [], summary: null, blocked: `Confirm the DWP descriptor for activity ${unconfirmed.join(', ')} on the reconsideration tab.` };
-    const labels = Object.fromEntries(activityList('pip').map(x => [x.key, x.label]));
+  if (isPipLike(a.case.benefit)) {
+    const b = a.case.benefit;
+    const who = b === 'adp' ? 'Social Security Scotland' : 'DWP';
+    const { comparison: c, missing, unconfirmed } = buildComparison(a.choices, a.decisions, a.evidence, b);
+    if (!c) return { issues: [], summary: null, blocked: `The ${who} descriptor is missing for activity ${missing.join(', ')}. Complete the ${b === 'adp' ? 're-determination' : 'reconsideration'} tab first.` };
+    if (unconfirmed.length) return { issues: [], summary: null, blocked: `Confirm the ${who} descriptor for activity ${unconfirmed.join(', ')} on the ${b === 'adp' ? 're-determination' : 'reconsideration'} tab.` };
+    const labels = Object.fromEntries(activityList(b).map(x => [x.key, x.label]));
     return {
       issues: c.challenges.map(ch => ({
         key: `pip:${ch.activity}`, label: labels[`pip:${ch.activity}`],
@@ -90,13 +92,16 @@ const long = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('e
 
 /** Draft grounds of appeal, from confirmed facts, decisions, accepted evidence and bundle pages: no AI-written text. */
 export function buildGrounds(input: {
-  benefit: 'pip' | 'uc-wca'; ref: string; decisionDate: string | null; mrNoticeDate: string | null; timing: MrTiming | null; lateReason: string | null;
+  benefit: 'pip' | 'adp' | 'uc-wca'; ref: string; decisionDate: string | null; mrNoticeDate: string | null; timing: MrTiming | null; lateReason: string | null;
   summary: string; issues: Issue[]; located: ReturnType<typeof locate>; hasBundle: boolean;
 }): string {
   const out: string[] = [];
-  out.push(`Grounds of appeal: ${input.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit, Work Capability Assessment'}`, `Reference: ${input.ref}`, '');
-  out.push(`The decision under appeal is the decision${input.decisionDate ? ` dated ${long(input.decisionDate)}` : ''}${input.mrNoticeDate ? `, as reconsidered on ${long(input.mrNoticeDate)}` : ''}.`);
-  if (input.timing?.status === 'late') out.push('', `This appeal is made more than one month after the mandatory reconsideration notice. ${input.lateReason ? `It is late because ${input.lateReason.replace(/\.?$/, '.')}` : '[Explain why the appeal is late.]'}`);
+  const t = terms(input.benefit), scot = input.benefit === 'adp', papers = scot ? 'appeal papers' : 'DWP bundle';
+  out.push(`Grounds of appeal: ${t.name}`, `Reference: ${input.ref}`, '');
+  out.push(scot
+    ? `The appeal is against the re-determination${input.mrNoticeDate ? ` notified on ${long(input.mrNoticeDate)}` : ''} of my client’s entitlement to ${t.name}${input.decisionDate ? `, following the determination of ${long(input.decisionDate)}` : ''}.`
+    : `The decision under appeal is the decision${input.decisionDate ? ` dated ${long(input.decisionDate)}` : ''}${input.mrNoticeDate ? `, as reconsidered on ${long(input.mrNoticeDate)}` : ''}.`);
+  if (input.timing?.status === 'late') out.push('', `${scot ? 'This appeal is made more than 31 days after my client was told of the re-determination, so it needs the tribunal’s permission.' : 'This appeal is made more than one month after the mandatory reconsideration notice.'} ${input.lateReason ? `It is late because ${input.lateReason.replace(/\.?$/, '.')}` : '[Explain why the appeal is late.]'}`);
   out.push('', input.summary);
   const enclosed: string[] = [];
   const where = (at: BundleHit | null, fallback: string) => (at ? `bundle page ${at.bundlePage}` : fallback);
@@ -104,14 +109,14 @@ export function buildGrounds(input: {
     const l = input.located.find(x => x.key === i.key)!;
     out.push('', i.label, i.dwp, i.ours);
     if (l.reasoning) out.push(`The decision maker says: "${l.reasoning.quote.quote}" (${where(l.reasoning.at, 'response')}).`);
-    else if (l.assessorReason) out.push(`The assessor said: "${l.assessorReason.quote.quote}" (${where(l.assessorReason.at, `assessment report, page ${l.assessorReason.quote.page}`)}).`);
+    else if (l.assessorReason) out.push(`The ${scot ? 'practitioner' : 'assessor'} said: "${l.assessorReason.quote.quote}" (${where(l.assessorReason.at, `${scot ? 'consultation report' : 'assessment report'}, page ${l.assessorReason.quote.page}`)}).`);
     const inBundle = l.evidence.filter(e => e.at || !input.hasBundle);
     const outside = l.evidence.filter(e => !e.at && input.hasBundle);
     if (inBundle.length) { out.push('The evidence shows:'); for (const e of inBundle) out.push(`- "${e.quote}" (${e.at ? `${docTitle(e.doc)}, bundle page ${e.at.bundlePage}` : `${docTitle(e.doc)}, page ${e.page}`})`); }
-    for (const e of outside) { out.push(`- "${e.quote}" (${docTitle(e.doc)}, page ${e.page}; not in the DWP bundle, enclosed)`); enclosed.push(docTitle(e.doc)); }
+    for (const e of outside) { out.push(`- "${e.quote}" (${docTitle(e.doc)}, page ${e.page}; not in the ${papers}, enclosed)`); enclosed.push(docTitle(e.doc)); }
     if (!l.evidence.length) out.push('[Add the evidence for this.]');
   }
-  if (enclosed.length) out.push('', `Enclosed, as they are not in the DWP bundle: ${[...new Set(enclosed)].join('; ')}.`);
+  if (enclosed.length) out.push('', `Enclosed, as they are not in the ${papers}: ${[...new Set(enclosed)].join('; ')}.`);
   return out.join('\n');
 }
 
@@ -122,16 +127,16 @@ export async function readMrNotice(me: Me, caseId: string) {
   const a = await getAppeal(me, caseId);
   if (!a) throw new Error('Case not found.');
   const notices = a.docs.filter(d => d.kind === 'mr_notice');
-  if (!notices.length) throw new Error('Upload the mandatory reconsideration notice first, marked as such.');
+  if (!notices.length) throw new Error(`Upload the ${terms(a.case.benefit).mrNotice} first, marked as such.`);
   await readUnread(me, caseId, notices);
   const docs = await readPages(me, caseId, ['mr_notice']);
   const lines = docs.flatMap(d => d.pages.flatMap(p => p.text.split('\n')));
   const dateLine = lines.find(l => /\bdate\b/i.test(l) && parseUkDate(l)) ?? null;
   const date = dateLine ? parseUkDate(dateLine) : null;
   const revised: string[] = [];
-  if (a.case.benefit === 'pip') {
+  if (isPipLike(a.case.benefit)) {
     const { names } = await aiGate(me, caseId);
-    const r = await extractAssessor(docs.map(d => ({ ...d, kind: 'decision' as const })), { names });
+    const r = await extractAssessor(docs.map(d => ({ ...d, kind: 'decision' as const })), { names, scheme: a.case.benefit === 'adp' ? 'adp' : 'pip' });
     await asAgency(me.agencyId, async c => {
       for (const x of r.activities) {
         const key = `pip:${x.activity}`;
@@ -147,7 +152,7 @@ export async function readMrNotice(me: Me, caseId: string) {
   await asAgency(me.agencyId, async c => {
     if (date) await c.query('update cases set mr_notice_date = coalesce(mr_notice_date, $2) where id = $1', [caseId, date]);
     await c.query("update cases set stage = 'appeal' where id = $1 and stage <> 'closed'", [caseId]);
-    await audit(c, me.agencyId, me.userId, caseId, `MR notice read${date ? ` (dated ${date})` : ''}${revised.length ? `; revised ${revised.join(', ')}` : '; no descriptor changes found'}`);
+    await audit(c, me.agencyId, me.userId, caseId, `${a.case.benefit === 'adp' ? 'Notice of re-determination' : 'MR notice'} read${date ? ` (dated ${date})` : ''}${revised.length ? `; revised ${revised.join(', ')}` : '; no descriptor changes found'}`);
   });
   return { date, revised };
 }
@@ -157,19 +162,19 @@ export async function readBundle(me: Me, caseId: string) {
   const a = await getAppeal(me, caseId);
   if (!a) throw new Error('Case not found.');
   const docs = a.docs.filter(d => d.kind === 'dwp_bundle');
-  if (!docs.length) throw new Error('Upload the DWP response bundle first, marked as such.');
+  if (!docs.length) throw new Error(`Upload the ${terms(a.case.benefit).bundle} first, marked as such.`);
   await readUnread(me, caseId, docs);
   const fresh = (await getAppeal(me, caseId))!;
   const { issues, blocked } = issuesFor(fresh);
   if (blocked) throw new Error(blocked);
   const { names } = await aiGate(me, caseId);
-  const r = await extractResponseReasoning(fresh.bundle!, issues.map(i => ({ key: i.key, label: i.label })), { names });
+  const r = await extractResponseReasoning(fresh.bundle!, issues.map(i => ({ key: i.key, label: i.label })), { names, benefit: fresh.case.benefit });
   const reasoning = Object.fromEntries(Object.entries(r.reasoning).map(([k, q]) => [k, { docId: q.docId, page: q.page, quote: q.quote }]));
   await asAgency(me.agencyId, async c => {
     await c.query('update cases set response_reasoning = $2 where id = $1', [caseId, reasoning]);
     await c.query("insert into extraction_runs (agency_id, case_id, model, dataset_version, verified, rejected, identifiers_removed, created_by, kind) values ($1, $2, $3, $4, $5, $6, $7, $8, 'assessment')",
       [me.agencyId, caseId, r.model, fresh.case.dataset_version, Object.keys(reasoning).length, r.dropped.length, r.identifiersRemoved, me.userId]);
-    await audit(c, me.agencyId, me.userId, caseId, `DWP response read: decision maker's reasoning found for ${Object.keys(reasoning).length} of ${issues.length} disputed items`);
+    await audit(c, me.agencyId, me.userId, caseId, `${fresh.case.benefit === 'adp' ? 'Appeal papers' : 'DWP response'} read: decision maker's reasoning found for ${Object.keys(reasoning).length} of ${issues.length} disputed items`);
   });
   return { found: Object.keys(reasoning).length, of: issues.length };
 }

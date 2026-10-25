@@ -3,7 +3,7 @@
 
 import descriptors from '@hs/engine/descriptors.json' with { type: 'json' };
 
-export type Benefit = 'pip' | 'uc-wca';
+export type Benefit = 'pip' | 'adp' | 'uc-wca';
 export type Activity = { key: string; label: string; group: string; descriptors: string[] };
 
 type D = { letter?: string; number?: string; text: string; points?: number };
@@ -18,8 +18,9 @@ export function datasetVersion(b: Benefit): string {
 }
 
 export function activityList(b: Benefit): Activity[] {
-  if (b === 'pip') {
-    return benefit('pip').activities.map(a => ({
+  if (b === 'pip' || b === 'adp') {
+    // ADP uses PIP's activity keys: the same 12 activities, its own wording.
+    return benefit(b).activities.map(a => ({
       key: `pip:${a.number}`,
       label: a.component === 'mobility' ? `Mobility ${a.number_in_table}: ${a.name}` : `Daily living ${a.number}: ${a.name}`,
       group: a.component === 'mobility' ? 'Mobility' : 'Daily living',

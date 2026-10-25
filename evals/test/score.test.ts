@@ -49,3 +49,20 @@ test('MR scoring: a wrong descriptor counts against, a missing one is left for t
   }, '2026-12-07', 'pa4');
   assert.deepEqual([s.lettersCorrect, s.lettersWrong, s.lettersMissing, s.justificationsFound, s.dateCorrect], [1, 1, 1, 1, true]);
 });
+
+test('ADP: the reader matches the determination wording against ADP descriptors, offline', async () => {
+  const { resolveAssessor, splitTextPages } = await import('@hs/core');
+  const fs = await import('node:fs');
+  const text = fs.readFileSync(new URL('../cases/ADP-01/documents/decision.md', import.meta.url), 'utf8');
+  const pages = splitTextPages(text).map(p => ({ docId: 'dec', page: p.page, text: p.text }));
+  const mr = JSON.parse(fs.readFileSync(new URL('../cases/ADP-01/mr.json', import.meta.url), 'utf8'));
+  // A faithful answer: for each activity, the descriptor wording exactly as the notice gives it.
+  const d = JSON.parse(fs.readFileSync(new URL('../descriptors.json', import.meta.url), 'utf8'));
+  const adp = d.benefits.find((b: any) => b.id === 'adp');
+  const raw = { activities: mr.determination.activities.map((a: any) => ({ activity: a.activity, decision: { doc: 'D1', page: 2, quote: adp.activities.find((x: any) => x.number === a.activity).descriptors.find((x: any) => x.letter === a.letter).text } })) };
+  const r = resolveAssessor(raw as any, pages, { D1: 'dec' }, 'adp');
+  assert.deepEqual(r.activities.map(a => a.letter), mr.determination.activities.map((a: any) => a.letter));
+  // The ADP-only wording would not match PIP's descriptors for activity 9.
+  const asPip = resolveAssessor(raw as any, pages, { D1: 'dec' }, 'pip');
+  assert.notEqual(asPip.activities.find(a => a.activity === 9)?.letter, 'a');
+});

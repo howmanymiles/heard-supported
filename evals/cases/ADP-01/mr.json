@@ -1,0 +1,159 @@
+{
+ "id": "ADP-01",
+ "determination": {
+  "date": "2026-11-10",
+  "consultation": false,
+  "activities": [
+   {
+    "activity": 1,
+    "letter": "b"
+   },
+   {
+    "activity": 2,
+    "letter": "a"
+   },
+   {
+    "activity": 3,
+    "letter": "a"
+   },
+   {
+    "activity": 4,
+    "letter": "b",
+    "justification_quote": {
+     "doc": "decision",
+     "page": 2,
+     "quote": "Washing and bathing: you told us you use a long-handled sponge, so you need an aid to wash."
+    }
+   },
+   {
+    "activity": 5,
+    "letter": "a"
+   },
+   {
+    "activity": 6,
+    "letter": "b"
+   },
+   {
+    "activity": 7,
+    "letter": "a"
+   },
+   {
+    "activity": 8,
+    "letter": "a"
+   },
+   {
+    "activity": 9,
+    "letter": "a",
+    "justification_quote": {
+     "doc": "decision",
+     "page": 2,
+     "quote": "Engaging socially: you are able to speak with your family and with your GP, so you can engage socially with other people unaided."
+    }
+   },
+   {
+    "activity": 10,
+    "letter": "a"
+   },
+   {
+    "activity": 11,
+    "letter": "a",
+    "justification_quote": {
+     "doc": "decision",
+     "page": 2,
+     "quote": "Planning and following journeys: you told us you know the routes to places you go, so you can plan and follow the route of a journey unaided."
+    }
+   },
+   {
+    "activity": 12,
+    "letter": "b",
+    "justification_quote": {
+     "doc": "decision",
+     "page": 2,
+     "quote": "Moving around: your GP says you can walk about 150 metres before needing to stop."
+    }
+   }
+  ]
+ },
+ "decision": {
+  "daily_living": {
+   "points": 6,
+   "rate": "none"
+  },
+  "mobility": {
+   "points": 4,
+   "rate": "none"
+  }
+ },
+ "expected_disputes": [
+  {
+   "activity": 4,
+   "adviser_letter": "e",
+   "error_type": "evidence_ignored",
+   "why": "The determination gave 4b for the sponge and ignored that she cannot get in or out of the bath, which has no adaptations, without her husband: ADP 4e.",
+   "rebuttal_evidence": [
+    {
+     "doc": "form",
+     "page": 1,
+     "quote": "My husband has to help me get in and out of the bath because my legs give way"
+    },
+    {
+     "doc": "notes",
+     "page": 1,
+     "quote": "house is a council flat, bath with shower over, no rails, no seat, no adaptations."
+    }
+   ]
+  },
+  {
+   "activity": 9,
+   "adviser_letter": "c",
+   "error_type": "typical_day_overstretched",
+   "why": "Talking to family and to the GP with her sister present was taken as engaging unaided. Her sister, experienced in supporting her in particular, gives the social support ADP's definition describes.",
+   "rebuttal_evidence": [
+    {
+     "doc": "form",
+     "page": 1,
+     "quote": "She knows how my panic attacks start and she can calm me down before it gets bad."
+    },
+    {
+     "doc": "gp",
+     "page": 1,
+     "quote": "she has left the waiting room before being seen on two occasions in 2025 because of panic."
+    }
+   ]
+  },
+  {
+   "activity": 11,
+   "adviser_letter": "b",
+   "error_type": "evidence_ignored",
+   "why": "Knowing the routes was taken to settle the activity. She needs her sister's prompting to start any journey, to avoid overwhelming psychological distress.",
+   "rebuttal_evidence": [
+    {
+     "doc": "form",
+     "page": 2,
+     "quote": "My sister phones me in the morning on the days I have somewhere to be and talks me through getting ready and out of the door."
+    },
+    {
+     "doc": "notes",
+     "page": 2,
+     "quote": "This is needed every time, including familiar places like the local shop."
+    }
+   ]
+  }
+ ],
+ "agree": [
+  1,
+  2,
+  3,
+  5,
+  6,
+  7,
+  8,
+  10,
+  12
+ ],
+ "must_not_claim": [
+  "That a consultation report exists",
+  "That she cannot follow the route of a journey",
+  "That she cannot walk 50 metres"
+ ]
+}

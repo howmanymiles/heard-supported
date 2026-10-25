@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { activityList, LOW_CONFIDENCE } from '@hs/core';
+import { activityList, LOW_CONFIDENCE, terms } from '@hs/core';
 import { requireMe } from '@/lib/auth';
 import { getCase, type EvidenceRow } from '@/lib/cases';
 import { caseClient } from '@/lib/claimants';
@@ -46,7 +46,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
       <p className="crumbs"><Link href="/">← Cases</Link></p>
       <div className="head">
         <h1><span className="mono">{cs.ref}</span>{cs.external_ref ? <span className="soft small"> · your ref {cs.external_ref}</span> : null}</h1>
-        <p className="soft">{cs.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit · Work Capability Assessment'} · Descriptor data {cs.dataset_version}</p>
+        <p className="soft">{terms(cs.benefit).name} · Descriptor data {cs.dataset_version}</p>
       </div>
       {client ? (
         <p className="small">Client: <Link href={`/clients/${client.id}`}>{client.name}</Link>{' · '}
@@ -91,7 +91,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
         {acts.map(a => {
           const ev = byAct(a.key); const g = gaps.filter(x => x.activity === a.key && x.status === 'open'); const dec = decisionFor(a.key);
           const chosen = Array.isArray(dec?.satisfied) && dec!.satisfied.length ? (typeof dec!.satisfied[0] === 'string' ? dec!.satisfied[0] as string : (dec!.satisfied[0] as { letter: string }).letter) : '';
-          const options = descriptorsFor(a.key);
+          const options = descriptorsFor(a.key, cs.benefit);
           return (
             <details key={a.key} id={a.key.replace(':', '-')} className="panel act" open={ev.length > 0 || g.length > 0}>
               <summary><span className="act-title">{a.label}</span><span className="soft small">{ev.filter(e => e.status === 'suggested').length} to check · {ev.filter(e => e.status === 'accepted').length} accepted{g.length ? ` · ${g.length} gaps` : ''}{chosen ? ` · descriptor ${chosen}` : ''}</span></summary>

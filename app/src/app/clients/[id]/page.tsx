@@ -48,7 +48,7 @@ export default async function Client({ params }: { params: Promise<{ id: string 
       <section className="panel stack" aria-label="Cases">
         <h2 className="eyebrow">Cases</h2>
         {cases.length === 0 ? <p className="soft">No cases yet.</p> : (
-          <ul className="plain">{cases.map((c: any) => <li key={c.id}><Link className="mono" href={`/cases/${c.id}`}>{c.ref}</Link>{c.external_ref ? <span className="soft small"> ({c.external_ref})</span> : null} <span className="soft small">{c.benefit === 'pip' ? 'PIP' : 'UC WCA'} · {c.closed_on ? `Closed ${c.closed_on}` : STAGE[c.stage] ?? c.stage}</span></li>)}</ul>
+          <ul className="plain">{cases.map((c: any) => <li key={c.id}><Link className="mono" href={`/cases/${c.id}`}>{c.ref}</Link>{c.external_ref ? <span className="soft small"> ({c.external_ref})</span> : null} <span className="soft small">{c.benefit === 'pip' ? 'PIP' : c.benefit === 'adp' ? 'ADP' : 'UC WCA'} · {c.closed_on ? `Closed ${c.closed_on}` : STAGE[c.stage] ?? c.stage}</span></li>)}</ul>
         )}
         {current ? <><h3 className="eyebrow">New case</h3><ClientCaseForm claimantId={k.id} /></> : null}
       </section>

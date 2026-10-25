@@ -2,7 +2,7 @@
 // adviser's, time limits, and a draft request built only from confirmed facts.
 // PIP here; the UC Work Capability Assessment equivalents are in mr-wca.ts.
 
-import { extractAssessor, mrTiming, activityList, type MrTiming } from '@hs/core';
+import { extractAssessor, mrTiming, activityList, terms, type MrTiming } from '@hs/core';
 import { comparePip, type PipComparison, type EvidenceRef } from '@hs/engine';
 import { asAgency, audit } from './db.ts';
 import { getCase, readUnread, readPages, type DecisionRow, type EvidenceRow } from './cases.ts';
@@ -29,7 +29,7 @@ export async function getMr(me: Me, caseId: string) {
   }));
   const decisionDate = isoDate(base.case.decision_date);
   const requestDate = isoDate(base.case.mr_request_date);
-  const timing: MrTiming | null = decisionDate ? mrTiming(decisionDate, requestDate ?? today()) : null;
+  const timing: MrTiming | null = decisionDate ? mrTiming(decisionDate, requestDate ?? today(), base.case.benefit) : null;
   return { ...base, ...extra, decisionDate, requestDate, timing };
 }
 
@@ -57,11 +57,11 @@ export async function readAssessment(me: Me, caseId: string) {
     return readWcaAssessment(me, caseId, base);
   }
   const papers = base.docs.filter(d => d.kind === 'pa4' || d.kind === 'decision');
-  if (!papers.length) throw new Error('Upload the decision letter first (and the PA4 if you have it), marked as such.');
+  if (!papers.length) throw new Error(`Upload the ${terms(base.case.benefit).decision} first (and the ${terms(base.case.benefit).report} if you have it), marked as such.`);
   await readUnread(me, caseId, papers);
   const docs = (await readPages(me, caseId, ['pa4', 'decision'])).map(d => ({ ...d, kind: d.kind as 'pa4' | 'decision' }));
   const { names } = await aiGate(me, caseId);
-  const r = await extractAssessor(docs, { names });
+  const r = await extractAssessor(docs, { names, scheme: base.case.benefit === 'adp' ? 'adp' : 'pip' });
 
   await asAgency(me.agencyId, async c => {
     await storeChoices(c, me, caseId, r.activities.map(a => ({ key: `pip:${a.activity}`, letter: a.letter, source: a.source, decision: a.decisionQuote ?? a.pointsQuote, report: a.pa4Quote, justification: a.justification, departs: a.departs, candidates: a.candidates })));
@@ -79,10 +79,11 @@ export async function readAssessment(me: Me, caseId: string) {
 export async function setAssessorChoice(me: Me, caseId: string, activity: string, letter: string) {
   let label: string;
   if (activity.startsWith('pip:')) {
-    const act = activityList('pip').find(a => a.key === activity);
+    const scheme = (await asAgency(me.agencyId, c => c.query('select benefit from cases where id = $1', [caseId]))).rows[0]?.benefit === 'adp' ? 'adp' : 'pip';
+    const act = activityList(scheme).find(a => a.key === activity);
     if (!act) throw new Error('Unknown activity.');
     const n = Number(activity.split(':')[1]);
-    const valid = data.benefits.find(b => b.id === 'pip')!.activities.find(a => a.number === n)!.descriptors.map(d => d.letter);
+    const valid = data.benefits.find(b => b.id === scheme)!.activities.find(a => a.number === n)!.descriptors.map(d => d.letter);
     if (!valid.includes(letter)) throw new Error('Choose one of the descriptors for this activity.');
     label = act.label;
   } else {
@@ -130,7 +131,7 @@ export async function saveMrDraft(me: Me, caseId: string, text: string) {
 
 // ---------- pure: comparison and draft ----------
 
-export function buildComparison(choices: ChoiceRow[], decisions: DecisionRow[], evidence: EvidenceRow[]):
+export function buildComparison(choices: ChoiceRow[], decisions: DecisionRow[], evidence: EvidenceRow[], benefit: string = 'pip'):
   { comparison: PipComparison | null; missing: number[]; unconfirmed: number[] } {
   const pip = choices.filter(c => c.activity.startsWith('pip:'));
   const has = (n: number) => pip.find(c => c.activity === `pip:${n}` && c.letter);
@@ -148,7 +149,7 @@ export function buildComparison(choices: ChoiceRow[], decisions: DecisionRow[], 
     const n = Number(c.activity.split(':')[1]);
     return { activity: n, letter: c.letter!, justification: c.justification ? { doc: c.justification.docId, page: c.justification.page, quote: c.justification.quote } : undefined };
   });
-  return { comparison: comparePip(data, assessor, pipInputs(decisions), refs), missing, unconfirmed };
+  return { comparison: comparePip(data, assessor, pipInputs(decisions), refs, benefit === 'adp' ? 'adp' : 'pip'), missing, unconfirmed };
 }
 
 const RATE: Record<string, string> = { none: 'no award', standard: 'the standard rate', enhanced: 'the enhanced rate' };
@@ -162,18 +163,20 @@ const long = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('e
  */
 export function buildMrDraft(input: {
   ref: string; decisionDate: string | null; timing: MrTiming | null; lateReason: string | null;
-  comparison: PipComparison; decisions: DecisionRow[]; labels: Record<number, string>;
+  comparison: PipComparison; decisions: DecisionRow[]; labels: Record<number, string>; benefit?: string;
 }): string {
   const { comparison: cmp } = input;
+  const t = terms(input.benefit ?? 'pip');
+  const scot = input.benefit === 'adp';
   const out: string[] = [];
   const when = input.decisionDate ? ` dated ${long(input.decisionDate)}` : '';
-  out.push('Mandatory reconsideration request: Personal Independence Payment', `Reference: ${input.ref}`, '');
-  out.push(`I am asking for a mandatory reconsideration of the PIP decision${when}.`);
+  out.push(scot ? `Request for a re-determination: ${t.name}` : `Mandatory reconsideration request: ${t.name}`, `Reference: ${input.ref}`, '');
+  out.push(scot ? `I am asking Social Security Scotland to re-determine my client’s entitlement to ${t.name}, following the determination${when}.` : `I am asking for a mandatory reconsideration of the PIP decision${when}.`);
   if (input.timing?.status === 'late') {
-    out.push('', `This request is made more than one month after the decision. ${input.lateReason ? `It is late because ${input.lateReason.replace(/\.?$/, '.')}` : '[Explain why the request is late.]'}`);
+    out.push('', `${scot ? 'This request is made more than 42 days after my client was told of the determination.' : 'This request is made more than one month after the decision.'} ${input.lateReason ? `It is late because ${input.lateReason.replace(/\.?$/, '.')}` : '[Explain why the request is late.]'}`);
   }
   const comp = (name: string, c: PipComparison['dailyLiving']) =>
-    `${name}: the decision gave ${c.assessor.points} points (${RATE[c.assessor.rate]}). On the evidence, the claimant scores ${c.adviser.points} points (${RATE[c.adviser.rate]}).`;
+    `${name}: the ${scot ? 'determination' : 'decision'} gave ${c.assessor.points} points (${RATE[c.assessor.rate]}). On the evidence, ${scot ? 'my client' : 'the claimant'} scores ${c.adviser.points} points (${RATE[c.adviser.rate]}).`;
   out.push('', comp('Daily living', cmp.dailyLiving), comp('Mobility', cmp.mobility));
 
   if (cmp.challenges.length) out.push('', 'The activities we dispute are set out below, starting with the largest difference.');
@@ -181,10 +184,10 @@ export function buildMrDraft(input: {
     const dec = input.decisions.find(d => d.activity === `pip:${ch.activity}`);
     const days = dec?.days_per_week != null ? Number(dec.days_per_week) : null;
     out.push('', input.labels[ch.activity] ?? `Activity ${ch.activity}: ${ch.name}`);
-    out.push(`The decision applied descriptor ${ch.activity}${ch.assessor.letter} (${ch.assessor.points} points): "${ch.assessor.text}"`);
+    out.push(`The ${scot ? 'determination' : 'decision'} applied descriptor ${ch.activity}${ch.assessor.letter} (${ch.assessor.points} points): "${ch.assessor.text}"`);
     out.push(`We say descriptor ${ch.activity}${ch.adviser!.letter} applies (${ch.adviser!.points} points): "${ch.adviser!.text}"`);
-    if (days !== null) out.push(`This applies on about ${days} days a week, which is over half of the days (regulation 7).`);
-    if (ch.justification) out.push(`The assessor said: "${ch.justification.quote}" (assessment report, page ${ch.justification.page}).`);
+    if (days !== null) out.push(`This applies on about ${days} days a week, which is over half of the days (${t.frequencyRef}).`);
+    if (ch.justification) out.push(`The ${scot ? 'practitioner' : 'assessor'} said: "${ch.justification.quote}" (${scot ? 'consultation report' : 'assessment report'}, page ${ch.justification.page}).`);
     if (ch.evidence.length) {
       out.push('The evidence shows:');
       for (const e of ch.evidence) out.push(`- "${e.quote}" (${docTitle(e.doc)}, page ${e.page})`);
@@ -194,6 +197,8 @@ export function buildMrDraft(input: {
   }
   const agreed = cmp.activities.filter(a => a.status === 'agree').map(a => a.activity);
   if (agreed.length) out.push('', `We do not dispute the descriptors for activity ${agreed.join(', ')}.`);
-  out.push('', 'Please consider all of the evidence listed above, including anything enclosed with this request, and send a written mandatory reconsideration notice with reasons.');
+  out.push('', scot
+    ? 'Please consider all of the evidence listed above, including anything enclosed with this request, and send a notice of re-determination with reasons.'
+    : 'Please consider all of the evidence listed above, including anything enclosed with this request, and send a written mandatory reconsideration notice with reasons.');
   return out.join('\n');
 }

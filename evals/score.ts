@@ -4,7 +4,7 @@ import { normalise, type VerifiedEvidence, type Gap, type AssessorResult, type W
 
 export type MustFind = { doc: string; page: number; quote: string };
 export type CaseActivity = { key: string; evidence_status: string; must_find: MustFind[]; gaps: string[] };
-export type CaseFile = { id: string; benefit: 'pip' | 'uc-wca'; activities: CaseActivity[]; must_not_claim?: string[] };
+export type CaseFile = { id: string; benefit: 'pip' | 'adp' | 'uc-wca'; activities: CaseActivity[]; must_not_claim?: string[] };
 
 export type Miss = { activity: string; doc: string; page: number; quote: string; foundUnder?: string[] };
 export type CaseScore = {
@@ -63,12 +63,14 @@ export function scoreCase(c: CaseFile, docIdFor: (doc: string) => string, verifi
 
 // ---------- MR stage: reading the DWP's position ----------
 
-export type MrAnswer = { pa4: { activities: Array<{ activity: number; letter: string; justification_quote?: { page: number; quote: string } }> } };
+type MrActs = { activities: Array<{ activity: number; letter: string; justification_quote?: { page: number; quote: string } }> };
+export type MrAnswer = { pa4?: MrActs; determination?: MrActs };
 
 export function scoreAssessor(mr: MrAnswer, r: Pick<AssessorResult, 'activities' | 'decisionDate' | 'dropped'>, letterDate: string | null, pa4DocId: string) {
   let lettersCorrect = 0, lettersWrong = 0, lettersMissing = 0, justificationsFound = 0;
   const wrong: Array<{ activity: number; got: string; want: string }> = [];
-  for (const want of mr.pa4.activities) {
+  // ADP answer files give the determination's descriptors (often no consultation report).
+  for (const want of (mr.pa4 ?? mr.determination!).activities) {
     const got = r.activities.find(a => a.activity === want.activity);
     if (!got?.letter) lettersMissing++;
     else if (got.letter === want.letter) lettersCorrect++;

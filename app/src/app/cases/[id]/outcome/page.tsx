@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireMe } from '@/lib/auth';
 import { getMr, buildComparison } from '@/lib/mr';
+import { terms } from '@hs/core';
 import { CLOSE_REASONS, awardChange, caseGain } from '@/lib/casework';
 import { OutcomeForm, CloseForm, IssueResultsForm } from '../../../forms';
 import { getAppeal, issuesFor } from '@/lib/appeal';
@@ -19,8 +20,8 @@ export default async function OutcomePage({ params }: { params: Promise<{ id: st
   const cs = m.case;
   // The award challenged, as far as the app knows it: the DWP position for PIP, the notice for WCA.
   let beforeDefault: { daily_living?: string; mobility?: string; wca?: string } | null = null;
-  if (cs.benefit === 'pip') {
-    const { comparison } = buildComparison(m.choices, m.decisions, m.evidence);
+  if (cs.benefit !== 'uc-wca') {
+    const { comparison } = buildComparison(m.choices, m.decisions, m.evidence, cs.benefit);
     if (comparison) beforeDefault = { daily_living: comparison.dailyLiving.assessor.rate, mobility: comparison.mobility.assessor.rate };
   } else if (cs.decision_outcome) beforeDefault = { wca: cs.decision_outcome };
   const ap = await getAppeal(me, id);
@@ -37,7 +38,7 @@ export default async function OutcomePage({ params }: { params: Promise<{ id: st
       <p className="crumbs"><Link href="/">← Cases</Link></p>
       <div className="head">
         <h1><span className="mono">{cs.ref}</span>{cs.external_ref ? <span className="soft small"> · your ref {cs.external_ref}</span> : null}</h1>
-        <p className="soft">{cs.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit · Work Capability Assessment'} · Outcome</p>
+        <p className="soft">{terms(cs.benefit).name} · Outcome</p>
       </div>
       <CaseTabs id={id} benefit={cs.benefit} current="outcome" />
 
@@ -54,7 +55,7 @@ export default async function OutcomePage({ params }: { params: Promise<{ id: st
         {disputed.length ? (<>
           <p className="soft small">What happened to each point you challenged. This builds your agency’s figures on which activities are won.</p>
           <IssueResultsForm caseId={id} issues={disputed} saved={saved} defaultStage={cs.appeal_outcome ? 'appeal' : 'mr'} />
-        </>) : <p className="soft small">{found?.blocked ?? 'No disputed points yet. They come from the reconsideration tab, once the DWP position and your position are both recorded.'}</p>}
+        </>) : <p className="soft small">{found?.blocked ?? 'No disputed points yet. They come from the reconsideration tab, once the decision maker’s position and yours are both recorded.'}</p>}
       </section>
 
       <section className="panel stack" aria-label="Close">

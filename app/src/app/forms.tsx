@@ -15,16 +15,19 @@ export function Status({ state }: { state: ActionState }) {
   return null;
 }
 
+/** ADP uses the same document kinds under Social Security Scotland's names. */
+const KIND_LABEL_ADP: Record<string, string> = { pa4: 'Consultation report', decision: 'Notice of determination', mr_notice: 'Notice of re-determination', dwp_bundle: 'Social Security Scotland’s appeal papers' };
 const KIND_LABEL: Record<string, string> = { evidence: 'Evidence (medical, form, letters)', notes: 'Your agency’s interview notes', pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: 'Decision letter or notice', mr_notice: 'Mandatory reconsideration notice', dwp_bundle: 'DWP response bundle', other: 'Other' };
 
-export function UploadForm({ caseId, syntheticOnly, kinds = ['evidence'], label = 'Add documents' }: { caseId: string; syntheticOnly: boolean; kinds?: string[]; label?: string }) {
+export function UploadForm({ caseId, syntheticOnly, kinds = ['evidence'], label = 'Add documents', benefit }: { caseId: string; syntheticOnly: boolean; kinds?: string[]; label?: string; benefit?: string }) {
+  const kindLabel = (k: string) => (benefit === 'adp' ? KIND_LABEL_ADP[k] : undefined) ?? KIND_LABEL[k] ?? k;
   const [state, action] = useActionState(uploadAction, {});
   return (
     <form action={action} className="stack">
       <input type="hidden" name="caseId" value={caseId} />
       {kinds.length > 1
         ? <label className="field">What is it?
-            <select name="kind" defaultValue={kinds[0]}>{kinds.map(k => <option key={k} value={k}>{KIND_LABEL[k] ?? k}</option>)}</select>
+            <select name="kind" defaultValue={kinds[0]}>{kinds.map(k => <option key={k} value={k}>{kindLabel(k)}</option>)}</select>
           </label>
         : <input type="hidden" name="kind" value={kinds[0]} />}
       <label className="field">{label}
@@ -62,13 +65,13 @@ export function AssessForm({ caseId, label }: { caseId: string; label: string })
   );
 }
 
-export function MrDatesForm({ caseId, decisionDate, requestDate, lateReason, outcome }: { caseId: string; decisionDate: string | null; requestDate: string | null; lateReason: string | null; outcome?: string | null }) {
+export function MrDatesForm({ caseId, decisionDate, requestDate, lateReason, outcome, scot = false }: { caseId: string; decisionDate: string | null; requestDate: string | null; lateReason: string | null; outcome?: string | null; scot?: boolean }) {
   const [state, action] = useActionState(mrDatesAction, {});
   return (
     <form action={action} className="stack">
       <input type="hidden" name="caseId" value={caseId} />
       <div className="row">
-        <label className="field">Date of the decision
+        <label className="field">{scot ? 'Date your client was told of the determination' : 'Date of the decision'}
           <input type="date" name="decisionDate" defaultValue={decisionDate ?? ''} />
         </label>
         <label className="field">Date the request is sent
@@ -88,7 +91,7 @@ export function MrDatesForm({ caseId, decisionDate, requestDate, lateReason, out
       )}
       <label className="field">Reason the request is late, if it is
         <textarea name="lateReason" rows={3} defaultValue={lateReason ?? ''} />
-        <span className="hint">The DWP can accept a late request up to 13 months after the decision if the claimant explains why it is late.</span>
+        <span className="hint">{scot ? 'Social Security Scotland can accept a late request up to a year after your client was told of the determination, if they have a good reason for not asking sooner.' : 'The DWP can accept a late request up to 13 months after the decision if the claimant explains why it is late.'}</span>
       </label>
       <div><Submit pending="Saving…" primary={false}>Save dates</Submit></div>
       <Status state={state} />
@@ -134,23 +137,23 @@ export function ActionButton({ caseId, label, pending, which }: { caseId: string
   );
 }
 
-export function AppealDatesForm({ caseId, mrNoticeDate, sentDate, lateReason }: { caseId: string; mrNoticeDate: string | null; sentDate: string | null; lateReason: string | null }) {
+export function AppealDatesForm({ caseId, mrNoticeDate, sentDate, lateReason, scot = false }: { caseId: string; mrNoticeDate: string | null; sentDate: string | null; lateReason: string | null; scot?: boolean }) {
   const [state, action] = useActionState(appealDatesAction, {});
   return (
     <form action={action} className="stack">
       <input type="hidden" name="caseId" value={caseId} />
       <div className="row">
-        <label className="field">Date of the MR notice
+        <label className="field">{scot ? 'Date your client was told of the re-determination' : 'Date of the MR notice'}
           <input type="date" name="mrNoticeDate" defaultValue={mrNoticeDate ?? ''} />
         </label>
-        <label className="field">Date the appeal is sent
+        <label className="field">{scot ? 'Date the appeal form reaches Social Security Scotland' : 'Date the appeal is sent'}
           <input type="date" name="sentDate" defaultValue={sentDate ?? ''} />
           <span className="hint">Leave blank until it is sent; today is used meanwhile.</span>
         </label>
       </div>
       <label className="field">Reason the appeal is late, if it is
         <textarea name="lateReason" rows={3} defaultValue={lateReason ?? ''} />
-        <span className="hint">A late appeal within 12 months of the time limit is treated as in time unless the DWP objects or the tribunal directs otherwise (rule 22(8)).</span>
+        <span className="hint">{scot ? 'After 31 days an appeal needs the tribunal’s permission, given only for a good reason, and it cannot be brought after a year (Social Security (Scotland) Act 2018, section 48).' : 'A late appeal within 12 months of the time limit is treated as in time unless the DWP objects or the tribunal directs otherwise (rule 22(8)).'}</span>
       </label>
       <div><Submit pending="Saving…" primary={false}>Save dates</Submit></div>
       <Status state={state} />
@@ -183,18 +186,19 @@ export function AiSubmissionForm({ caseId, stage }: { caseId: string; stage: 'mr
   );
 }
 
-export function LetterForm({ caseId, isPip }: { caseId: string; isPip: boolean }) {
+export function LetterForm({ caseId, isPip, scot = false }: { caseId: string; isPip: boolean; scot?: boolean }) {
+  const rep = scot ? 'consultation report and supporting information' : isPip ? 'PA4' : 'UC85 or UC85A';
   const [state, action] = useActionState(letterAction, {});
   return (
     <form action={action} className="stack">
       <input type="hidden" name="caseId" value={caseId} />
       <fieldset className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
         <legend className="small"><b>Letter</b></legend>
-        <label className="check"><input type="radio" name="kind" value="raise_mr" defaultChecked /> Acting on behalf: ask for a reconsideration, reasons to follow</label>
-        <label className="check"><input type="radio" name="kind" value="request_report" /> Ask for a copy of the {isPip ? 'PA4' : 'UC85 or UC85A'} only</label>
+        <label className="check"><input type="radio" name="kind" value="raise_mr" defaultChecked /> Acting on behalf: ask for a {scot ? 're-determination' : 'reconsideration'}, reasons to follow</label>
+        <label className="check"><input type="radio" name="kind" value="request_report" /> Ask for a copy of the {rep} only</label>
       </fieldset>
       <div className="row">
-        <label className="check"><input type="checkbox" name="requestReport" value="yes" defaultChecked /> Also ask for the {isPip ? 'PA4' : 'report'}</label>
+        <label className="check"><input type="checkbox" name="requestReport" value="yes" defaultChecked /> Also ask for the {scot ? 'consultation report and supporting information' : isPip ? 'PA4' : 'report'}</label>
         <label className="check"><input type="checkbox" name="hold" value="yes" defaultChecked /> Ask them to wait for reasons and evidence</label>
         <label className="check"><input type="checkbox" name="authority" value="yes" /> Signed authority enclosed</label>
       </div>
@@ -227,7 +231,7 @@ function AwardFields({ prefix, label, benefit, value }: { prefix: string; label:
   return (
     <fieldset className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
       <legend className="small"><b>{label}</b></legend>
-      {benefit === 'pip' ? (
+      {benefit !== 'uc-wca' ? (
         <div className="row">
           <label className="field small-field">Daily living<select name={`${prefix}_dl`} defaultValue={value?.daily_living ?? ''}>{RATES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
           <label className="field small-field">Mobility<select name={`${prefix}_mob`} defaultValue={value?.mobility ?? ''}>{RATES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
@@ -246,14 +250,14 @@ export function OutcomeForm({ caseId, benefit, c, beforeDefault }: { caseId: str
     <form action={action} className="stack">
       <input type="hidden" name="caseId" value={caseId} />
       <div className="row">
-        <label className="field">Reconsideration result
+        <label className="field">{benefit === 'adp' ? 'Re-determination result' : 'Reconsideration result'}
           <select name="mrOutcome" defaultValue={c.mr_outcome ?? ''}><option value="">Not yet / not asked for</option><option value="revised">Revised in full</option><option value="revised_in_part">Revised in part</option><option value="unchanged">Not changed</option></select>
         </label>
-        <label className="field">Date of the MR notice<input type="date" name="mrOutcomeDate" defaultValue={d(c.mr_outcome_date) || d(c.mr_notice_date)} /></label>
+        <label className="field">{benefit === 'adp' ? 'Date of the notice of re-determination' : 'Date of the MR notice'}<input type="date" name="mrOutcomeDate" defaultValue={d(c.mr_outcome_date) || d(c.mr_notice_date)} /></label>
       </div>
       <div className="row">
         <label className="field">Appeal result
-          <select name="appealOutcome" defaultValue={c.appeal_outcome ?? ''}><option value="">Not yet / no appeal</option><option value="allowed">Allowed</option><option value="allowed_in_part">Allowed in part</option><option value="dismissed">Dismissed</option><option value="lapsed_revised">Lapsed: DWP revised before the hearing</option><option value="withdrawn">Withdrawn</option><option value="struck_out">Struck out</option></select>
+          <select name="appealOutcome" defaultValue={c.appeal_outcome ?? ''}><option value="">Not yet / no appeal</option><option value="allowed">Allowed</option><option value="allowed_in_part">Allowed in part</option><option value="dismissed">Dismissed</option><option value="lapsed_revised">Lapsed: decision revised before the hearing</option><option value="withdrawn">Withdrawn</option><option value="struck_out">Struck out</option></select>
         </label>
         <label className="field">Date of the result<input type="date" name="appealOutcomeDate" defaultValue={d(c.appeal_outcome_date)} /></label>
       </div>

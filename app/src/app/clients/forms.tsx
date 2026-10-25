@@ -100,7 +100,7 @@ export function ClientCaseForm({ claimantId }: { claimantId: string }) {
       <input type="hidden" name="claimantId" value={claimantId} />
       <div className="row">
         <label className="field">Your case management reference (optional)<input name="ref" maxLength={40} autoComplete="off" /><span className="hint">The case number is given automatically. Add your own system’s reference here if you use one. Not the client’s name.</span></label>
-        <label className="field">Benefit<select name="benefit" defaultValue="pip"><option value="pip">Personal Independence Payment</option><option value="uc-wca">Universal Credit (WCA)</option></select></label>
+        <label className="field">Benefit<select name="benefit" defaultValue="pip"><option value="pip">Personal Independence Payment</option><option value="adp">Adult Disability Payment (Scotland)</option><option value="uc-wca">Universal Credit (WCA)</option></select></label>
       </div>
       <div><Submit pending="Creating…">Create case</Submit></div>
       <Status state={state} />

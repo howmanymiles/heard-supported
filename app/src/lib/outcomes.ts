@@ -12,7 +12,7 @@ const APPEAL_DECIDED = ['allowed', 'allowed_in_part', 'dismissed', 'lapsed_revis
 const APPEAL_OVERTURN = ['allowed', 'allowed_in_part', 'lapsed_revised'];
 
 export type OutcomeRow = {
-  id: string; ref: string; external_ref?: string | null; client: string | null; office?: string | null; benefit: 'pip' | 'uc-wca'; adviser: string | null;
+  id: string; ref: string; external_ref?: string | null; client: string | null; office?: string | null; benefit: 'pip' | 'adp' | 'uc-wca'; adviser: string | null;
   mr_request_date: string | null; mr_outcome: string | null; mr_outcome_date: string | null;
   appeal_sent_date: string | null; appeal_outcome: string | null; appeal_outcome_date: string | null;
   award_before: Award | null; award_after: Award | null; uc_lcwra_rate: string | null; lcw_legacy: boolean;
@@ -105,7 +105,7 @@ export function summariseOutcomes(rows: OutcomeRow[], issues: IssueRow[], from: 
       if (g) { money.total += g.gain; money.valued++; } else money.notValued++;
       const bf = r.award_before ?? {}, af = r.award_after ?? {};
       if (r.award_before && r.award_after) {
-        if (r.benefit === 'pip') {
+        if (r.benefit !== 'uc-wca') {
           if ((rank[af.daily_living ?? 'none'] ?? 0) > (rank[bf.daily_living ?? 'none'] ?? 0)) { components.dailyLivingUp++; if (af.daily_living === 'enhanced') components.dailyLivingToEnhanced++; }
           if ((rank[af.mobility ?? 'none'] ?? 0) > (rank[bf.mobility ?? 'none'] ?? 0)) { components.mobilityUp++; if (af.mobility === 'enhanced') components.mobilityToEnhanced++; }
         } else if (af.wca === 'lcwra' && bf.wca !== 'lcwra') components.toLcwra++;
@@ -129,14 +129,14 @@ export function summariseOutcomes(rows: OutcomeRow[], issues: IssueRow[], from: 
     days: { mrMedian: median(mrDays), mrCount: mrDays.length, appealMedian: median(appealDays), appealCount: appealDays.length }, byIssue, cases };
 }
 
-const AWARD = (b: string, a: Award | null) => !a ? '' : b === 'pip' ? `DL ${a.daily_living ?? 'none'} / Mob ${a.mobility ?? 'none'}` : (a.wca ?? '').toUpperCase();
+const AWARD = (b: string, a: Award | null) => !a ? '' : b !== 'uc-wca' ? `DL ${a.daily_living ?? 'none'} / Mob ${a.mobility ?? 'none'}` : (a.wca ?? '').toUpperCase();
 const csvCell = (v: unknown) => { const s = v === null || v === undefined ? '' : String(v); return /[",\n]/.test(s) || /^[=+\-@]/.test(s) ? `"${(/^[=+\-@]/.test(s) ? `'${s}` : s).replace(/"/g, '""')}"` : s; };
 
 /** One row per case, for funders' returns and the agency's own analysis. Client names are left out unless asked for. */
 export function outcomesCsv(cases: OutcomeCase[], withNames = false): string {
   const head = ['Reference', 'Your reference', ...(withNames ? ['Client'] : []), 'Benefit', 'Office', 'Adviser', 'MR requested', 'MR result', 'MR result date', 'Days to MR result',
     'Appeal sent', 'Appeal result', 'Appeal result date', 'Days to appeal result', 'Overturned at', 'Award before', 'Award after', 'Change', 'Yearly value gained (GBP)', 'Rates year'];
-  const lines = cases.map(c => [c.ref, c.external_ref, ...(withNames ? [c.client] : []), c.benefit === 'pip' ? 'PIP' : 'UC WCA', c.office, c.adviser, c.mr_request_date, c.mr_outcome && MR_OUTCOMES[c.mr_outcome as keyof typeof MR_OUTCOMES], c.mr_outcome_date, c.mrDays,
+  const lines = cases.map(c => [c.ref, c.external_ref, ...(withNames ? [c.client] : []), c.benefit === 'pip' ? 'PIP' : c.benefit === 'adp' ? 'ADP' : 'UC WCA', c.office, c.adviser, c.mr_request_date, c.mr_outcome && MR_OUTCOMES[c.mr_outcome as keyof typeof MR_OUTCOMES], c.mr_outcome_date, c.mrDays,
     c.appeal_sent_date, c.appeal_outcome && APPEAL_OUTCOMES[c.appeal_outcome as keyof typeof APPEAL_OUTCOMES], c.appeal_outcome_date, c.appealDays, c.stageWon === 'mr' ? 'Reconsideration' : c.stageWon === 'appeal' ? 'Appeal' : '', AWARD(c.benefit, c.award_before), AWARD(c.benefit, c.award_after), c.change ?? '', c.gain, c.gainYear].map(csvCell).join(','));
   return [head.map(csvCell).join(','), ...lines].join('\r\n') + '\r\n';
 }

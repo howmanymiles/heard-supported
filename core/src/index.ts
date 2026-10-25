@@ -13,3 +13,4 @@ export * from './bundle.ts';
 export * from './response.ts';
 export * from './submission.ts';
 export * from './rates.ts';
+export * from './terms.ts';

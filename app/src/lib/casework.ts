@@ -37,7 +37,7 @@ export async function findCases(me: Me, f: CaseFilter): Promise<CaseRow[]> {
   if (f.mine) add('c.adviser_id = ?', me.userId);
   else if (f.adviser) add('c.adviser_id = ?', f.adviser);
   if (f.stage) add('c.stage = ?', f.stage);
-  if (f.benefit === 'pip' || f.benefit === 'uc-wca') add('c.benefit = ?', f.benefit);
+  if (f.benefit === 'pip' || f.benefit === 'adp' || f.benefit === 'uc-wca') add('c.benefit = ?', f.benefit);
   if (f.q) { args.push((normaliseRefSearch(f.q) ?? f.q).replace(/[%_\\]/g, m => `\\${m}`).slice(0, 40)); const n = `$${args.length}`; where.push(`(c.ref ilike '%' || ${n} || '%' or c.external_ref ilike '%' || ${n} || '%' or k.name ilike '%' || ${n} || '%' or k.preferred_name ilike '%' || ${n} || '%')`); }
   if (f.claimant) add('c.claimant_id = ?', f.claimant);
   return asAgency(me.agencyId, async c => (await c.query(`
@@ -57,14 +57,14 @@ export async function findCases(me: Me, f: CaseFilter): Promise<CaseRow[]> {
 export const PIP_RATES = ['none', 'standard', 'enhanced'] as const;
 export const WCA_OUTCOMES = ['none', 'lcw', 'lcwra'] as const;
 export const MR_OUTCOMES = { revised: 'Revised in full', revised_in_part: 'Revised in part', unchanged: 'Not changed' } as const;
-export const APPEAL_OUTCOMES = { allowed: 'Allowed', allowed_in_part: 'Allowed in part', dismissed: 'Dismissed', lapsed_revised: 'Lapsed: DWP revised before the hearing', withdrawn: 'Withdrawn', struck_out: 'Struck out' } as const;
+export const APPEAL_OUTCOMES = { allowed: 'Allowed', allowed_in_part: 'Allowed in part', dismissed: 'Dismissed', lapsed_revised: 'Lapsed: decision revised before the hearing', withdrawn: 'Withdrawn', struck_out: 'Struck out' } as const;
 export const CLOSE_REASONS = { outcome: 'Outcome reached', client_withdrew: 'Client withdrew', no_contact: 'Lost contact', referred: 'Referred elsewhere', other: 'Other' } as const;
 
 export type Award = { daily_living?: string; mobility?: string; wca?: string };
 
 export function checkAward(benefit: string, a: Award | null): Award | null {
   if (!a) return null;
-  if (benefit === 'pip') {
+  if (benefit !== 'uc-wca') {
     const ok = (v?: string) => !v || (PIP_RATES as readonly string[]).includes(v);
     if (!ok(a.daily_living) || !ok(a.mobility)) throw new Error('Choose a rate for each component.');
     return a.daily_living || a.mobility ? { daily_living: a.daily_living, mobility: a.mobility } : null;
@@ -121,7 +121,7 @@ const RANK: Record<string, number> = { none: 0, standard: 1, enhanced: 2, lcw: 1
 /** Whether the award at the end is better than at the start, by component. Pure, for reports and tests. */
 export function awardChange(benefit: string, before: Award | null, after: Award | null): 'better' | 'same' | 'worse' | null {
   if (!before || !after) return null;
-  const keys = benefit === 'pip' ? (['daily_living', 'mobility'] as const) : (['wca'] as const);
+  const keys = benefit !== 'uc-wca' ? (['daily_living', 'mobility'] as const) : (['wca'] as const);
   const d = keys.map(k => (RANK[after[k] ?? 'none'] ?? 0) - (RANK[before[k] ?? 'none'] ?? 0));
   if (d.some(x => x < 0) && !d.some(x => x > 0)) return 'worse';
   if (d.some(x => x > 0)) return d.some(x => x < 0) ? 'same' : 'better';
@@ -144,7 +144,7 @@ export type Report = {
 export function caseGain(x: { benefit: string; award_before: Award | null; award_after: Award | null; uc_lcwra_rate?: string | null; lcw_legacy?: boolean; on: string }) {
   if (!x.award_before || !x.award_after) return null;
   const year = rateYear(x.on);
-  const g = annualGain(x.benefit as 'pip' | 'uc-wca', x.award_before, x.award_after, year,
+  const g = annualGain(x.benefit as 'pip' | 'adp' | 'uc-wca', x.award_before, x.award_after, year,
     { lcwra: (x.uc_lcwra_rate as 'standard' | 'protected' | null) ?? null, lcwLegacy: !!x.lcw_legacy });
   return g === null ? null : { gain: g, year };
 }
@@ -155,7 +155,7 @@ export async function agencyReport(me: Me, from: string, to: string, today: stri
     const open = (await c.query("select benefit, stage, to_char(decision_date, 'YYYY-MM-DD') d, to_char(mr_request_date, 'YYYY-MM-DD') r, to_char(mr_notice_date, 'YYYY-MM-DD') n, to_char(appeal_sent_date, 'YYYY-MM-DD') s from cases where closed_at is null")).rows;
     const { nextDeadline } = await import('@hs/core');
     const count = <T,>(xs: T[], key: (x: T) => string | null | undefined) => xs.reduce((m, x) => { const k = key(x); if (k) m[k] = (m[k] ?? 0) + 1; return m; }, {} as Record<string, number>);
-    const late = open.filter(o => { const n = nextDeadline({ decisionDate: o.d, mrRequestDate: o.r, mrNoticeDate: o.n, appealSentDate: o.s }, today); return n && n.status !== 'in_time'; }).length;
+    const late = open.filter(o => { const n = nextDeadline({ benefit: o.benefit, decisionDate: o.d, mrRequestDate: o.r, mrNoticeDate: o.n, appealSentDate: o.s }, today); return n && n.status !== 'in_time'; }).length;
     const mr = (await c.query('select mr_outcome from cases where mr_outcome is not null and mr_outcome_date between $1 and $2', [from, to])).rows;
     const ap = (await c.query('select appeal_outcome from cases where appeal_outcome is not null and appeal_outcome_date between $1 and $2', [from, to])).rows;
     const closed = (await c.query(`select benefit, closed_reason, award_before, award_after, uc_lcwra_rate, lcw_legacy,
@@ -168,11 +168,11 @@ export async function agencyReport(me: Me, from: string, to: string, today: stri
       const g = caseGain(x);
       if (!g) money.notValued++;
       else {
-        money.valued++; money[x.benefit === 'pip' ? 'pip' : 'uc'] += g.gain;
+        money.valued++; money[x.benefit === 'uc-wca' ? 'uc' : 'pip'] += g.gain;   // 'pip' holds PIP and ADP
         if (!money.years.includes(g.year)) money.years.push(g.year);
       }
       if (x.award_before && x.award_after) {
-        if (x.benefit === 'pip') {
+        if (x.benefit !== 'uc-wca') {
           if ((RANK[x.award_after.daily_living] ?? 0) > (RANK[x.award_before.daily_living] ?? 0)) awards.pip.dailyLivingUp++;
           if ((RANK[x.award_after.mobility] ?? 0) > (RANK[x.award_before.mobility] ?? 0)) awards.pip.mobilityUp++;
         } else {

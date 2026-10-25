@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireMe } from '@/lib/auth';
 import { createCase, addDocument, readAndReview, setEvidenceStatus, setGapStatus, saveDecision, DOC_KINDS, type DocKind } from '@/lib/cases';
 import { readAssessment, setAssessorChoice, confirmAllChoices, saveMrDates, saveMrDraft, getMr, buildComparison, buildMrDraft } from '@/lib/mr';
-import { activityList } from '@hs/core';
+import { activityList, parseBenefit } from '@hs/core';
 import { getAppeal, issuesFor, locate, buildGrounds, readMrNotice, readBundle, saveAppealDates, saveAppealDraft } from '@/lib/appeal';
 import { putDocument } from '@/lib/storage';
 import { asAgency, audit } from '@/lib/db';
@@ -92,7 +92,7 @@ export async function decisionAction(form: FormData) {
   const me = await requireMe();
   const caseId = String(form.get('caseId'));
   const days = String(form.get('days') ?? '').trim();
-  await saveDecision(me, caseId, form.get('benefit') === 'uc-wca' ? 'uc-wca' : 'pip', String(form.get('activity')), String(form.get('letter') ?? ''), days === '' ? null : Number(days));
+  await saveDecision(me, caseId, parseBenefit(form.get('benefit')), String(form.get('activity')), String(form.get('letter') ?? ''), days === '' ? null : Number(days));
   revalidatePath(`/cases/${caseId}`);
 }
 
@@ -173,13 +173,15 @@ export async function draftAction(_: ActionState, form: FormData): Promise<Actio
     revalidatePath(`/cases/${caseId}/mr`);
     return { ok: 'Draft created from the comparison. Edit it below and save.' };
   }
-  const { comparison, missing, unconfirmed } = buildComparison(mr.choices, mr.decisions, mr.evidence);
-  if (!comparison || missing.length) return { error: `The DWP descriptor is still missing for activity ${missing.join(', ')}.` };
-  if (unconfirmed.length) return { error: `Confirm the DWP descriptor for activity ${unconfirmed.join(', ')} first.` };
-  const labels = Object.fromEntries(activityList('pip').map(a => [Number(a.key.split(':')[1]), a.label]));
+  const b = mr.case.benefit === 'adp' ? 'adp' : 'pip';
+  const who = b === 'adp' ? 'Social Security Scotland' : 'DWP';
+  const { comparison, missing, unconfirmed } = buildComparison(mr.choices, mr.decisions, mr.evidence, b);
+  if (!comparison || missing.length) return { error: `The ${who} descriptor is still missing for activity ${missing.join(', ')}.` };
+  if (unconfirmed.length) return { error: `Confirm the ${who} descriptor for activity ${unconfirmed.join(', ')} first.` };
+  const labels = Object.fromEntries(activityList(b).map(a => [Number(a.key.split(':')[1]), a.label]));
   const text = buildMrDraft({
     ref: mr.case.ref, decisionDate: mr.decisionDate, timing: mr.timing, lateReason: mr.case.late_reason,
-    comparison, decisions: mr.decisions, labels,
+    comparison, decisions: mr.decisions, labels, benefit: b,
   });
   await saveMrDraft(me, caseId, text);
   revalidatePath(`/cases/${caseId}/mr`);

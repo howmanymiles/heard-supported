@@ -1,7 +1,7 @@
 // AI-drafted submission letters (MR request or appeal), from the case's
 // confirmed facts. The checks are in @hs/core/submission.ts.
 
-import { draftSubmission, renderSubmission, authoritiesFor, SUBMISSION_REGULATIONS, type SubmissionFacts } from '@hs/core';
+import { draftSubmission, renderSubmission, authoritiesFor, SUBMISSION_REGULATIONS, terms, type SubmissionFacts } from '@hs/core';
 import { asAgency, audit } from './db.ts';
 import { getAppeal, issuesFor, locate } from './appeal.ts';
 import { docTitle } from './mr.ts';
@@ -21,8 +21,8 @@ export function buildFacts(a: Appeal, stage: 'mr' | 'appeal'): { facts: Submissi
   const kindOf = (docName: string) => a.docs.find(d => d.name === docName)?.kind;
   let n = 0;
   const facts: SubmissionFacts = {
-    stage, benefit: a.case.benefit, summary: summary!, regulations: SUBMISSION_REGULATIONS[a.case.benefit as 'pip' | 'uc-wca'],
-    authorities: authoritiesFor(a.case.benefit as 'pip' | 'uc-wca').map((x, i) => ({ ...x, ref: `C${i + 1}` })),
+    stage, benefit: a.case.benefit, summary: summary!, regulations: SUBMISSION_REGULATIONS[a.case.benefit as 'pip' | 'adp' | 'uc-wca'],
+    authorities: authoritiesFor(a.case.benefit as 'pip' | 'adp' | 'uc-wca').map((x, i) => ({ ...x, ref: `C${i + 1}` })),
     issues: issues.map(i => {
       const l = located.find(x => x.key === i.key)!;
       const dm = l.reasoning
@@ -37,14 +37,19 @@ export function buildFacts(a: Appeal, stage: 'mr' | 'appeal'): { facts: Submissi
       };
     }),
   };
+  const t = terms(a.case.benefit), scot = a.case.benefit === 'adp';
   const header = stage === 'appeal'
-    ? [`Submission on behalf of the appellant: ${a.case.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit, Work Capability Assessment'}`, `Reference: ${a.case.ref}`, '',
-       `This is a submission on behalf of the appellant in the appeal against the decision${a.decisionDate ? ` dated ${long(a.decisionDate)}` : ''}${a.mrNoticeDate ? `, as reconsidered on ${long(a.mrNoticeDate)}` : ''}.`,
-       ...(a.appealTimingNow?.status === 'late' ? ['', `The appeal is made more than one month after the mandatory reconsideration notice. ${a.case.appeal_late_reason ? `It is late because ${String(a.case.appeal_late_reason).replace(/\.?$/, '.')}` : '[Explain why the appeal is late.]'}`] : []),
+    ? [`Submission on behalf of the appellant: ${t.name}`, `Reference: ${a.case.ref}`, '',
+       scot
+         ? `This is a submission on behalf of the appellant in the appeal against the re-determination${a.mrNoticeDate ? ` notified on ${long(a.mrNoticeDate)}` : ''}${a.decisionDate ? `, following the determination of ${long(a.decisionDate)}` : ''}.`
+         : `This is a submission on behalf of the appellant in the appeal against the decision${a.decisionDate ? ` dated ${long(a.decisionDate)}` : ''}${a.mrNoticeDate ? `, as reconsidered on ${long(a.mrNoticeDate)}` : ''}.`,
+       ...(a.appealTimingNow?.status === 'late' ? ['', `${scot ? 'The appeal is made more than 31 days after the appellant was told of the re-determination, so it needs the tribunal’s permission.' : 'The appeal is made more than one month after the mandatory reconsideration notice.'} ${a.case.appeal_late_reason ? `It is late because ${String(a.case.appeal_late_reason).replace(/\.?$/, '.')}` : '[Explain why the appeal is late.]'}`] : []),
        '', summary!]
-    : [`Mandatory reconsideration request: ${a.case.benefit === 'pip' ? 'Personal Independence Payment' : 'Universal Credit, Work Capability Assessment'}`, `Reference: ${a.case.ref}`, '',
-       `I am writing on behalf of my client to ask for a mandatory reconsideration of the decision${a.decisionDate ? ` dated ${long(a.decisionDate)}` : ''}.`,
-       ...(a.timing?.status === 'late' ? ['', `This request is made more than one month after the decision. ${a.case.late_reason ? `It is late because ${String(a.case.late_reason).replace(/\.?$/, '.')}` : '[Explain why the request is late.]'}`] : []),
+    : [scot ? `Request for a re-determination: ${t.name}` : `Mandatory reconsideration request: ${t.name}`, `Reference: ${a.case.ref}`, '',
+       scot
+         ? `I am writing on behalf of my client to ask Social Security Scotland to re-determine their entitlement to ${t.name}, following the determination${a.decisionDate ? ` of ${long(a.decisionDate)}` : ''}.`
+         : `I am writing on behalf of my client to ask for a mandatory reconsideration of the decision${a.decisionDate ? ` dated ${long(a.decisionDate)}` : ''}.`,
+       ...(a.timing?.status === 'late' ? ['', `${scot ? 'This request is made more than 42 days after my client was told of the determination.' : 'This request is made more than one month after the decision.'} ${a.case.late_reason ? `It is late because ${String(a.case.late_reason).replace(/\.?$/, '.')}` : '[Explain why the request is late.]'}`] : []),
        '', summary!.replace(/The appellant says they score/g, 'My client scores')];
   return { facts, header };
 }
