@@ -33,7 +33,15 @@ Worked as a team leader in a contact centre; redundant in 2026. No other informa
 
 ## Functional history (from the evidence)
 
-The GP reports her mood is improving. She lives alone; her sister visits. The UC50 reports she does not go out and does not answer the door to people she does not know. She reports poor concentration and that her sister prompts her to wash and eat.
+The GP reports her mood is improving. She lives alone; her sister visits. The UC50 reports she does not go out and does not answer the door to people she does not know. She reports poor concentration.
+
+## Typical day (from the UC50)
+
+Waking: says most days she does not get up until the afternoon.
+Getting up: no physical difficulty described.
+Self care: says she means to shower and get dressed and does not.
+Food: her sister does her shopping and leaves meals in the freezer; says she sometimes forgets to eat.
+Rest of the day: stays at home; says she does not go out and does not answer the door to people she does not know.
 
 ## Risk
 
