@@ -251,7 +251,7 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-
 // GlobalStandard because this subscription has no Data Zone quota for these models yet;
 // acceptable for fictional data only. A switch for real data needs Data Zone quota.
 @description('Deploy the cheaper models for evaluation.')
-param trialModels bool = true
+param trialModels bool = false
 
 resource modelMini 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = if (trialModels) {
   parent: ai
