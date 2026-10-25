@@ -1,6 +1,6 @@
 # The adviser app as one container. Built in GitHub Actions and pushed to the
 # environment's container registry; runs on Azure Container Apps.
-FROM node:22-bookworm-slim AS build
+FROM node:26-bookworm-slim AS build
 WORKDIR /src
 COPY package.json package-lock.json ./
 COPY app/package.json app/
@@ -14,7 +14,7 @@ RUN npm run build -w app \
  && mkdir -p app/.next/standalone/app/db \
  && cp -r app/db/migrations app/.next/standalone/app/db/migrations
 
-FROM node:22-bookworm-slim
+FROM node:26-bookworm-slim
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1
 # Security updates for the base system; and no package managers in the running image,
 # since nothing is installed at run time and they only add things to attack.
