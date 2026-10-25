@@ -1,7 +1,7 @@
 // AI-drafted submission letters (MR request or appeal), from the case's
 // confirmed facts. The checks are in @hs/core/submission.ts.
 
-import { draftSubmission, renderSubmission, SUBMISSION_REGULATIONS, type SubmissionFacts } from '@hs/core';
+import { draftSubmission, renderSubmission, authoritiesFor, SUBMISSION_REGULATIONS, type SubmissionFacts } from '@hs/core';
 import { asAgency, audit } from './db.ts';
 import { getAppeal, issuesFor, locate } from './appeal.ts';
 import { docTitle } from './mr.ts';
@@ -21,6 +21,7 @@ export function buildFacts(a: Appeal, stage: 'mr' | 'appeal'): { facts: Submissi
   let n = 0;
   const facts: SubmissionFacts = {
     stage, benefit: a.case.benefit, summary: summary!, regulations: SUBMISSION_REGULATIONS[a.case.benefit as 'pip' | 'uc-wca'],
+    authorities: authoritiesFor(a.case.benefit as 'pip' | 'uc-wca').map((x, i) => ({ ...x, ref: `C${i + 1}` })),
     issues: issues.map(i => {
       const l = located.find(x => x.key === i.key)!;
       const dm = l.reasoning
@@ -55,7 +56,8 @@ export async function writeSubmission(me: Me, caseId: string, stage: 'mr' | 'app
   const r = await draftSubmission(built.facts);
   const text = renderSubmission(r, built.facts, built.header);
   const sentences = [...r.opening, ...r.issues.flatMap(i => i.sentences), ...r.closing];
-  const review = { stage, kept: sentences.length, argument: sentences.filter(s => s.argument).map(s => s.text), dropped: r.dropped };
+  const cited = [...new Set(sentences.flatMap(s => s.authorities))].map(ref => built.facts.authorities!.find(x => x.ref === ref)!).map(x => ({ name: x.name, citation: x.citation, proposition: x.proposition, source_url: x.source_url }));
+  const review = { stage, kept: sentences.length, argument: sentences.filter(s => s.argument).map(s => s.text), dropped: r.dropped, authorities: cited };
   await asAgency(me.agencyId, async c => {
     await c.query(`update cases set ${stage === 'appeal' ? 'appeal_draft' : 'mr_draft'} = $2, submission_review = $3 where id = $1`, [caseId, text, review]);
     await c.query("insert into extraction_runs (agency_id, case_id, model, dataset_version, verified, rejected, identifiers_removed, created_by, kind) values ($1, $2, $3, $4, $5, $6, 0, $7, 'submission')",

@@ -206,3 +206,30 @@ test('submission checks: invented numbers, misquotes, case law, wrong descriptor
   assert.match(text, /Not in the DWP bundle, enclosed or set out above: adviser’s notes\./);
   assert.doesNotMatch(text, /\[E1\]/);
 });
+
+test('case law: only library authorities by id, citations written by code, no names in the model’s text', async () => {
+  const { resolveSubmission, renderSubmission, buildSubmissionMessages, authoritiesFor, CONFIRMED_AUTHORITIES, SUBMISSION_REGULATIONS } = await import('../src/submission.ts');
+  assert.deepEqual(CONFIRMED_AUTHORITIES, []);   // nothing is citable until an expert confirms it
+  const library = [
+    { id: 'rj', citation: '[2017] UKUT 105 (AAC)', name: 'RJ, GMcL and CS v SSWP', benefit: 'pip' as const, topics: ['pip:reg4-2A-safely'], proposition: 'Safely means a real possibility of harm that cannot be ignored, given its likelihood and severity.', source_url: 'https://example' },
+    { id: 'charlton', citation: '[2009] EWCA Civ 42', name: 'Charlton v SSWP', benefit: 'wca' as const, topics: ['wca:substantial-risk-lcw'], proposition: 'x', source_url: 'https://example' },
+  ];
+  const auths = authoritiesFor('pip', library).map((a, i) => ({ ...a, ref: `C${i + 1}` }));
+  assert.deepEqual(auths.map(a => a.id), ['rj']);
+  const facts = { stage: 'appeal' as const, benefit: 'pip' as const, summary: '', regulations: SUBMISSION_REGULATIONS.pip, authorities: auths,
+    issues: [{ key: 'pip:1', label: 'Daily living 1: Preparing food', dwp: 'descriptor 1a', ours: 'descriptor 1e', letters: ['1a', '1e'], decisionMaker: null,
+      evidence: [{ id: 'E1', quote: 'left the hob on twice last month', source: 'notes', where: 'page 2', agencyNotes: true, inBundle: false }] }] };
+  const [sys, user] = buildSubmissionMessages(facts);
+  assert.match(sys.content, /authorities listed under AUTHORITIES, and no others/);
+  assert.match(user.content, /C1 \[pip:reg4-2A-safely\] Safely means/);
+  const r = resolveSubmission({ issues: [{ key: 'pip:1', sentences: [
+    { text: 'The risk of harm when cooking must be judged by its likelihood and its severity [C1].', cites: [], authorities: ['C1'] },  // kept
+    { text: 'The same applies here.', cites: [], authorities: ['C7'] },                                                              // not in library
+    { text: 'As held in RJ v SSWP [2017] UKUT 105 (AAC), she is not safe.', cites: [], authorities: ['C1'] },                       // wrote the citation itself
+  ] }] }, facts);
+  assert.deepEqual(r.dropped.map(d => d.reason), ['authority_not_in_library', 'case_law']);
+  const text = renderSubmission(r, facts, []);
+  assert.match(text, /likelihood and its severity \(RJ, GMcL and CS v SSWP \[2017\] UKUT 105 \(AAC\)\)\./);
+  const [sys2] = buildSubmissionMessages({ ...facts, authorities: [] });
+  assert.match(sys2.content, /Do not cite case law/);
+});
