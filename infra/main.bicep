@@ -131,6 +131,21 @@ resource pgDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-01' =
   name: dbName
 }
 
+// Encrypted connections only, TLS 1.2 or later: Azure's defaults, pinned here so a later
+// change can't quietly loosen them. One at a time: the server refuses parallel changes.
+resource pgTls 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2024-08-01' = {
+  parent: pg
+  name: 'require_secure_transport'
+  properties: { value: 'on', source: 'user-override' }
+}
+
+resource pgTlsMin 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2024-08-01' = {
+  parent: pg
+  name: 'ssl_min_protocol_version'
+  properties: { value: 'TLSv1.2', source: 'user-override' }
+  dependsOn: [pgTls]
+}
+
 // Allows Azure services (the app) to connect. Before any real client data,
 // replace with private networking (see SECURITY.md).
 resource pgFirewallAzure 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2024-08-01' = {
@@ -160,8 +175,11 @@ resource secretNextAuth 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
 }
 
 // ---------- Document storage ----------
+// Documents. Encrypted twice at rest: Azure's service encryption plus an independent
+// infrastructure layer with a separate key (requireInfrastructureEncryption), which can only
+// be set when an account is created; hence the 'sx' name, replacing the original 'st' account.
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: 'hs${env}st${take(suffix, 10)}'
+  name: 'hs${env}sx${take(suffix, 10)}'
   location: location
   tags: tags
   kind: 'StorageV2'
@@ -173,7 +191,8 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     supportsHttpsTrafficOnly: true
     encryption: {
       keySource: 'Microsoft.Storage'
-      services: { blob: { enabled: true } }
+      requireInfrastructureEncryption: true
+      services: { blob: { enabled: true, keyType: 'Account' }, file: { enabled: true, keyType: 'Account' } }
     }
   }
 }

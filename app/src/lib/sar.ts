@@ -126,7 +126,8 @@ export async function exportClient(me: Me, claimantId: string): Promise<{ filena
     let n = `files/${x.ref}/${safeName(d.name)}`;
     for (let i = 2; used.has(n); i++) n = `files/${x.ref}/${i}-${safeName(d.name)}`;
     used.add(n);
-    files.push({ name: n, data: await readBlob(d.blob_path) });
+    try { files.push({ name: n, data: await readBlob(d.blob_path) }); }
+    catch { files.push({ name: `${n}.missing.txt`, data: Buffer.from('The original file is no longer stored. The text read from it is in report.html.\n', 'utf8') }); }
   }
   const data = { produced: new Date().toISOString(), ...g, cases: (g.cases as any[]).map(({ id, ...x }) => ({ ...x, documents: x.documents.map(({ id: _i, blob_path: _b, ...d }: any) => d) })) };
   const out = zip([{ name: 'report.html', data: Buffer.from(report(g), 'utf8') }, { name: 'data.json', data: Buffer.from(JSON.stringify(data, null, 2), 'utf8') }, ...files]);

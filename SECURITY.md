@@ -39,6 +39,11 @@ Heard & Supported now holds a client's **name, preferred name and date of birth*
 - Limits on sign-in attempts (30 per 10 minutes per connection), agency sign-up (5 an hour) and invitation links (20 an hour).
 - Our own error pages, which show no details.
 
+**Encryption**
+- In transit: HTTPS only to the app (HSTS); the database accepts encrypted connections only, TLS 1.2 or later, pinned in the infrastructure, and the app verifies its certificate; storage refuses anything below TLS 1.2. The session cookie is itself encrypted (A256GCM).
+- At rest: database, backups, Key Vault and logs with AES-256 under Microsoft-managed keys. Documents are encrypted twice: service encryption plus an independent infrastructure-encryption layer.
+- Not covered by encryption: anyone holding valid database credentials reads plain text (closed by Entra-only auth and private networking, infrastructure items 1–2); exports are plain files once downloaded, and the agency's to protect.
+
 **Services and secrets**
 - Managed identity between services; in Azure the app uses only its own identity. Storage has shared-key access off; Document Intelligence and the AI have key authentication off. Remaining secrets live in Key Vault and reach the app as Key Vault references.
 - GitHub deploys with OIDC (no stored password), limited to the `dev` environment, with rights over one resource group.
