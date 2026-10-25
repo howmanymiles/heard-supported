@@ -89,7 +89,9 @@ jobs:
       - name: Deploy infrastructure and app
         id: infra
         run: |
+          dep="hs-${{ github.run_id }}-${{ github.run_attempt }}"
           out=$(az deployment group create \
+            --name "$dep" \
             --resource-group "${{ vars.RESOURCE_GROUP }}" \
             --template-file infra/main.bicep \
             --parameters \
@@ -116,7 +118,13 @@ jobs:
               signInAudience="${{ vars.SIGN_IN_AUDIENCE || 'single' }}" \
               enableEmail="${{ vars.ENABLE_EMAIL || 'false' }}" \
               supportEmail="${{ vars.SUPPORT_EMAIL || 'hello@heardsupported.co.uk' }}" \
-            --query properties.outputs -o json)
+            --query properties.outputs -o json) || {
+            # Say why, on the run page, without anyone needing to open the Azure portal.
+            why=$(az deployment operation group list -g "${{ vars.RESOURCE_GROUP }}" --name "$dep" \
+              --query "[?properties.provisioningState=='Failed'].{resource: properties.targetResource.resourceName, error: properties.statusMessage.error}" -o json | jq -c . | head -c 3500)
+            echo "::error title=Azure deployment failed::$why"
+            exit 1
+          }
           echo "url=$(jq -r .webUrl.value <<<"$out")" >> "$GITHUB_OUTPUT"
           echo "redirect=$(jq -r .signInRedirect.value <<<"$out")" >> "$GITHUB_OUTPUT"
 
