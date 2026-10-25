@@ -27,7 +27,7 @@ param modelVersion string
 param modelFormat string = 'OpenAI'
 
 @description('App Service plan size. F1 (free) works for light development use when the subscription has no Basic quota yet.')
-@allowed(['F1', 'B1', 'B2', 'P0v3'])
+@allowed(['F1', 'B1', 'B2', 'P0v3', 'P0v4'])
 param appSku string = 'B1'
 
 @description('Model deployment type. DataZoneStandard keeps processing in the EU; Standard keeps it in aiLocation. GlobalStandard is for synthetic data only.')
@@ -206,7 +206,7 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-
 }
 
 // ---------- Web app ----------
-resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
+resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: 'hs-${env}-plan'
   location: location
   tags: tags
