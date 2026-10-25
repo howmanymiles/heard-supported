@@ -10,7 +10,7 @@ export async function chatJson<T>(messages: ChatMessage[], opts: { endpoint?: st
   const endpoint = (opts.endpoint ?? process.env.AI_ENDPOINT ?? '').replace(/\/$/, '');
   const deployment = opts.deployment ?? process.env.AI_DEPLOYMENT;
   if (!endpoint || !deployment) throw new Error('AI_ENDPOINT and AI_DEPLOYMENT must be set.');
-  const apiVersion = process.env.AI_API_VERSION ?? '2024-10-21';
+  const apiVersion = process.env.AI_API_VERSION ?? '2025-04-01-preview';
   const body: Record<string, unknown> = { messages, response_format: { type: 'json_object' } };
   if (process.env.AI_TEMPERATURE) body.temperature = Number(process.env.AI_TEMPERATURE);
 
