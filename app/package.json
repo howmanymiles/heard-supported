@@ -18,7 +18,7 @@
     "@azure/storage-blob": "^12.26.0",
     "@hs/core": "*",
     "@hs/engine": "*",
-    "next": "15.5.28",
+    "next": "16.4.2",
     "next-auth": "4.24.15",
     "pg": "^8.13.1",
     "postcss": "^8.5.31",
