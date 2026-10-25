@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { docType } from '@/lib/doctypes';
 import { notFound } from 'next/navigation';
 import { requireMe } from '@/lib/auth';
 import { getAppeal, issuesFor, locate } from '@/lib/appeal';
@@ -57,7 +58,7 @@ export default async function AppealPage({ params }: { params: Promise<{ id: str
         <h2 className="eyebrow">Papers</h2>
         {[...notice, ...bundleDocs].length ? <ul className="plain">{[...notice, ...bundleDocs].map(d => (
           <li key={d.id} className="doc">
-            {d.read_status === 'read' ? <Link href={`/cases/${id}/documents/${d.id}`}>{d.name}</Link> : <span>{d.name}</span>}
+            {d.read_status === 'read' ? <Link href={`/cases/${id}/documents/${d.id}`}>{d.name}</Link> : <span>{d.name}</span>}{docType(d.doc_type) ? <span className="chip">{docType(d.doc_type)!.label}</span> : null}
             <span className="soft small"> · {d.kind === 'mr_notice' ? noticeName : bundleName} · {d.read_status === 'read' ? `${d.page_count} pages` : d.read_status === 'failed' ? 'reading failed' : 'not read yet'}</span>
           </li>))}</ul> : <p className="soft">Upload the {noticeName}, and the {bundleName} when {scot ? 'they arrive' : 'it arrives'}.</p>}
         {synthId === 'PIP-03' && !notice.length && (

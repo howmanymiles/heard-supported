@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { docType } from '@/lib/doctypes';
 import { notFound } from 'next/navigation';
 import { activityList, LOW_CONFIDENCE, terms } from '@hs/core';
 import { requireMe } from '@/lib/auth';
@@ -79,11 +80,11 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
           <h2 className="eyebrow">Documents</h2>
           {docs.length ? <ul className="plain">{docs.map(d => (
             <li key={d.id} className="doc">
-              {d.read_status === 'read' ? <Link href={`/cases/${id}/documents/${d.id}`}>{d.name}</Link> : <span>{d.name}</span>}
+              {d.read_status === 'read' ? <Link href={`/cases/${id}/documents/${d.id}`}>{d.name}</Link> : <span>{d.name}</span>}{docType(d.doc_type) ? <span className="chip">{docType(d.doc_type)!.label}</span> : null}
               <span className="soft small"> · {d.read_status === 'read' ? `${d.page_count} pages` : d.read_status === 'failed' ? 'reading failed' : 'not read yet'}
                 {d.low_confidence_lines ? <> · <span className="warn">{d.low_confidence_lines} lines to check by eye</span></> : null}</span>
             </li>))}</ul> : <p className="soft">No documents yet.</p>}
-          <UploadForm caseId={id} syntheticOnly={syntheticOnly} kinds={['evidence', 'notes']} />
+          <UploadForm caseId={id} syntheticOnly={syntheticOnly} kinds={['evidence', 'notes']} benefit={cs.benefit} />
           {docs.length > 0 && <ReviewForm caseId={id} label={unread ? `Read ${unread} new document${unread > 1 ? 's' : ''} and review` : 'Review evidence again'} />}
           {lastRun && <p className="soft small">Last review: {lastRun.verified} cited suggestions; {lastRun.rejected} dropped because their quotes could not be found on the page; {lastRun.identifiers_removed} identifiers removed before the AI saw the text. Model: {lastRun.model}.</p>}
           <p className="soft small">Lines read with confidence below {Math.round(LOW_CONFIDENCE * 100)}% are flagged for you to check against the original.</p>

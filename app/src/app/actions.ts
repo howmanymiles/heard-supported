@@ -46,10 +46,15 @@ export async function uploadAction(_: ActionState, form: FormData): Promise<Acti
   }
   const files = form.getAll('file').filter((f): f is File => f instanceof File && f.size > 0);
   if (!files.length) return { error: 'Choose a file to upload.' };
-  const kind = String(form.get('kind') ?? 'evidence') as DocKind;
+  // The adviser picks what the document is (src/lib/doctypes.ts); its kind follows from that.
+  const { docType } = await import('@/lib/doctypes');
+  const t = docType(String(form.get('docType') ?? ''));
+  const allowed = String(form.get('kinds') ?? '').split(',');
+  if (!t || !allowed.includes(t.kind)) return { error: 'Choose what the document is from the list.' };
+  const kind = t.kind as DocKind;
   if (!DOC_KINDS.includes(kind)) return { error: 'Choose what kind of document this is.' };
   try {
-    for (const f of files) await addDocument(me, caseId, f, kind);
+    for (const f of files) await addDocument(me, caseId, f, kind, t.id);
   } catch (e) {
     return { error: msg(e) };
   }

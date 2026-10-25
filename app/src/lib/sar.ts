@@ -7,6 +7,7 @@ import { crc32 } from 'node:zlib';
 import { activityList, terms, type Benefit } from '@hs/core';
 import { asAgency, audit } from './db.ts';
 import { esc } from './html.ts';
+import { docType } from './doctypes.ts';
 import type { Me } from './auth.ts';
 
 type BlobReader = (path: string) => Promise<Buffer>;
@@ -52,7 +53,7 @@ export async function gatherClient(me: Me, claimantId: string) {
       from cases x left join users u on u.id = x.adviser_id where x.claimant_id = $1 order by x.created_at`);
     for (const cs of cases) {
       const id = [cs.id];
-      cs.documents = await q("select id, name, kind, content_type, blob_path, created_at from documents where case_id = $1 order by created_at", id);
+      cs.documents = await q("select id, name, kind, doc_type, content_type, blob_path, created_at from documents where case_id = $1 order by created_at", id);
       for (const d of cs.documents) d.pages = (await q('select page_no, text from pages where document_id = $1 order by page_no', [d.id])).map(p => ({ page: p.page_no, text: p.text }));
       cs.evidence = await q("select e.quote, e.page_no, e.activities, e.note, e.status, d.name as document from evidence e join documents d on d.id = e.document_id where e.case_id = $1 order by d.created_at, e.page_no", id);
       cs.gaps = await q('select activity, gap, status from gaps where case_id = $1', id);
@@ -98,7 +99,7 @@ export function report(g: Gathered, produced = new Date()): string {
         ...(x.mr_draft ? [{ t: 'Reconsideration draft', b: x.mr_draft }] : []), ...(x.appeal_draft ? [{ t: 'Appeal draft', b: x.appeal_draft }] : []),
         ...(x.late_reason ? [{ t: 'Reason for lateness (reconsideration)', b: x.late_reason }] : []), ...(x.appeal_late_reason ? [{ t: 'Reason for lateness (appeal)', b: x.appeal_late_reason }] : [])]
         .map(l => `<h5>${esc(l.t)}</h5><pre>${esc(l.b)}</pre>`).join('') || '<p class="none">None.</p>'}
-      <h4>Documents</h4>${x.documents.length ? x.documents.map((d: any) => `<details><summary>${esc(d.name)} (${esc(d.kind)}, added ${day(d.created_at)}; original in <code>files/</code>)</summary>${d.pages.map((p: any) => `<h5>Page ${p.page}</h5><pre>${esc(p.text)}</pre>`).join('')}</details>`).join('') : '<p class="none">None.</p>'}
+      <h4>Documents</h4>${x.documents.length ? x.documents.map((d: any) => `<details><summary>${esc(d.name)} (${esc(docType(d.doc_type)?.label ?? d.kind)}, added ${day(d.created_at)}; original in <code>files/</code>)</summary>${d.pages.map((p: any) => `<h5>Page ${p.page}</h5><pre>${esc(p.text)}</pre>`).join('')}</details>`).join('') : '<p class="none">None.</p>'}
     </article>`;
   }).join('');
   return `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>Information held about ${esc(k.name)}</title>

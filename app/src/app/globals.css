@@ -140,3 +140,10 @@ textarea.draft { font-family: var(--mono); font-size: 14px; line-height: 1.55; }
 .meter { display: inline-block; height: 8px; border-radius: 4px; background: var(--accent); vertical-align: middle; margin-right: 6px; }
 
 .page-foot { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; padding-top: 2rem; padding-bottom: 2rem; border-top: 1px solid var(--line, #e3e3e3); margin-top: 3rem; }
+
+.combo { position: relative; }
+.combo-list { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px 0; list-style: none; max-height: 320px; overflow: auto; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+.combo-group { padding: 8px 12px 2px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.combo-opt { padding: 7px 12px; cursor: pointer; font-size: 14px; }
+.combo-opt.active { background: var(--accent-tint); }
+.combo-none { padding: 8px 12px; }

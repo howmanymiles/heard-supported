@@ -15,7 +15,7 @@ export type DocKind = 'evidence' | 'notes' | 'pa4' | 'uc85' | 'uc85a' | 'decisio
 export const DOC_KINDS: DocKind[] = ['evidence', 'notes', 'pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle', 'other'];
 /** Papers that record the DWP's position rather than the client's evidence. */
 export const PAPER_KINDS: DocKind[] = ['pa4', 'uc85', 'uc85a', 'decision', 'mr_notice', 'dwp_bundle'];
-export type DocRow = { id: string; name: string; kind: DocKind; content_type: string; size_bytes: number; read_status: string; page_count: number | null; low_confidence_lines: number | null; created_at: Date };
+export type DocRow = { id: string; name: string; kind: DocKind; doc_type?: string | null; content_type: string; size_bytes: number; read_status: string; page_count: number | null; low_confidence_lines: number | null; created_at: Date };
 export type EvidenceRow = { id: string; document_id: string; doc_name: string; page_no: number; quote: string; activities: string[]; note: string | null; status: string; source: string };
 export type GapRow = { id: string; activity: string; gap: string; status: string };
 export type DecisionRow = { activity: string; satisfied: Array<{ letter: string; daysPercent?: number }> | string[]; days_per_week: string | null };
@@ -57,7 +57,7 @@ export async function getCase(me: Me, id: string) {
   return asAgency(me.agencyId, async c => {
     const cs = await c.query(`select c.*, u.name as adviser_name from cases c left join users u on u.id = c.adviser_id where c.id = $1`, [id]);
     if (!cs.rowCount) return null;
-    const docs = (await c.query('select id, name, kind, content_type, size_bytes, read_status, page_count, low_confidence_lines, created_at from documents where case_id = $1 order by created_at', [id])).rows as DocRow[];
+    const docs = (await c.query('select id, name, kind, doc_type, content_type, size_bytes, read_status, page_count, low_confidence_lines, created_at from documents where case_id = $1 order by created_at', [id])).rows as DocRow[];
     const evidence = (await c.query(`select e.id, e.document_id, d.name as doc_name, e.page_no, e.quote, e.activities, e.note, e.status, e.source
       from evidence e join documents d on d.id = e.document_id where e.case_id = $1 order by d.created_at, e.page_no`, [id])).rows as EvidenceRow[];
     const gaps = (await c.query('select id, activity, gap, status from gaps where case_id = $1 order by created_at', [id])).rows as GapRow[];
@@ -80,7 +80,7 @@ export async function getDocumentPages(me: Me, caseId: string, docId: string) {
   });
 }
 
-export async function addDocument(me: Me, caseId: string, file: File, docKind: DocKind = 'evidence') {
+export async function addDocument(me: Me, caseId: string, file: File, docKind: DocKind = 'evidence', docType: string | null = null) {
   if (!DOC_KINDS.includes(docKind)) throw new Error('Unknown document type.');
   if (file.size > MAX_BYTES) throw new Error('Files must be 20 MB or smaller.');
   await asAgency(me.agencyId, c => storeGate(c, caseId));   // check consent before anything is stored
@@ -96,8 +96,8 @@ export async function addDocument(me: Me, caseId: string, file: File, docKind: D
     const owns = await c.query('select 1 from cases where id = $1', [caseId]);
     if (!owns.rowCount) throw new Error('Case not found.');
     await storeGate(c, caseId);
-    await c.query('insert into documents (id, agency_id, case_id, name, kind, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-      [docId, me.agencyId, caseId, file.name.slice(0, 200), docKind, found.contentType, bytes.length, path, me.userId]);
+    await c.query('insert into documents (id, agency_id, case_id, name, kind, doc_type, content_type, size_bytes, blob_path, created_by) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+      [docId, me.agencyId, caseId, file.name.slice(0, 200), docKind, docType, found.contentType, bytes.length, path, me.userId]);
     await audit(c, me.agencyId, me.userId, caseId, `Document added (${found.label})`);
   });
 }

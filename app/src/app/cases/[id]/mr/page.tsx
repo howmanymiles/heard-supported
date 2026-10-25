@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { docType } from '@/lib/doctypes';
 import { notFound } from 'next/navigation';
 import { activityList, terms, isPipLike, adpRedeterminationDue } from '@hs/core';
 import { requireMe } from '@/lib/auth';
@@ -84,7 +85,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
         <h2 className="eyebrow">Decision papers</h2>
         {papers.length ? <ul className="plain">{papers.map(d => (
           <li key={d.id} className="doc">
-            {d.read_status === 'read' ? <Link href={`/cases/${id}/documents/${d.id}`}>{d.name}</Link> : <span>{d.name}</span>}
+            {d.read_status === 'read' ? <Link href={`/cases/${id}/documents/${d.id}`}>{d.name}</Link> : <span>{d.name}</span>}{docType(d.doc_type) ? <span className="chip">{docType(d.doc_type)!.label}</span> : null}
              <span className="soft small"> · {scot ? (d.kind === 'pa4' ? 'consultation report' : d.kind === 'decision' ? 'notice of determination' : d.kind) : KIND_SHORT[d.kind] ?? d.kind} · {d.read_status === 'read' ? `${d.page_count} pages` : d.read_status === 'failed' ? 'reading failed' : 'not read yet'}</span>
           </li>))}</ul> : <p className="soft">{scot ? 'Upload the notice of determination, and the consultation report if there was one.' : isPip ? 'Upload the decision letter and the PA4 assessment report.' : 'Upload the UC85 or UC85A report and the decision notice. The report holds the descriptors; the notice gives the date and award.'} They are read for {scot ? 'Social Security Scotland’s' : 'the DWP’s'} position, not as evidence.</p>}
         {synthId && !papers.length && (

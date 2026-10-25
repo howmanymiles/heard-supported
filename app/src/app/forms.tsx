@@ -2,6 +2,8 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
+import { DocTypePicker } from './doctype-picker';
+import { docTypesFor } from '@/lib/doctypes';
 import { uploadAction, reviewAction, assessAction, mrDatesAction, draftAction, saveDraftAction, mrNoticeAction, bundleAction, appealDatesAction, groundsAction, saveGroundsAction, aiSubmissionAction, letterAction, saveLetterAction, outcomeAction, closeAction, issueResultsAction, type ActionState } from './actions';
 
 export function Submit({ children, pending: pendingText, primary = true }: { children: React.ReactNode; pending: string; primary?: boolean }) {
@@ -19,20 +21,17 @@ export function Status({ state }: { state: ActionState }) {
 const KIND_LABEL_ADP: Record<string, string> = { pa4: 'Consultation report', decision: 'Notice of determination', mr_notice: 'Notice of re-determination', dwp_bundle: 'Social Security Scotland’s appeal papers' };
 const KIND_LABEL: Record<string, string> = { evidence: 'Evidence (medical, form, letters)', notes: 'Your agency’s interview notes', pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: 'Decision letter or notice', mr_notice: 'Mandatory reconsideration notice', dwp_bundle: 'DWP response bundle', other: 'Other' };
 
-export function UploadForm({ caseId, syntheticOnly, kinds = ['evidence'], label = 'Add documents', benefit }: { caseId: string; syntheticOnly: boolean; kinds?: string[]; label?: string; benefit?: string }) {
-  const kindLabel = (k: string) => (benefit === 'adp' ? KIND_LABEL_ADP[k] : undefined) ?? KIND_LABEL[k] ?? k;
+export function UploadForm({ caseId, syntheticOnly, kinds = ['evidence'], label = 'Add documents', benefit = 'pip' }: { caseId: string; syntheticOnly: boolean; kinds?: string[]; label?: string; benefit?: string }) {
   const [state, action] = useActionState(uploadAction, {});
+  const types = docTypesFor(benefit, [...kinds, 'other']);
   return (
     <form action={action} className="stack">
       <input type="hidden" name="caseId" value={caseId} />
-      {kinds.length > 1
-        ? <label className="field">What is it?
-            <select name="kind" defaultValue={kinds[0]}>{kinds.map(k => <option key={k} value={k}>{kindLabel(k)}</option>)}</select>
-          </label>
-        : <input type="hidden" name="kind" value={kinds[0]} />}
+      <input type="hidden" name="kinds" value={[...kinds, 'other'].join(',')} />
+      <DocTypePicker types={types} />
       <label className="field">{label}
         <input type="file" name="file" id="upload-file" multiple accept=".pdf,.docx,.jpg,.jpeg,.png,.tif,.tiff,.txt,.md" />
-        <span className="hint">PDF, Word, photos or scans, up to 20 MB each.</span>
+        <span className="hint">PDF, Word, photos or scans, up to 20 MB each. If you add several at once, they’re all recorded as the same type.</span>
       </label>
       {syntheticOnly && (
         <label className="check"><input type="checkbox" name="fictional" value="yes" id="upload-fictional" required /> This is a fictional test document, not a real client’s</label>
