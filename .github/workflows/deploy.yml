@@ -112,6 +112,7 @@ jobs:
               budgetEmail="${{ vars.BUDGET_EMAIL }}" \
               firstAdminEmail="${{ vars.FIRST_ADMIN_EMAIL || vars.BUDGET_EMAIL }}" \
               budgetStart="${{ vars.BUDGET_START }}" \
+              trialModels="${{ vars.TRIAL_MODELS || 'true' }}" \
               signInAudience="${{ vars.SIGN_IN_AUDIENCE || 'single' }}" \
               enableEmail="${{ vars.ENABLE_EMAIL || 'false' }}" \
               supportEmail="${{ vars.SUPPORT_EMAIL || 'hello@heardsupported.co.uk' }}" \

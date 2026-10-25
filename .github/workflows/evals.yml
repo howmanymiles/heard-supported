@@ -12,6 +12,11 @@ on:
         type: choice
         options: [all, evidence, mr, appeal]
         default: all
+      model:
+        description: "Model to test"
+        type: choice
+        options: [gpt-4o, gpt-4o-mini, gpt-4.1-mini]
+        default: gpt-4o
 
 permissions:
   id-token: write
@@ -35,7 +40,13 @@ jobs:
         run: |
           AI=$(az cognitiveservices account list -g "${{ vars.RESOURCE_GROUP }}" --query "[?kind=='AIServices'].properties.endpoints.\"OpenAI Language Model Instance API\" | [0]" -o tsv)
           echo "AI_ENDPOINT=$AI" >> "$GITHUB_ENV"
-          echo "AI_DEPLOYMENT=review-model" >> "$GITHUB_ENV"
+          case "${{ inputs.model }}" in
+            gpt-4o-mini) DEP=review-model-mini ;;
+            gpt-4.1-mini) DEP=review-model-41mini ;;
+            *) DEP=review-model ;;
+          esac
+          echo "AI_DEPLOYMENT=$DEP" >> "$GITHUB_ENV"
+          echo "EVAL_MODEL=${{ inputs.model }}" >> "$GITHUB_ENV"
       - name: Evidence stage
         if: inputs.stage == 'all' || inputs.stage == 'evidence'
         env: { CASES: "${{ inputs.cases }}" }

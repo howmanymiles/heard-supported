@@ -246,6 +246,27 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-
   }
 }
 
+// Cheaper models, for evaluation against the fictional cases before any switch.
+// Pay-per-use: no cost unless called. One deployment at a time on the account.
+@description('Deploy the cheaper models for evaluation.')
+param trialModels bool = true
+
+resource modelMini 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = if (trialModels) {
+  parent: ai
+  name: 'review-model-mini'
+  sku: { name: 'DataZoneStandard', capacity: 50 }
+  properties: { model: { format: 'OpenAI', name: 'gpt-4o-mini', version: '2024-07-18' } }
+  dependsOn: [modelDeployment]
+}
+
+resource model41Mini 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = if (trialModels) {
+  parent: ai
+  name: 'review-model-41mini'
+  sku: { name: 'DataZoneStandard', capacity: 50 }
+  properties: { model: { format: 'OpenAI', name: 'gpt-4.1-mini', version: '2025-04-14' } }
+  dependsOn: [modelMini]
+}
+
 // ---------- App (Azure Container Apps) ----------
 resource appIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: identityName

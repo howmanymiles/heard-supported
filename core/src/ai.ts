@@ -10,6 +10,9 @@ export type ChatMessage = { role: 'system' | 'user'; content: string };
 let tokenProvider: () => Promise<string> = cognitiveToken;
 export function setTokenProviderForTests(fn: () => Promise<string>) { tokenProvider = fn; }
 
+/** Tokens used so far in this process, for cost measurement (evaluations). */
+export const usageTotals = { calls: 0, promptTokens: 0, completionTokens: 0, cachedTokens: 0 };
+
 export async function chatJson<T>(messages: ChatMessage[], opts: { endpoint?: string; deployment?: string } = {}): Promise<{ data: T; model: string }> {
   const endpoint = (opts.endpoint ?? process.env.AI_ENDPOINT ?? '').replace(/\/$/, '');
   const deployment = opts.deployment ?? process.env.AI_DEPLOYMENT;
@@ -31,7 +34,11 @@ export async function chatJson<T>(messages: ChatMessage[], opts: { endpoint?: st
       continue;
     }
     if (!r.ok) throw new Error(`AI model call failed (HTTP ${r.status}): ${(await r.text()).slice(0, 300)}`);
-    const j = await r.json() as { model?: string; choices: Array<{ message: { content: string } }> };
+    const j = await r.json() as { model?: string; choices: Array<{ message: { content: string } }>; usage?: { prompt_tokens?: number; completion_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } } };
+    usageTotals.calls++;
+    usageTotals.promptTokens += j.usage?.prompt_tokens ?? 0;
+    usageTotals.completionTokens += j.usage?.completion_tokens ?? 0;
+    usageTotals.cachedTokens += j.usage?.prompt_tokens_details?.cached_tokens ?? 0;
     const text = j.choices?.[0]?.message?.content ?? '';
     try {
       return { data: JSON.parse(text) as T, model: j.model ?? deployment };

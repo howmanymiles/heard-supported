@@ -7,7 +7,7 @@
 //   node run.ts --mr         PIP cases, reading the PA4 and decision letter
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractEvidence, extractAssessor, extractWcaAssessor, extractResponseReasoning, draftSubmission, renderSubmission, SUBMISSION_REGULATIONS, splitTextPages, parseUkDate, type ExtractionDoc } from '@hs/core';
+import { usageTotals, extractEvidence, extractAssessor, extractWcaAssessor, extractResponseReasoning, draftSubmission, renderSubmission, SUBMISSION_REGULATIONS, splitTextPages, parseUkDate, type ExtractionDoc } from '@hs/core';
 import { scoreCase, scoreAssessor, scoreWcaAssessor, samePassage, type CaseFile } from './score.ts';
 
 const here = import.meta.dirname;
@@ -24,6 +24,19 @@ if (!process.env.AI_ENDPOINT) { console.error('Set AI_ENDPOINT (and sign in with
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 const outDir = path.join(here, 'results', mrStage ? `${stamp}-mr` : appealStage ? `${stamp}-appeal` : stamp);
 fs.mkdirSync(outDir, { recursive: true });
+
+// Prices per million tokens, GBP, Azure Data Zone (EU), October 2026, from the Azure retail prices API.
+const PRICES: Record<string, [number, number]> = { 'gpt-4o': [2.1, 8.3], 'gpt-4o-mini': [0.13, 0.5], 'gpt-4.1-mini': [0.3, 1.3], 'gpt-4.1': [1.7, 6.6] };
+/** Print the result line, plus a GitHub annotation so it shows on the workflow run without signing in. */
+function report(stage: string, line: string) {
+  const model = process.env.EVAL_MODEL ?? process.env.AI_DEPLOYMENT ?? 'unknown';
+  const [pin, pout] = PRICES[model] ?? [0, 0];
+  const cost = (usageTotals.promptTokens * pin + usageTotals.completionTokens * pout) / 1e6;
+  const per = ids.length ? cost / ids.length : 0;
+  const usage = `${usageTotals.calls} calls, ${usageTotals.promptTokens.toLocaleString('en-GB')} tokens in, ${usageTotals.completionTokens.toLocaleString('en-GB')} out; about £${cost.toFixed(3)} (£${per.toFixed(4)} a case) at ${model} prices`;
+  console.log(usage);
+  if (process.env.GITHUB_ACTIONS) console.log(`::notice title=${stage} · ${model}::${line.replace(/\n/g, ' ')} | ${usage}`);
+}
 
 if (appealStage) {
   // The decision maker's reasoning on each disputed activity, found in the DWP response.
@@ -55,6 +68,7 @@ if (appealStage) {
     } catch (e) { failed++; console.log(`FAILED: ${(e as Error).message}`); }
   }
   console.log(`\nReasoning found ${found}/${of}. Results: ${path.relative(process.cwd(), outDir)}`);
+  report('Appeal stage', `Decision maker's reasoning found ${found}/${of}; ${failed} cases failed or claimed what they must not.`);
   process.exit(failed ? 1 : 0);
 }
 
@@ -103,7 +117,9 @@ if (mrStage) {
   const sum = (k: string) => ok.reduce((n, r) => n + r[k], 0);
   const summary = { at: new Date().toISOString(), stage: 'mr', cases: ids, model: ok[0]?.model ?? null, lettersCorrect: sum('lettersCorrect'), lettersWrong: sum('lettersWrong'), lettersMissing: sum('lettersMissing'), of: ok.reduce((n, r) => n + (r.of ?? 12), 0), justificationsFound: sum('justificationsFound'), datesCorrect: ok.filter(r => r.dateCorrect).length, failed: rows.length - ok.length, rows };
   fs.writeFileSync(path.join(outDir, 'summary.json'), JSON.stringify(summary, null, 2));
-  console.log(`\nFindings right ${summary.lettersCorrect}/${summary.of}, wrong ${summary.lettersWrong} (the number that matters), left for the adviser ${summary.lettersMissing}. PIP reasons found ${summary.justificationsFound}. Dates right ${summary.datesCorrect}/${ok.length}.`);
+  const mrLine = `Findings right ${summary.lettersCorrect}/${summary.of}, wrong ${summary.lettersWrong} (the number that matters), left for the adviser ${summary.lettersMissing}. PIP reasons found ${summary.justificationsFound}. Dates right ${summary.datesCorrect}/${ok.length}.`;
+  console.log(`\n${mrLine}`);
+  report('Reconsideration stage', mrLine);
   console.log(`Results: ${path.relative(process.cwd(), outDir)}`);
   process.exit(summary.failed || summary.lettersWrong ? 1 : 0);
 }
@@ -140,6 +156,8 @@ const summary = {
 };
 fs.writeFileSync(path.join(outDir, 'summary.json'), JSON.stringify(summary, null, 2));
 const pct = (x: number | null) => x == null ? '—' : `${(x * 100).toFixed(1)}%`;
-console.log(`\nOverall recall ${pct(summary.recall)} (${summary.found}/${summary.mustFind}); right passage, wrong activity ${summary.foundWrongActivity}; dropped by citation check ${pct(summary.dropRate)}; noise ${summary.noise}.`);
+const evLine = `Overall recall ${pct(summary.recall)} (${summary.found}/${summary.mustFind}); right passage, wrong activity ${summary.foundWrongActivity}; dropped by citation check ${pct(summary.dropRate)}; noise ${summary.noise}.`;
+console.log(`\n${evLine}`);
+report('Evidence stage', evLine);
 console.log(`Results: ${path.relative(process.cwd(), outDir)}`);
 if (summary.failed) process.exit(1);
