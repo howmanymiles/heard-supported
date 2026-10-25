@@ -118,11 +118,11 @@ jobs:
               signInAudience="${{ vars.SIGN_IN_AUDIENCE || 'single' }}" \
               enableEmail="${{ vars.ENABLE_EMAIL || 'false' }}" \
               supportEmail="${{ vars.SUPPORT_EMAIL || 'hello@heardsupported.co.uk' }}" \
-            --query properties.outputs -o json) || {
+            --query properties.outputs -o json 2>deploy-err.txt) || {
             # Say why, on the run page, without anyone needing to open the Azure portal.
-            why=$(az deployment operation group list -g "${{ vars.RESOURCE_GROUP }}" --name "$dep" \
-              --query "[?properties.provisioningState=='Failed'].{resource: properties.targetResource.resourceName, error: properties.statusMessage.error}" -o json | jq -c . | head -c 3500)
-            echo "::error title=Azure deployment failed::$why"
+            why=$( { az deployment operation group list -g "${{ vars.RESOURCE_GROUP }}" --name "$dep" \
+              --query "[?properties.provisioningState=='Failed'].{resource: properties.targetResource.resourceName, error: properties.statusMessage.error}" -o json 2>/dev/null | jq -c . ; } || true)
+            echo "::error title=Azure deployment failed::$(tr '\n' ' ' < deploy-err.txt | tail -c 2500) ${why:0:2500}"
             exit 1
           }
           echo "url=$(jq -r .webUrl.value <<<"$out")" >> "$GITHUB_OUTPUT"
