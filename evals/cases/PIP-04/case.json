@@ -1,0 +1,194 @@
+{
+  "id": "PIP-04",
+  "benefit": "pip",
+  "title": "Sight loss",
+  "summary": "Woman in her thirties, living with her partner, certified severely sight impaired from retinitis pigmentosa. She reads only short items slowly with an electronic magnifier, cannot cook safely alone after a burn and a cut, labels her eye drops by touch, and needs a person or her guide dog for unfamiliar routes. Her partner reading the bills is a reading issue, not a budgeting one, and her difficulty in groups is visual, not an engagement need.",
+  "exercises": [
+    "reading: aid vs cannot read at all",
+    "journeys: assistance dog / another person for unfamiliar routes",
+    "safety: hot pans and knives",
+    "eye drops are medication, not therapy",
+    "aid mentioned without frequency or reliability (null draft)",
+    "misattribution: reading vs budgeting, sight vs engaging"
+  ],
+  "client": {
+    "ref": "HS-2004",
+    "age_band": "30-39",
+    "living": "Lives with partner",
+    "conditions_in_documents": [
+      "Retinitis pigmentosa, both eyes (severely sight impaired)",
+      "Cystoid macular oedema, both eyes",
+      "Asthma, mild, no recent treatment",
+      "Healed fracture of right fifth metatarsal"
+    ]
+  },
+  "documents": [
+    { "id": "form", "file": "documents/form.md", "type": "form", "pages": 4 },
+    { "id": "gp", "file": "documents/gp.md", "type": "gp", "pages": 2 },
+    { "id": "ophthalmology", "file": "documents/ophthalmology.md", "type": "specialist", "pages": 4 },
+    { "id": "notes", "file": "documents/notes.md", "type": "notes", "pages": 3 }
+  ],
+  "activities": [
+    {
+      "key": "pip:1",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 1, "quote": "I don't use the hob much since I burnt myself." },
+        { "doc": "notes", "page": 2, "quote": "Since then doesn't use oven or hob alone." },
+        { "doc": "notes", "page": 2, "quote": "Cut finger peeling veg earlier this year, \"steri-strips\", now doesn't use the sharp knife." },
+        { "doc": "notes", "page": 2, "quote": "Partner cooks evening meal every day." },
+        { "doc": "ophthalmology", "page": 3, "quote": "Help needed with: reading print, getting around in unfamiliar places, using cooker safely" }
+      ],
+      "gaps": [
+        "Form says 'don't use the hob much', notes say not alone at all; the difference should be noted",
+        "No kitchen review since her sight worsened",
+        "Whether she could cook a simple meal with supervision rather than having it cooked for her"
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "e", "daysPercent": 100 } ] },
+      "draft_note": "She cannot cook safely without another person after a burn and a cut; the microwave and liquid level indicator do not cover preparing fresh food."
+    },
+    {
+      "key": "pip:2",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "form", "page": 1, "quote": "I'm fine. Sometimes I knock my drink over." }
+      ],
+      "gaps": [
+        "Whether she can find food on the plate and cut it up without help",
+        "How often she spills or knocks things over"
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Only a passing mention of spills; nothing yet supports a scoring descriptor."
+    },
+    {
+      "key": "pip:3",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "ophthalmology", "page": 2, "quote": "She mentioned that the two drop bottles feel similar and she has on occasion used the wrong one." },
+        { "doc": "ophthalmology", "page": 2, "quote": "stopping them is likely to allow the macular oedema to worsen." },
+        { "doc": "notes", "page": 2, "quote": "Client now feels the label on each bottle every time before putting drops in." },
+        { "doc": "form", "page": 1, "quote": "I do my eye drops myself." }
+      ],
+      "gaps": [
+        "Tactile labels have been in use for only about 3 weeks",
+        "Who replaces the labels on new bottles (partner applied the first set)"
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "b", "daysPercent": 100 } ] },
+      "draft_note": "Eye drops are medication, not therapy, so 3c to 3f do not apply; she needs an aid (tactile labels) to take them safely, and stopping them risks deterioration."
+    },
+    {
+      "key": "pip:4",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Form and notes both say no issues."
+    },
+    {
+      "key": "pip:5",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Form and notes both say no issues."
+    },
+    {
+      "key": "pip:6",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "notes", "page": 2, "quote": "Has a colour detector from rehab worker; client mentioned it in passing, adviser didn't ask how often she uses it or whether it works." },
+        { "doc": "ophthalmology", "page": 4, "quote": "Rehabilitation worker issued talking colour detector and tactile bump-ons." },
+        { "doc": "form", "page": 2, "quote": "My partner sometimes tells me if something doesn't go or if I've got a mark on my top." },
+        { "doc": "notes", "page": 2, "quote": "Didn't say how often." }
+      ],
+      "gaps": [
+        "How often she uses the colour detector, and whether she needs it to choose clothes",
+        "How often her partner points out stains or clashing clothes (a 2-week log has been requested)",
+        "Whether she would go out with stained or unsuitable clothing without that help"
+      ],
+      "draft_descriptor": null,
+      "draft_note": "An aid (colour detector) and some prompting are mentioned, with no frequency or reliability; 6b or 6c(ii) cannot be chosen yet."
+    },
+    {
+      "key": "pip:7",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No problems speaking or hearing."
+    },
+    {
+      "key": "pip:8",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 2, "quote": "I can't read letters or anything printed. I can't read signs when I'm out." },
+        { "doc": "notes", "page": 1, "quote": "Uses electronic magnifier at home for short things like a label or an appointment date" },
+        { "doc": "notes", "page": 1, "quote": "Tried a letter from the council with it: \"gave up after a couple of lines\"." },
+        { "doc": "ophthalmology", "page": 1, "quote": "Near vision: N18 with her x6 electronic magnifier at close range, reading slowly. Unable to read N48 unaided." },
+        { "doc": "notes", "page": 1, "quote": "Partner reads all post and bills to her, every week." }
+      ],
+      "gaps": [
+        "Whether reading even short items with the magnifier takes more than twice as long as normal",
+        "Whether the text-to-speech app counts as an aid that lets her read complex information reliably (notes say it gets lots wrong)"
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "b", "daysPercent": 100 } ] },
+      "draft_note": "She reads basic information only with a magnifier, so 8e (cannot read at all) is not supported; expert to consider whether she cannot reliably read complex information even with aids."
+    },
+    {
+      "key": "pip:9",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "It's harder in a group because I can't see who is talking to me." },
+        { "doc": "notes", "page": 3, "quote": "Fine one to one. Group situations at work harder, can't see faces or who's speaking, misses cues. No anxiety." }
+      ],
+      "gaps": [],
+      "draft_descriptor": { "satisfied": [ { "letter": "a" } ] },
+      "draft_note": "Difficulty in groups comes from sight, not a need for prompting or social support; she is fine one to one."
+    },
+    {
+      "key": "pip:10",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "My partner reads me the bills but I decide what we pay and when." },
+        { "doc": "notes", "page": 1, "quote": "No difficulty with the decisions themselves, issue is reading the paperwork." }
+      ],
+      "gaps": [],
+      "draft_descriptor": { "satisfied": [ { "letter": "a" } ] },
+      "draft_note": "She makes the budgeting decisions herself; needing bills read out belongs under reading (activity 8)."
+    },
+    {
+      "key": "pip:11",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "If it's somewhere new I need my partner or a friend to come with me" },
+        { "doc": "notes", "page": 3, "quote": "New places: needs partner or friend to go with her, or someone walks the route with her and the dog first." },
+        { "doc": "notes", "page": 3, "quote": "Has got lost once trying a new route alone with cane" },
+        { "doc": "notes", "page": 3, "quote": "Long cane used outdoors \"nearly always\"." },
+        { "doc": "notes", "page": 3, "quote": "says only to partner's mum two doors along, \"I just follow the wall\"." }
+      ],
+      "gaps": [
+        "Whether she can follow any familiar route other than two doors along without the cane or dog (relevant to 11f)",
+        "No clinical statement that the cane is needed on familiar routes; adviser has this on the to-do list"
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "d", "daysPercent": 100 } ] },
+      "draft_note": "She needs another person or her guide dog (an assistance dog) to follow an unfamiliar route; 11f depends on more evidence about familiar routes without her cane."
+    },
+    {
+      "key": "pip:12",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No physical difficulty walking; the foot fracture has healed."
+    }
+  ],
+  "must_not_claim": [
+    "That she reads Braille or that Braille is relevant to activity 8",
+    "That she has no light perception or total loss of vision",
+    "That she has anxiety or other mental health difficulty affecting journeys or engaging with people",
+    "That her partner manages her money or makes budgeting decisions for her",
+    "That she uses the colour detector daily or needs help to dress every day",
+    "That the eye drops count as therapy taking a set number of hours a week"
+  ],
+  "expert_review": { "status": "draft", "notes": "" }
+}

@@ -1,0 +1,20 @@
+// Bundles the synthetic test cases' documents (not their answer files) so the
+// app can load them as demo cases. Runs before dev and build.
+import fs from 'node:fs';
+import path from 'node:path';
+
+const root = path.resolve(import.meta.dirname, '../../evals/cases');
+const out = [];
+for (const id of fs.readdirSync(root).sort()) {
+  const c = JSON.parse(fs.readFileSync(path.join(root, id, 'case.json'), 'utf8'));
+  const names = Object.fromEntries(c.documents.map(d => [path.basename(d.file), d.type]));
+  const docs = fs.readdirSync(path.join(root, id, 'documents')).sort().map(f => ({
+    name: `${id} ${(names[f] ?? f.replace('.md', '')).replace(/_/g, ' ')}.md`,
+    text: fs.readFileSync(path.join(root, id, 'documents', f), 'utf8'),
+  }));
+  // Claim-stage documents only: the PA4, decision and appeal papers belong to later stages.
+  const claimDocs = docs.filter(d => !/ (pa4|decision|mr request|mr notice|sscs1|dwp response)\.md$/.test(d.name));
+  out.push({ id, benefit: c.benefit, title: c.title, docs: claimDocs });
+}
+fs.writeFileSync(path.resolve(import.meta.dirname, '../src/data/synthetic.json'), JSON.stringify(out));
+console.log(`Bundled ${out.length} synthetic cases.`);

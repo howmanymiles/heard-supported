@@ -1,0 +1,111 @@
+{
+  "id": "PIP-03",
+  "mr_notice": {
+    "date": "2026-09-09",
+    "activities": [
+      { "activity": 1, "letter": "a" },
+      { "activity": 2, "letter": "a" },
+      { "activity": 3, "letter": "a" },
+      { "activity": 4, "letter": "b" },
+      { "activity": 5, "letter": "a" },
+      { "activity": 6, "letter": "b" },
+      { "activity": 7, "letter": "a" },
+      { "activity": 8, "letter": "a" },
+      { "activity": 9, "letter": "a" },
+      { "activity": 10, "letter": "a" },
+      { "activity": 11, "letter": "a" },
+      { "activity": 12, "letter": "b" }
+    ],
+    "daily_living": { "points": 4, "rate": "none" },
+    "mobility": { "points": 4, "rate": "none" }
+  },
+  "lodged": "2026-09-24",
+  "response_date": "2026-10-15",
+  "bundle_order": ["dwp_response", "form", "gp", "physio", "pa4", "decision", "mr_request", "mr_notice", "sscs1"],
+  "issues": [
+    {
+      "activity": 12,
+      "dm_letter": "b",
+      "adviser_letter": "e",
+      "dm_reasoning": { "doc": "dwp_response", "page": 3, "quote": "However, the walk test is a single snapshot of the appellant's walking on one day, in a clinic setting, and does not outweigh the other evidence of her walking." },
+      "rebuttal": "The walk test is the only measured evidence, taken on a day she called average, and it shows she cannot repeat even a short walk: 18 m, a 4-minute rest for her saturation to recover, then 12 m. The observed 20-30 m walk is below the 50 m the decision maker needs, and the response never applies the 'repeatedly' and 'reasonable time' tests in reg 4(2A).",
+      "evidence": [
+        { "doc": "physio", "page": 1, "quote": "Walk abandoned at 18 metres when patient stopped due to breathlessness and right knee pain." },
+        { "doc": "physio", "page": 1, "quote": "Required a seated rest of approximately 4 minutes before SpO2 recovered to 92%. She then walked a further 12 metres before stopping again and declined to continue." },
+        { "doc": "physio", "page": 1, "quote": "Patient reported today as an average day." },
+        { "doc": "physio", "page": 2, "quote": "Walking distance on testing today was considerably less than her own estimate." },
+        { "doc": "physio", "page": 3, "quote": "On arrival she needed to sit on the shower seat for 2 to 3 minutes to recover her breath before she could continue." },
+        { "doc": "gp", "page": 1, "quote": "MRC dyspnoea scale 4." },
+        { "doc": "pa4", "page": 2, "quote": "approximately 20-30 m, with a stick in the left hand, at a slow pace, without stopping. Mildly breathless on arrival" }
+      ],
+      "not_in_bundle": [
+        { "doc": "notes", "page": 1, "quote": "Adviser walked it after appt, approx. 80 m door to door (paced, not measured).", "why_it_matters": "The response says no distance to the shop has been provided. The only figure is the adviser's paced estimate, so it should be offered as an estimate, not a measurement; it shows the 'daily walk to the shop' is about 80 m in total, not 80 m without stopping." },
+        { "doc": "notes", "page": 1, "quote": "stops at next door's wall to lean and get breath, then again at the bus shelter, sometimes a third time.", "why_it_matters": "Breaks the shop trip into short stretches between rests, which is what the DM treats as evidence of walking more than 50 m." },
+        { "doc": "notes", "page": 1, "quote": "Takes her about 15 mins to get there.", "why_it_matters": "About 15 minutes for roughly 80 m goes to whether she walks within a reasonable time period." },
+        { "doc": "notes", "page": 1, "quote": "On questioning goes more like 3 days a week. On bad days (cold, damp, chest bad) doesn't go at all.", "why_it_matters": "Corrects 'most days' on the PIP2, which the PA4, decision, MR notice and response all rely on." },
+        { "doc": "notes", "page": 1, "quote": "Better days maybe 1 or 2 a week, when she can get to the shop with fewer stops.", "why_it_matters": "The basis for applying 12e on the majority of days under reg 7." }
+      ],
+      "hearing_questions": [
+        "How did you get here today, and how far did you walk from the taxi to this room? Did you stop on the way?",
+        "Tell us about the last time you went to the corner shop. Where did you stop, and for how long each time?",
+        "When you stop, what makes you stop: your breathing, your knees, or both? How long until you can carry on?",
+        "On your PIP2 you said about 50 metres. How did you work that out?",
+        "In a usual week, how many days do you go out on foot at all, and what is different on the days you don't?"
+      ]
+    },
+    {
+      "activity": 1,
+      "dm_letter": "a",
+      "adviser_letter": "b",
+      "dm_reasoning": { "doc": "dwp_response", "page": 4, "quote": "The decision maker considers that her use of her own kitchen stool is a matter of personal preference rather than a need arising from her condition" },
+      "rebuttal": "She gives the reason for sitting herself: she cannot stand long enough without getting breathless, which fits the medical evidence of breathlessness on minimal exertion. The OT offered a perching stool, showing a clinical view that she needs to sit; she declined it only because her own stool already serves that purpose. 1c is the alternative at the same 2 points.",
+      "evidence": [
+        { "doc": "form", "page": 1, "quote": "I use the microwave a lot because I can't stand at the cooker for long without getting puffed out. If I'm doing potatoes I sit down to peel them." },
+        { "doc": "physio", "page": 4, "quote": "Perching stool for kitchen offered. Patient declined, prefers to use her own kitchen stool." },
+        { "doc": "gp", "page": 2, "quote": "Breathless on minimal exertion." }
+      ],
+      "not_in_bundle": [
+        { "doc": "notes", "page": 2, "quote": "Sits on her kitchen stool to prepare veg. Can't stand at cooker for more than a few mins.", "why_it_matters": "Puts a time on how long she can stand at the cooker, which the response says she can do for long enough." },
+        { "doc": "notes", "page": 2, "quote": "Mostly microwave meals and soup. Lifting a full pan makes her breathless, so avoids it.", "why_it_matters": "Supports 1c: she avoids the cooker for a physical reason, answering the DM's point that microwave use is only a preference." }
+      ],
+      "hearing_questions": [
+        "When did you last cook something on the hob rather than in the microwave? What happened?",
+        "Can you tell us about the stool you use in the kitchen: what you use it for, and what happens if you try to do the same job standing?",
+        "Why did you turn down the perching stool the occupational therapist offered?",
+        "How do you manage a pan of potatoes once they are cooked: lifting it, draining it?"
+      ]
+    },
+    {
+      "activity": 5,
+      "dm_letter": "a",
+      "adviser_letter": "b",
+      "dm_reasoning": { "doc": "dwp_response", "page": 4, "quote": "there is no evidence from the occupational therapist that the appellant has continued to use it or that she needs it." },
+      "rebuttal": "The OT saw the difficulty rising from the WC directly, in her home, and fitted the frame for that reason; that is evidence of need. Rising once from a chair with arms, using both arms, says nothing about a standard-height WC with none, and the physio recorded two attempts from a standard chair. Her 'no problems' answer post-dates the frame, and the adviser saw it in place in July.",
+      "evidence": [
+        { "doc": "physio", "page": 3, "quote": "Rises from WC with difficulty due to knee pain." },
+        { "doc": "physio", "page": 4, "quote": "Toilet frame fitted around WC on this visit. Patient tried it and found rising much easier." },
+        { "doc": "physio", "page": 1, "quote": "Sit to stand from standard chair with use of both arms, 2 attempts." },
+        { "doc": "pa4", "page": 2, "quote": "Rose from the chair at the end of the assessment independently, using both arms of the chair, in one attempt." },
+        { "doc": "mr_request", "page": 3, "quote": "Our adviser saw the frame in place around her WC when visiting her at home on 14 July 2026." }
+      ],
+      "not_in_bundle": [
+        { "doc": "notes", "page": 2, "quote": "Didn't mention toilet frame (adviser saw it in bathroom).", "why_it_matters": "The contemporaneous record behind the MR request's statement; explains why she did not mention the frame at the consultation and shows it was still in place six weeks after fitting." }
+      ],
+      "hearing_questions": [
+        "Is the frame the occupational therapist fitted still around your toilet? Do you use it every time?",
+        "How do you get up from the toilet when you are somewhere without a frame or rails?",
+        "You wrote that you have no problems with the toilet itself. Was the frame already there when you filled in the form?",
+        "Before the frame was fitted, how did you get up from the toilet?"
+      ]
+    }
+  ],
+  "agree": [2, 3, 4, 6, 7, 8, 9, 10, 11],
+  "must_not_claim": [
+    "That the corner shop is 80 metres away as a measured distance, or that the 80 m figure is in DWP's bundle (it is the adviser's paced estimate, in the notes only)",
+    "That she walks to the shop without stopping, or walks 80 metres in one go",
+    "That the DWP response ignored the walk test entirely (it addresses it and calls it a single snapshot)",
+    "That a walk test, oxygen saturation or squat was carried out at the PA4 consultation",
+    "That she uses a rollator, home oxygen or a perching stool, or has had falls",
+    "That activity 6 is still in dispute (the MR notice revised it to 6b)"
+  ]
+}

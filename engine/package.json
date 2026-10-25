@@ -1,0 +1,12 @@
+{
+  "name": "@hs/engine",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Descriptor rules engine: PIP (regs 4-7) and UC WCA (regs 39-40, Schedules 6-9), plus PA4 comparison.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./descriptors.json": "./data/descriptors.json"
+  },
+  "scripts": { "test": "node --test test/*.test.ts" }
+}

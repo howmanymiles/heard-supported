@@ -1,0 +1,39 @@
+name: Evaluate AI on synthetic cases
+
+on:
+  workflow_dispatch:
+    inputs:
+      cases:
+        description: "Case IDs to run, space separated (blank = all)"
+        required: false
+        default: ""
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Find endpoints
+        run: |
+          AI=$(az cognitiveservices account list -g "${{ vars.RESOURCE_GROUP }}" --query "[?kind=='AIServices'].properties.endpoints.\"OpenAI Language Model Instance API\" | [0]" -o tsv)
+          echo "AI_ENDPOINT=$AI" >> "$GITHUB_ENV"
+          echo "AI_DEPLOYMENT=review-model" >> "$GITHUB_ENV"
+      - name: Run evaluation
+        run: npm run evals -w evals -- ${{ github.event.inputs.cases }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: evals/results/

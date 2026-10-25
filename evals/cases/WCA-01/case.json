@@ -1,0 +1,251 @@
+{
+  "id": "WCA-01",
+  "benefit": "uc-wca",
+  "title": "Back pain and anxiety, near the line",
+  "summary": "Former warehouse operative with lumbar degenerative disc disease, left sciatica and generalised anxiety. Draft reaches 18 points only by combining three 6-point descriptors (1(d), 2(c), 14(c)); each is contestable, and losing any one leaves 12, so the case tests whether the AI can weigh physical and mental evidence together, resolve a UC50/physio conflict on sitting tolerance, and handle good-day/bad-day variability without overclaiming. No Schedule 7 descriptor or Schedule 8/9 circumstance is made out.",
+  "exercises": [
+    "combined Part 1 and Part 2 points (reg 39(3)(c))",
+    "highest descriptor per activity (reg 39(5))",
+    "conflict: claimant's UC50 vs physio on sitting tolerance",
+    "majority of the time: good days vs bad days on mobilising",
+    "objective test result (6-minute walk test) vs self-report",
+    "cause condition: physical vs mental cause for activity 13 (reg 39(4))",
+    "unfamiliar place reached alone defeats activity 15"
+  ],
+  "client": {
+    "ref": "HS-3001",
+    "age_band": "50-59",
+    "living": "Lives with wife",
+    "conditions_in_documents": [
+      "Lumbar degenerative disc disease L4/5 and L5/S1",
+      "Left-sided sciatica",
+      "Generalised anxiety disorder",
+      "Gastro-oesophageal reflux",
+      "Hypertension"
+    ]
+  },
+  "documents": [
+    { "id": "form", "file": "documents/form.md", "type": "form", "pages": 4 },
+    { "id": "gp", "file": "documents/gp.md", "type": "gp", "pages": 4 },
+    { "id": "physio", "file": "documents/physio.md", "type": "physio", "pages": 4 },
+    { "id": "notes", "file": "documents/notes.md", "type": "notes", "pages": 4 }
+  ],
+  "activities": [
+    {
+      "key": "sch6:1",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "physio", "page": 2, "quote": "Total distance 240 metres. One rest stop, standing, at approximately 170 metres, reporting left leg pain 7/10." },
+        { "doc": "form", "page": 1, "quote": "I can walk about 100 yards and then I have to stop and lean on something till the leg settles." },
+        { "doc": "notes", "page": 2, "quote": "Has to stop at the bus shelter halfway on the way back \"nearly every time\"." },
+        { "doc": "notes", "page": 2, "quote": "says \"maybe three bad days a week\" when he does not go out at all except to the garden." },
+        { "doc": "notes", "page": 2, "quote": "Client says that was \"a good day, I'd taken extra tablets before\"." }
+      ],
+      "gaps": [
+        "Majority of the time: bad days are said to be about three a week, so the worse limits (100 m or 50 m) are not shown on most days; 1(d) rests on the 6MWT and the corner-shop pattern, which the client describes as good-day performance.",
+        "No measured or estimated distance for the corner shop walk; '100 yards' (about 91 m) is the client's estimate and conflicts with the 170 m measured before stopping.",
+        "'Repeatedly' limb not addressed: no evidence of whether he could repeat 200 m within a reasonable timescale.",
+        "Walking stick: not prescribed and not used; a decision maker may ask whether one could reasonably be used and would extend his distance.",
+        "GP has not assessed walking distance; diary requested but not yet available."
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "d" } ] },
+      "draft_note": "6MWT stop at about 170 m (on what he calls a good day) plus regular stops on the corner-shop route support 1(d), 6 points; 1(c) is only supported on a minority of days."
+    },
+    {
+      "key": "sch6:2",
+      "evidence_status": "conflict",
+      "must_find": [
+        { "doc": "form", "page": 2, "quote": "I can't sit for more than about 20 minutes before I have to get up. Standing is worse, maybe 10 minutes." },
+        { "doc": "physio", "page": 2, "quote": "He reported he could sit for up to an hour in a supportive chair." },
+        { "doc": "physio", "page": 2, "quote": "sat for the 45-minute session with one change of position at approximately 25 minutes." },
+        { "doc": "physio", "page": 2, "quote": "stood for approximately 15 minutes during the session before asking to sit, reporting increasing back pain." },
+        { "doc": "notes", "page": 2, "quote": "client says he meant he can stay in a chair for an hour if he can \"wriggle about\" and put his feet up, not upright at a desk." },
+        { "doc": "notes", "page": 1, "quote": "client stood up at approx 25 min, said needed to \"stretch it out\", stood by window approx 5 min then sat again." }
+      ],
+      "gaps": [
+        "The physio's 'up to an hour in a supportive chair' is a reported statement, not an observation; the client's explanation in the notes needs to go to the physio for clarification (action 3).",
+        "Combination limb: sitting about 20-25 min plus standing 10-15 min may exceed 30 min in total at a work station, which is why 2(b) is not drafted; no evidence of how long he can alternate before needing to move away.",
+        "In the physio session he changed position at 25 minutes but did not leave the work station; whether that counts as 'needing to move away' is a judgement point.",
+        "Physio says sitting tolerance 'varies'; no frequency of worse days given."
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "c" } ] },
+      "draft_note": "Observed and reported tolerances (sit 20-25 min, stand 10-15 min) support remaining at a work station for less than an hour, 2(c), 6 points; the physio's reported hour in a supportive chair is the conflict to resolve."
+    },
+    {
+      "key": "sch6:3",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "UC50 says yes; physio records full active shoulder range."
+    },
+    {
+      "key": "sch6:4",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "physio", "page": 2, "quote": "able to lift an empty archive box from a table and carry it 5 metres." },
+        { "doc": "form", "page": 2, "quote": "Bending down to pick something up off the floor is sore, I use the grabber stick the physio gave me." }
+      ],
+      "gaps": [
+        "Difficulty is with bending and heavy lifting, which activity 4 does not score; an AI should not convert floor-level bending into a 4(c) descriptor."
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "d" } ] },
+      "draft_note": "Physio observed him transferring an empty box; no descriptor applies (4(d), 0 points)."
+    },
+    {
+      "key": "sch6:5",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No hand problems in any document; grip normal."
+    },
+    {
+      "key": "sch6:6",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No communication difficulty recorded."
+    },
+    {
+      "key": "sch6:7",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Reading glasses only; no sensory impairment."
+    },
+    {
+      "key": "sch6:8",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No sensory impairment."
+    },
+    {
+      "key": "sch6:9",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No continence issues; physio notes no red flag symptoms."
+    },
+    {
+      "key": "sch6:10",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No episodes of altered consciousness."
+    },
+    {
+      "key": "sch6:11",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No learning difficulty."
+    },
+    {
+      "key": "sch6:12",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No hazard awareness issues."
+    },
+    {
+      "key": "sch6:13",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "Sometimes I can't get going in the morning because I haven't slept with the pain." },
+        { "doc": "notes", "page": 4, "quote": "Wife says he starts jobs in the garden and leaves them because of pain, not because he forgets." }
+      ],
+      "gaps": [
+        "Activity 13 requires impaired mental function (reg 39(4)(b)); the evidence attributes the difficulty to pain and poor sleep, not anxiety.",
+        "No frequency recorded beyond 'sometimes' and 'some mornings'."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Difficulty is physical in cause on the current evidence; no Part 2 descriptor can be drafted."
+    },
+    {
+      "key": "sch6:14",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "If something changes on the day I panic, my chest goes tight and I can't think." },
+        { "doc": "form", "page": 3, "quote": "Last month the physio cancelled on the morning and I just went back to bed for the day." },
+        { "doc": "gp", "page": 3, "quote": "He becomes very distressed when plans change unexpectedly and his wife has noticed this." },
+        { "doc": "notes", "page": 3, "quote": "Bus not turning up, comes home rather than wait for the next one, misses appointments." },
+        { "doc": "notes", "page": 3, "quote": "Wife says this happens \"most weeks, something sets him off\"." },
+        { "doc": "notes", "page": 3, "quote": "Planned change: managed with notice, per client and wife, although upset." }
+      ],
+      "gaps": [
+        "The only dated example is the physio's same-day cancellation on 21 July; 'misses appointments' after a late bus needs dates and specific examples.",
+        "14(b) not supported: planned changes are managed, including the brother's rearranged visit."
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "c" } ] },
+      "draft_note": "Consistent evidence from client, wife and GP that unplanned same-day changes make day to day life significantly more difficult, weekly; 14(c), 6 points."
+    },
+    {
+      "key": "sch6:15",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "physio", "page": 1, "quote": "He reported he had not been to this site before and was anxious about finding the department, but managed." },
+        { "doc": "notes", "page": 4, "quote": "Went to physio (new place) on his own by bus first time." }
+      ],
+      "gaps": [
+        "Anxiety about new places is present but he got to an unfamiliar place alone; leaving early when the bus does not come is better argued under activity 14."
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "d" } ] },
+      "draft_note": "Reached an unfamiliar hospital department alone; no descriptor applies (15(d), 0 points)."
+    },
+    {
+      "key": "sch6:16",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "notes", "page": 4, "quote": "Did not want to go to the pain management group: \"a room full of folk I don't know talking about it\"." },
+        { "doc": "notes", "page": 4, "quote": "Wife says he will speak to shop staff, the GP, the jobcentre work coach." },
+        { "doc": "notes", "page": 4, "quote": "Not clear he is unable to engage with unfamiliar people most of the time." },
+        { "doc": "physio", "page": 3, "quote": "Referral to the pain management programme (group) — patient unsure about group setting" }
+      ],
+      "gaps": [
+        "16(c) needs engagement with unfamiliar people to be not possible for the majority of the time; the evidence shows avoidance of a group on one occasion and routine contact with shop staff, GP and work coach.",
+        "No evidence of significant distress during one-to-one contact with strangers; he spoke to the adviser 'without obvious difficulty, though tense at start'."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Difficulty shown only on some occasions (group settings); majority of the time not established, so no descriptor drafted."
+    },
+    {
+      "key": "sch6:17",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No behavioural issues recorded."
+    },
+    {
+      "key": "sch7:1",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "notes", "page": 2, "quote": "On bad days says he struggles to get from the house to the car." }
+      ],
+      "gaps": [
+        "Struggling to reach the car is only described for bad days (about three a week) and no distance is given; measured walking on the 6MWT was 170 m before stopping."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "50 m limit not shown for the majority of the time (reg 40(4)); Schedule 7 descriptor 1 not met."
+    }
+  ],
+  "treated_as": { "sch8": [], "sch9": [] },
+  "must_not_claim": [
+    "He uses a walking stick or other walking aid (he does not, and none has been prescribed).",
+    "He cannot walk 50 metres (no document says so; the 6MWT measured 170 m before his first stop).",
+    "He has a diagnosis of depression or a history of self-harm (GAD only; notes record no self-harm history).",
+    "He is awaiting or has been offered spinal surgery (the spinal service did not consider him a surgical candidate).",
+    "His sitting tolerance has been measured by the GP or a work capability assessor (only the physio observed it).",
+    "He cannot use stairs (he managed 12 stairs with one rail)."
+  ],
+  "expert_review": { "status": "draft", "notes": "" }
+}

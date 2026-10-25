@@ -1,0 +1,94 @@
+{
+  "id": "PIP-04",
+  "pa4": {
+    "assessment": { "date": "2026-10-09", "type": "telephone", "duration_minutes": 55 },
+    "activities": [
+      { "activity": 1, "letter": "b",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "With these aids she is able to prepare and cook a simple meal. Her partner cooks the main meal, but this is a household arrangement." } },
+      { "activity": 2, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "The claimant reports she is fine with eating and drinking and occasionally knocks a drink over." } },
+      { "activity": 3, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "There is no cognitive impairment and no therapy requiring support. She is able to manage her medication unaided." } },
+      { "activity": 4, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "The claimant reports no problems with washing or bathing." } },
+      { "activity": 5, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "The claimant reports no problems with toilet needs. There is no history of incontinence." } },
+      { "activity": 6, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "Her partner sometimes mentions a mark on her clothing, but she does not need this to dress or to choose appropriate clothing." } },
+      { "activity": 7, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "The claimant spoke clearly and fluently and had no difficulty hearing or understanding questions over the telephone." } },
+      { "activity": 8, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "The claimant uses her mobile phone for text messages and confirmed she read the appointment reminder text sent the previous day." } },
+      { "activity": 9, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "She reports she is fine with people and that groups are harder only because she cannot see who is speaking." } },
+      { "activity": 10, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "Her partner reads the bills to her; this relates to reading and is considered under activity 8." } },
+      { "activity": 11, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "The claimant travels to work independently by bus 3 days a week and goes to the local shops, using her guide dog and long cane." } },
+      { "activity": 12, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "The claimant reports no problems with walking and walks her dog daily." } }
+    ]
+  },
+  "decision": { "daily_living": { "points": 2, "rate": "none" }, "mobility": { "points": 0, "rate": "none" } },
+  "expected_disputes": [
+    {
+      "activity": 1,
+      "adviser_letter": "e",
+      "error_type": "reliability_not_considered",
+      "why": "The assessor scores an aid (1b) because of the microwave bump-ons and liquid level indicator. Neither shows she can prepare and cook a simple meal safely. She burnt herself on the oven, cut herself peeling vegetables, and has not used the oven or hob alone since. The cooker safety need was recorded when she was certified, and her sight has got worse since then. Cereal, sandwiches and microwave meals are not a simple meal prepared from fresh, and calling her partner's cooking 'a household arrangement' ignores why it happens. She needs supervision or assistance to cook safely (reg 4(2A)(a)), so 1e applies.",
+      "rebuttal_evidence": [
+        { "doc": "notes", "page": 2, "quote": "Since then doesn't use oven or hob alone." },
+        { "doc": "notes", "page": 2, "quote": "Cut finger peeling veg earlier this year, \"steri-strips\", now doesn't use the sharp knife." },
+        { "doc": "notes", "page": 2, "quote": "Partner cooks evening meal every day." },
+        { "doc": "ophthalmology", "page": 3, "quote": "Help needed with: reading print, getting around in unfamiliar places, using cooker safely" },
+        { "doc": "notes", "page": 2, "quote": "Liquid level indicator: \"I use it for hot drinks\"." }
+      ]
+    },
+    {
+      "activity": 3,
+      "adviser_letter": "b",
+      "error_type": "aid_or_prompting_missed",
+      "why": "The PA4 history records that tactile labels were supplied for her drop bottles, but the activity 3 justification does not mention them. It treats recalling her medication as proof she can take it unaided. Before the labels she used the wrong bottle a number of times. The consultant warns that missing the dorzolamide is likely to let the macular oedema worsen, and she now relies on the labels every time. That is an aid needed to manage medication (3b). Eye drops are medication, not therapy, so nothing above 3b applies.",
+      "rebuttal_evidence": [
+        { "doc": "ophthalmology", "page": 2, "quote": "She mentioned that the two drop bottles feel similar and she has on occasion used the wrong one." },
+        { "doc": "ophthalmology", "page": 2, "quote": "stopping them is likely to allow the macular oedema to worsen." },
+        { "doc": "notes", "page": 2, "quote": "Client now feels the label on each bottle every time before putting drops in." }
+      ]
+    },
+    {
+      "activity": 8,
+      "adviser_letter": "b",
+      "error_type": "evidence_ignored",
+      "why": "The assessor concludes she can read unaided from her using text messages and a computer at work. The documents show she uses her phone with its talking setting (VoiceOver) and a screen reader at work. The low vision service advised smartphone accessibility settings. She cannot read print without a magnifier. With the magnifier she reads only N18, slowly, and gave up on a letter after a couple of lines. The assessor never asks how she read the reminder text. Descriptor a requires reading with no aid other than spectacles; at minimum 8b applies. Whether she can read complex information reliably even with aids is for the expert to decide.",
+      "rebuttal_evidence": [
+        { "doc": "ophthalmology", "page": 1, "quote": "Near vision: N18 with her x6 electronic magnifier at close range, reading slowly. Unable to read N48 unaided." },
+        { "doc": "notes", "page": 1, "quote": "Can't read any print without magnifier." },
+        { "doc": "notes", "page": 1, "quote": "Tried a letter from the council with it: \"gave up after a couple of lines\"." },
+        { "doc": "notes", "page": 1, "quote": "uses screen reader at work" },
+        { "doc": "form", "page": 3, "quote": "I do my own banking on my phone with the talking setting." },
+        { "doc": "ophthalmology", "page": 4, "quote": "Advised large print (N24+) where available and smartphone accessibility settings." }
+      ]
+    },
+    {
+      "activity": 11,
+      "adviser_letter": "d",
+      "error_type": "typical_day_overstretched",
+      "why": "Her commute and shop trips are routes her guide dog has been trained on, and she makes them with the dog. Following a route with an assistance dog is what 11d and 11f describe, so this does not show she manages unaided. The assessor does not address unfamiliar journeys at all. For those she needs her partner or a friend, or someone to walk the route with her and the dog first. She got lost on the one new route she tried alone. 11d applies. 11f (familiar routes) is arguable because she uses the cane nearly always, but needs more evidence.",
+      "rebuttal_evidence": [
+        { "doc": "form", "page": 3, "quote": "If it's somewhere new I need my partner or a friend to come with me" },
+        { "doc": "notes", "page": 3, "quote": "Guide dog for the commute (bus) and to the local shops: routes the dog has been trained on." },
+        { "doc": "notes", "page": 3, "quote": "New places: needs partner or friend to go with her, or someone walks the route with her and the dog first." },
+        { "doc": "notes", "page": 3, "quote": "Has got lost once trying a new route alone with cane" }
+      ]
+    }
+  ],
+  "agree": [ 2, 4, 5, 6, 7, 9, 10, 12 ],
+  "must_not_claim": [
+    "That the assessor was wrong to score 0 for activities 9 or 10 (her difficulties there are visual and reading-related, and the PA4 says so)",
+    "That the documents say she reads text messages using VoiceOver (they record the talking setting for banking and a screen reader at work, not texts specifically)",
+    "That she qualifies for 8e or cannot read signs, symbols or words at all",
+    "That the eye drops are therapy scoring under 3c to 3f",
+    "That she needs her partner's help to dress every day, or that 6b or 6c is established",
+    "That the PA4 records an examination or a test of her vision"
+  ]
+}

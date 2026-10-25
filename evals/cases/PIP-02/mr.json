@@ -1,0 +1,271 @@
+{
+  "id": "PIP-02",
+  "pa4": {
+    "assessment": {
+      "date": "2026-11-26",
+      "type": "face_to_face",
+      "duration_minutes": 55
+    },
+    "activities": [
+      {
+        "activity": 1,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "The claimant can make toast and snacks for herself and helps her mother with peeling and chopping"
+        }
+      },
+      {
+        "activity": 2,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "Reduced appetite is reported, but she eats the meals provided without the need for prompting"
+        }
+      },
+      {
+        "activity": 3,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "The claimant takes sertraline once daily"
+        }
+      },
+      {
+        "activity": 4,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "The claimant presented with adequate self-care and showers around twice a week"
+        }
+      },
+      {
+        "activity": 5,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "No difficulty reported"
+        }
+      },
+      {
+        "activity": 6,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "The claimant was appropriately dressed at assessment and states she can get dressed"
+        }
+      },
+      {
+        "activity": 7,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "Speech was quiet but coherent and she understood all questions asked"
+        }
+      },
+      {
+        "activity": 8,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "No difficulty reported with reading"
+        }
+      },
+      {
+        "activity": 9,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "The claimant maintained good eye contact, engaged well with the assessor and answered questions appropriately throughout a 55 minute assessment with an unfamiliar professional"
+        }
+      },
+      {
+        "activity": 10,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "The claimant states on her PIP2 that she can manage her money fine and she completed Higher maths"
+        }
+      },
+      {
+        "activity": 11,
+        "letter": "d",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "The claimant attended the assessment today at an unfamiliar location accompanied by her mother, which indicates she is able to undertake journeys"
+        }
+      },
+      {
+        "activity": 12,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "Walked from the waiting area without difficulty"
+        }
+      }
+    ]
+  },
+  "decision": {
+    "daily_living": {
+      "points": 0,
+      "rate": "none"
+    },
+    "mobility": {
+      "points": 10,
+      "rate": "standard"
+    }
+  },
+  "expected_disputes": [
+    {
+      "activity": 1,
+      "adviser_letter": "d",
+      "error_type": "aid_or_prompting_missed",
+      "why": "The PA4 records that her mother cooks and gets her to help, but reasons only from physical ability and intact cognition. Prompting to prepare or cook is a scoring descriptor in its own right, and the evidence is that without it she does not prepare food at all.",
+      "rebuttal_evidence": [
+        {
+          "doc": "cpn",
+          "page": 2,
+          "quote": "When her mother prompts and stays in the kitchen with her she will help with simple tasks."
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "she'll peel/chop if mum is there and keeps her at it. Without mum asking she won't come down."
+        },
+        {
+          "doc": "form",
+          "page": 2,
+          "quote": "Mum makes the dinner and tells me to come and help but most of the time I don't."
+        }
+      ]
+    },
+    {
+      "activity": 3,
+      "adviser_letter": "b",
+      "error_type": "aid_or_prompting_missed",
+      "why": "The PA4 notes the daily reminder from her mother but discounts it because the regime is simple. The test is whether she needs prompting, and the CPN records missed doses most days and deterioration before the reminders started.",
+      "rebuttal_evidence": [
+        {
+          "doc": "cpn",
+          "page": 2,
+          "quote": "she was missing doses most days, and her mood deteriorated. Adherence has been good since the reminders started."
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "Mum puts tablet next to her cup of tea every morning and checks."
+        }
+      ]
+    },
+    {
+      "activity": 4,
+      "adviser_letter": "c",
+      "error_type": "observation_overrelied",
+      "why": "The assessor relied on 'adequate self-care' on the day of an appointment, when her mother tells her to get ready, and on the absence of physical or safety problems. The CPN records she will not shower unless prompted and has gone over a week without washing.",
+      "rebuttal_evidence": [
+        {
+          "doc": "cpn",
+          "page": 2,
+          "quote": "she will not shower unless prompted, and that without prompting she has gone over a week without washing"
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "Mum says \"most days I'm on at her and most days it doesn't happen\"."
+        }
+      ]
+    },
+    {
+      "activity": 9,
+      "adviser_letter": "c",
+      "error_type": "observation_overrelied",
+      "why": "Eye contact and engagement at assessment were used to award 9a, but her mother attended, gave much of the history and is the person who calms her. The CPN states she does not engage with unfamiliar professionals without her mother, which is social support from an experienced person.",
+      "rebuttal_evidence": [
+        {
+          "doc": "cpn",
+          "page": 3,
+          "quote": "She does not engage with unfamiliar professionals without her mother, who has supported her through all of her appointments and knows how to calm her."
+        },
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "Mum has supported her through all of this since 2024 and knows what helps (breathing, letting her sit by the door)."
+        },
+        {
+          "doc": "form",
+          "page": 3,
+          "quote": "Mum comes in to the doctors with me and does most of the talking."
+        }
+      ]
+    },
+    {
+      "activity": 10,
+      "adviser_letter": "b",
+      "error_type": "evidence_ignored",
+      "why": "The assessor preferred the PIP2 answer and her ability to do arithmetic, setting aside her mother's account at assessment that she now handles the bills. Simple budgeting is not in issue; complex budgeting needs assistance since the February 2026 debts. A statement from her mother would put the detail in writing.",
+      "rebuttal_evidence": [
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "in Feb 2026 CL ran up £400 on online orders she didn't need when low, and missed phone contract payments, account went to collections."
+        },
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "Since then mum holds her bank card and pays her bills, CL gets cash for small things."
+        }
+      ]
+    },
+    {
+      "activity": 11,
+      "adviser_letter": "f",
+      "error_type": "evidence_ignored",
+      "why": "The assessor treated attending the assessment as evidence she can undertake journeys, though her mother drove her, and concluded she could manage familiar journeys alone with no evidence of a single journey alone. The CPN records she does not leave the house alone and turns back within minutes when she tries.",
+      "rebuttal_evidence": [
+        {
+          "doc": "cpn",
+          "page": 3,
+          "quote": "She does not leave the house alone. Journeys happen only with her mother, by car."
+        },
+        {
+          "doc": "cpn",
+          "page": 3,
+          "quote": "When she has attempted short journeys on her own as part of graded exposure work, she has turned back within a few minutes each time."
+        },
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "Mum said if she's with her CL will manage it, \"it's me being there\"."
+        }
+      ]
+    }
+  ],
+  "agree": [
+    2,
+    5,
+    6,
+    7,
+    8,
+    12
+  ],
+  "must_not_claim": [
+    "That the assessor refused to let her mother attend or speak (the PA4 records consent and contribution)",
+    "That she has a home therapy programme, so 3c or higher applies",
+    "That she needs prompting to eat once food is in front of her",
+    "That 11e applies (she does make journeys with her mother)",
+    "That she has self-harmed or has current suicidal thoughts",
+    "That the PA4 or any document records how often she needs prompting to dress"
+  ]
+}

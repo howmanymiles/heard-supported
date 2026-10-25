@@ -1,0 +1,90 @@
+{
+  "id": "PIP-03",
+  "pa4": {
+    "assessment": { "date": "2026-07-16", "type": "face_to_face", "duration_minutes": 45 },
+    "activities": [
+      { "activity": 1, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "She sits to peel vegetables but this is a matter of preference and no aid is required to prepare or cook a simple meal." } },
+      { "activity": 2, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "The claimant reports no difficulty with eating and drinking." } },
+      { "activity": 3, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "Her tablets are supplied in a pharmacy blister pack, which she describes as a convenience." } },
+      { "activity": 4, "letter": "b",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "The claimant uses a shower seat fitted by the council, and the OT report confirms she uses it for every shower." } },
+      { "activity": 5, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "the claimant has not reported needing it and her observed function indicates she can manage toilet needs unaided." } },
+      { "activity": 6, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 3, "quote": "She was able to reach to mid-shin when seated and has full upper limb movement." } },
+      { "activity": 7, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "The claimant conversed in full sentences throughout and had no difficulty hearing or understanding questions." } },
+      { "activity": 8, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "The claimant uses reading glasses only and read the consent form at assessment." } },
+      { "activity": 9, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "She describes herself as liking a chat and attends bingo monthly." } },
+      { "activity": 10, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "The claimant manages all her own bills and shopping." } },
+      { "activity": 11, "letter": "a",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "Any limitation on journeys relates to her physical ability to walk, which is considered under activity 12." } },
+      { "activity": 12, "letter": "b",
+        "justification_quote": { "doc": "pa4", "page": 4, "quote": "The physiotherapy walk test of 18 metres is noted but represents a single occasion and is not consistent with her reported daily walk to the shop." } }
+    ]
+  },
+  "decision": { "daily_living": { "points": 2, "rate": "none" }, "mobility": { "points": 4, "rate": "none" } },
+  "expected_disputes": [
+    {
+      "activity": 1,
+      "adviser_letter": "b",
+      "error_type": "evidence_ignored",
+      "why": "The assessor records that she sits to prepare vegetables but treats the stool as preference. The form ties it to not being able to stand for long, and the OT offered a perching stool for the kitchen, which shows a clinical view that she needs one. Using it means 1b (an aid), not 1a. A microwave meal each day does not show she can cook unaided. 1c (microwave only) is an alternative argument for the same 2 points.",
+      "rebuttal_evidence": [
+        { "doc": "form", "page": 1, "quote": "I use the microwave a lot because I can't stand at the cooker for long without getting puffed out." },
+        { "doc": "notes", "page": 2, "quote": "Sits on her kitchen stool to prepare veg. Can't stand at cooker for more than a few mins." },
+        { "doc": "physio", "page": 4, "quote": "Perching stool for kitchen offered. Patient declined, prefers to use her own kitchen stool." }
+      ]
+    },
+    {
+      "activity": 5,
+      "adviser_letter": "b",
+      "error_type": "observation_overrelied",
+      "why": "Rising once from a chair with arms at the assessment centre is used to set aside the OT's direct observation that she rises from the WC with difficulty, and the toilet frame fitted for that reason. The adviser saw the frame in her bathroom in July, so it was still in place. Her 'no problems with the toilet' answer on the form was given with the frame already fitted, so it does not show she manages without it.",
+      "rebuttal_evidence": [
+        { "doc": "physio", "page": 3, "quote": "Rises from WC with difficulty due to knee pain." },
+        { "doc": "physio", "page": 4, "quote": "Toilet frame fitted around WC on this visit. Patient tried it and found rising much easier." },
+        { "doc": "notes", "page": 2, "quote": "Didn't mention toilet frame (adviser saw it in bathroom)." }
+      ]
+    },
+    {
+      "activity": 6,
+      "adviser_letter": "b",
+      "error_type": "aid_or_prompting_missed",
+      "why": "The PA4 history records that a long-handled shoe horn was issued, but the activity 6 justification does not mention it. It relies instead on reaching mid-shin when seated, which is not the same as reaching her feet. The OT found she cannot flex her knees enough to reach her feet, and she uses the shoe horn daily, so 6b applies. Shoes and socks fall within dressing.",
+      "rebuttal_evidence": [
+        { "doc": "physio", "page": 3, "quote": "Dressing: unable to flex knees enough to reach feet comfortably." },
+        { "doc": "physio", "page": 4, "quote": "Long-handled shoe horn issued. Patient demonstrated safe use and reports using it daily to put on her shoes." }
+      ]
+    },
+    {
+      "activity": 12,
+      "adviser_letter": "e",
+      "error_type": "reliability_not_considered",
+      "why": "The assessor dismisses the measured 18 m walk as a single occasion, even though the physio records it as an average day. The assessor relies instead on one observed walk of 20-30 m, which does not show 50 m, and on the shop trip. The shop is about 80 m (paced by the adviser) and she only reaches it with two or three stops over about 15 minutes, and does not go at all on bad days. That does not meet the 'repeatedly' and 'reasonable time' tests in reg 4(2A) for any distance over 20 m. After the 18 m walk she needed a 4-minute rest and then managed only 12 m more. Better days are 1 to 2 a week, so 12e applies on most days.",
+      "rebuttal_evidence": [
+        { "doc": "physio", "page": 1, "quote": "Walk abandoned at 18 metres when patient stopped due to breathlessness and right knee pain." },
+        { "doc": "physio", "page": 1, "quote": "She then walked a further 12 metres before stopping again and declined to continue." },
+        { "doc": "physio", "page": 1, "quote": "Patient reported today as an average day." },
+        { "doc": "notes", "page": 1, "quote": "stops at next door's wall to lean and get breath, then again at the bus shelter, sometimes a third time." },
+        { "doc": "notes", "page": 1, "quote": "Takes her about 15 mins to get there." },
+        { "doc": "notes", "page": 1, "quote": "Better days maybe 1 or 2 a week, when she can get to the shop with fewer stops." }
+      ]
+    }
+  ],
+  "agree": [ 2, 3, 4, 7, 8, 9, 10, 11 ],
+  "must_not_claim": [
+    "That the assessor failed to consider the shower seat (activity 4 was scored 4b)",
+    "That the corner shop distance of 80 metres was measured, or that she walks it without stopping",
+    "That the PA4 records a walk test or oxygen saturation taken at the assessment",
+    "That she is entitled to 3b because her inhalers use a spacer or her tablets come in a blister pack",
+    "That her worry about getting breathless on journeys supports a descriptor under activity 11",
+    "That the walk from the waiting room shows she can walk more than 50 metres"
+  ]
+}

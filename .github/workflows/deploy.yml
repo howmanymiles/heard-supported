@@ -1,0 +1,91 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # OIDC sign-in to Azure, no stored password
+  contents: read
+
+concurrency: deploy-dev
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env:
+      # A non-superuser, so the row-level security tests mean something.
+      TEST_DATABASE_URL: postgres://hsapp:hsapp@localhost:5432/hstest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Create test database
+        env: { PGPASSWORD: postgres }
+        run: |
+          psql -h localhost -U postgres -c "create role hsapp login password 'hsapp'"
+          psql -h localhost -U postgres -c "create database hstest owner hsapp"
+      - run: npm ci
+      - run: npm test --workspaces --if-present
+      - run: npm run typecheck -w app
+
+  deploy:
+    needs: test
+    # Skipped until infra/bootstrap.sh has set the repository variables.
+    if: vars.RESOURCE_GROUP != ''
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+
+      - name: Sign in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy infrastructure
+        run: |
+          az deployment group create \
+            --resource-group "${{ vars.RESOURCE_GROUP }}" \
+            --template-file infra/main.bicep \
+            --parameters \
+              webAppName="${{ vars.WEBAPP_NAME }}" \
+              aiLocation="${{ vars.AI_LOCATION }}" \
+              modelName="${{ vars.MODEL_NAME }}" \
+              modelVersion="${{ vars.MODEL_VERSION }}" \
+              modelFormat="${{ vars.MODEL_FORMAT }}" \
+              entraClientId="${{ vars.ENTRA_CLIENT_ID }}" \
+              entraClientSecret="${{ secrets.ENTRA_CLIENT_SECRET }}" \
+              nextAuthSecret="${{ secrets.NEXTAUTH_SECRET }}" \
+              dbAdminPassword="${{ secrets.DB_ADMIN_PASSWORD }}" \
+              deployerPrincipalId="${{ vars.DEPLOYER_PRINCIPAL_ID }}" \
+              budgetEmail="${{ vars.BUDGET_EMAIL }}" \
+              budgetStart="${{ vars.BUDGET_START }}" \
+            --output none
+
+      - name: Build app
+        run: |
+          npm ci
+          npm run build -w app
+          # Standalone output: copy static assets and SQL migrations alongside the server.
+          cp -r app/.next/static app/.next/standalone/app/.next/static
+          mkdir -p app/.next/standalone/app/db
+          cp -r app/db/migrations app/.next/standalone/app/db/migrations
+          (cd app/.next/standalone && zip -qr ../../../app.zip .)
+
+      - name: Deploy app
+        run: |
+          az webapp deploy --resource-group "${{ vars.RESOURCE_GROUP }}" --name "${{ vars.WEBAPP_NAME }}" \
+            --src-path app.zip --type zip --async false
+          echo "Deployed to https://${{ vars.WEBAPP_NAME }}.azurewebsites.net"

@@ -1,0 +1,16 @@
+{
+  "name": "heard-supported",
+  "private": true,
+  "workspaces": [
+    "engine",
+    "core",
+    "app",
+    "evals"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "npm test --workspaces --if-present"
+  }
+}

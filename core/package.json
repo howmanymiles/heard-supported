@@ -1,0 +1,10 @@
+{
+  "name": "@hs/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared logic for reading documents, removing identifiers, calling the AI model and verifying citations.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "node --test test/*.test.ts" },
+  "dependencies": { "@azure/identity": "^4.5.0", "@hs/engine": "*" }
+}

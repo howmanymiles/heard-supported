@@ -1,0 +1,33 @@
+{
+  "name": "@hs/app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.ts",
+    "predev": "node scripts/bundle-cases.mjs",
+    "prebuild": "node scripts/bundle-cases.mjs",
+    "pretypecheck": "node scripts/bundle-cases.mjs"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.5.0",
+    "@azure/storage-blob": "^12.26.0",
+    "@hs/core": "*",
+    "@hs/engine": "*",
+    "next": "15.5.28",
+    "next-auth": "4.24.15",
+    "pg": "^8.13.1",
+    "react": "19.1.10",
+    "react-dom": "19.1.10"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.2"
+  }
+}

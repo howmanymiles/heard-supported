@@ -1,0 +1,10 @@
+{
+  "name": "@hs/evals",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "evals": "node run.ts",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": { "@hs/core": "*" }
+}

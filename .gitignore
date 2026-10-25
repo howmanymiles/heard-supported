@@ -1,0 +1,8 @@
+node_modules/
+.next/
+app.zip
+evals/results/
+.env*
+!.env.example
+*.log
+app/src/data/synthetic.json

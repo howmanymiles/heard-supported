@@ -1,0 +1,406 @@
+{
+  "id": "WCA-02",
+  "benefit": "uc-wca",
+  "title": "Substantial risk",
+  "summary": "Woman in her 30s with bipolar affective disorder, four weeks after a six-week informal admission for a severe depressive episode, under a home treatment team and supported most days by her sister. Schedule 6 mental descriptors give about 12 points (13(c), 16(c)), with activity 15 in conflict (15(b) would take her to 21), and no Schedule 7 descriptor is clearly met. The case turns on the consultant's opinion that work-related activity with the possibility of sanction would carry a substantial risk of relapse and self-neglect: this supports Sch 9 para 4 and, if LCW is not reached on points (reg 39(7)), Sch 8 para 4. The Sch 8 para 4(2)(b) medication exception is arguably not engaged because lithium is not yet therapeutic and the 2024 relapse happened while she was adherent; 4(2)(a) workplace adjustments are not addressed. Weakness: the consultant does not address the least onerous forms of work-related activity, which the adviser has asked about.",
+  "exercises": [
+    "Sch 9 para 4 substantial risk from work-related activity",
+    "Sch 8 para 4 as fallback where LCW not met on points (reg 39(7))",
+    "Sch 8 para 4(2): medication and reasonable adjustments exceptions",
+    "reg 40(6): Sch 9 para 4 only if LCWRA not met on assessment",
+    "frequently vs majority of the time (13(c) vs 13(b) / Sch 7 descriptor 11)",
+    "prompting not in the claimant's presence does not meet Sch 7 15(c)/(d)",
+    "conflict: UC50 'I don't go out' vs sister's account of trips to the shop alone",
+    "historic hypomania not relevant to current activity 17"
+  ],
+  "client": {
+    "ref": "HS-3002",
+    "age_band": "30-39",
+    "living": "Lives alone",
+    "conditions_in_documents": [
+      "Bipolar affective disorder, current episode severe depression without psychotic symptoms",
+      "Iron deficiency anaemia",
+      "Asthma"
+    ]
+  },
+  "documents": [
+    {
+      "id": "form",
+      "file": "documents/form.md",
+      "type": "form",
+      "pages": 4
+    },
+    {
+      "id": "gp",
+      "file": "documents/gp.md",
+      "type": "gp",
+      "pages": 4
+    },
+    {
+      "id": "psychiatrist",
+      "file": "documents/psychiatrist.md",
+      "type": "psychiatrist",
+      "pages": 4
+    },
+    {
+      "id": "notes",
+      "file": "documents/notes.md",
+      "type": "notes",
+      "pages": 4
+    }
+  ],
+  "activities": [
+    {
+      "key": "sch6:1",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No physical mobility problem."
+    },
+    {
+      "key": "sch6:2",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No physical problem."
+    },
+    {
+      "key": "sch6:3",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No physical problem."
+    },
+    {
+      "key": "sch6:4",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No physical problem."
+    },
+    {
+      "key": "sch6:5",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No physical problem."
+    },
+    {
+      "key": "sch6:6",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No communication problem."
+    },
+    {
+      "key": "sch6:7",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Poor concentration when reading is not a sensory impairment; activity 7 does not apply."
+    },
+    {
+      "key": "sch6:8",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No sensory impairment."
+    },
+    {
+      "key": "sch6:9",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No continence problem."
+    },
+    {
+      "key": "sch6:10",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Morning drowsiness from quetiapine is not an episode of lost or altered consciousness."
+    },
+    {
+      "key": "sch6:11",
+      "evidence_status": "partial",
+      "must_find": [
+        {
+          "doc": "form",
+          "page": 2,
+          "quote": "I can learn things but it takes longer at the moment."
+        },
+        {
+          "doc": "psychiatrist",
+          "page": 3,
+          "quote": "Insight good. Concentration poor."
+        }
+      ],
+      "gaps": [
+        "Slower learning and poor concentration are recorded but nothing suggests she cannot learn a moderately complex task."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Not enough to support 11(c)."
+    },
+    {
+      "key": "sch6:12",
+      "evidence_status": "partial",
+      "must_find": [
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "sister says before admission she found the hob left on after client made soup, once. Nothing since discharge."
+        }
+      ],
+      "gaps": [
+        "One pre-admission incident; no current evidence that she requires supervision to maintain safety."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Single historic incident does not support a descriptor."
+    },
+    {
+      "key": "sch6:13",
+      "evidence_status": "good",
+      "must_find": [
+        {
+          "doc": "form",
+          "page": 3,
+          "quote": "I mean to have a shower and get dressed and I don't."
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "Sister says \"three or four days a week\" she has not washed or dressed when she arrives."
+        },
+        {
+          "doc": "form",
+          "page": 3,
+          "quote": "I don't open my post, she opens it."
+        },
+        {
+          "doc": "psychiatrist",
+          "page": 3,
+          "quote": "sister reports she showered that morning because of the appointment."
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "Client heats meal in microwave if sister reminds her by text; some days doesn't eat until sister arrives."
+        }
+      ],
+      "gaps": [
+        "Three or four days a week is frequent but not clearly the majority of the time, so 13(b) and Sch 7 descriptor 11 are not made out on current evidence; a diary would show which side of the line she is.",
+        "Unclear how much the sister's texts and the HTT calls are doing; evidence of what happens without prompting would strengthen the activity."
+      ],
+      "draft_descriptor": {
+        "satisfied": [
+          {
+            "letter": "c"
+          }
+        ]
+      },
+      "draft_note": "Frequent failure to initiate washing, dressing, meals and post, due to depression; 13(c), 6 points."
+    },
+    {
+      "key": "sch6:14",
+      "evidence_status": "partial",
+      "must_find": [
+        {
+          "doc": "form",
+          "page": 3,
+          "quote": "I don't really have a routine just now. If something is different I get stressed."
+        },
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "HTT changed visit time without notice once, client did not answer."
+        }
+      ],
+      "gaps": [
+        "One example of an unplanned change; no evidence that day to day life is made significantly more difficult overall. Adviser notes the activity is weak."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Insufficient evidence for 14(c)."
+    },
+    {
+      "key": "sch6:15",
+      "evidence_status": "conflict",
+      "must_find": [
+        {
+          "doc": "form",
+          "page": 4,
+          "quote": "I don't go out. My sister takes me to appointments."
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "Sister says she has been to the corner shop on her own \"two or three times\" since discharge for milk and cigarettes"
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "Has not been to the GP or pharmacy on her own since discharge; says she would not manage, \"I'd turn back\". Not tested."
+        },
+        {
+          "doc": "psychiatrist",
+          "page": 3,
+          "quote": "She attends appointments only when accompanied by her sister."
+        }
+      ],
+      "gaps": [
+        "The corner shop trips mean 15(a) cannot apply and undercut the UC50's 'I don't go out'.",
+        "15(b) needs evidence that she is unable (not just unwilling or never tried) to get to a specified familiar place unaccompanied; her own prediction 'I'd turn back' is untested.",
+        "No evidence about unfamiliar places beyond appointments with her sister."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Arguable 15(b) (9 points) but the evidence conflicts and is untested; left for the expert. If accepted, the total reaches 21 and LCW is met on points."
+    },
+    {
+      "key": "sch6:16",
+      "evidence_status": "good",
+      "must_find": [
+        {
+          "doc": "form",
+          "page": 4,
+          "quote": "I don't answer the door unless I know who it is. When there's a new person from the crisis team I find it really hard."
+        },
+        {
+          "doc": "psychiatrist",
+          "page": 3,
+          "quote": "has found visits from unfamiliar home treatment staff distressing."
+        },
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "Sister says when a new worker came she would not let them in on one occasion, sister had to come round."
+        },
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "Spoke to me but would not have agreed to see me without sister present"
+        }
+      ],
+      "gaps": [
+        "She did engage with the adviser (with her sister present), so 16(b) 'always precluded' is not supported.",
+        "Only one recorded refusal of an unfamiliar worker; frequency of distress with strangers could be clarified from HTT notes."
+      ],
+      "draft_descriptor": {
+        "satisfied": [
+          {
+            "letter": "c"
+          }
+        ]
+      },
+      "draft_note": "Consistent evidence from client, consultant and sister of significant distress with unfamiliar people; 16(c), 6 points."
+    },
+    {
+      "key": "sch6:17",
+      "evidence_status": "partial",
+      "must_find": [
+        {
+          "doc": "form",
+          "page": 4,
+          "quote": "When I'm high I can be a bit much, but I'm not like that now."
+        },
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "Nothing like that now or since 2019."
+        }
+      ],
+      "gaps": [
+        "Disinhibited behaviour is historic (2019 hypomania); nothing current."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Historic only; no descriptor applies at present."
+    },
+    {
+      "key": "sch7:11",
+      "evidence_status": "partial",
+      "must_find": [
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "Other days she has, sometimes because sister texted to remind her."
+        }
+      ],
+      "gaps": [
+        "Would need evidence that she cannot reliably initiate or complete two sequential personal actions on the majority of occasions (reg 40(4)); current evidence is three or four days a week."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Not met on current evidence; revisit if a diary shows the majority of days."
+    },
+    {
+      "key": "sch7:13",
+      "evidence_status": "partial",
+      "must_find": [
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "Has stopped replying to friends' messages."
+        }
+      ],
+      "gaps": [
+        "Social contact is not always precluded: she sees her sister daily, engaged with the adviser and with clinicians."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Not met."
+    },
+    {
+      "key": "sch7:15",
+      "evidence_status": "partial",
+      "must_find": [
+        {
+          "doc": "form",
+          "page": 4,
+          "quote": "Sometimes I forget to eat."
+        },
+        {
+          "doc": "psychiatrist",
+          "page": 2,
+          "quote": "During the first three weeks of admission nursing staff needed to prompt her to eat and to attend to personal care."
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "client says she \"would eat something, toast or whatever\"."
+        }
+      ],
+      "gaps": [
+        "Prompting in her presence was needed during admission, but that has resolved; current prompting is by text and phone, which is not 'in the claimant's presence' for 15(c) or 15(d).",
+        "Weight stable since discharge."
+      ],
+      "draft_descriptor": null,
+      "draft_note": "15(c)/(d) not met at present; relevant history for the self-neglect risk argument."
+    }
+  ],
+  "treated_as": {
+    "sch8": [
+      4
+    ],
+    "sch9": [
+      4
+    ]
+  },
+  "must_not_claim": [
+    "She has current thoughts of self-harm or a history of self-harm (the consultant records no current thoughts of harm and no intent on admission; no history is documented).",
+    "She was detained under the Mental Health Act (the admission was informal).",
+    "She had psychotic symptoms (both letters say without psychotic symptoms).",
+    "A sanction was applied to her UC (she received a warning letter; the notes say no sanction was applied as far as she knows).",
+    "She has been allocated a care coordinator or CPN (a CMHT referral has been made; none is allocated yet).",
+    "There is a risk to other people (the consultant says there is no identified risk to others)."
+  ],
+  "expert_review": {
+    "status": "draft",
+    "notes": ""
+  }
+}

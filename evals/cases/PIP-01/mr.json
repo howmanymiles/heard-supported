@@ -1,0 +1,203 @@
+{
+  "id": "PIP-01",
+  "pa4": {
+    "assessment": {
+      "date": "2026-11-17",
+      "type": "telephone",
+      "duration_minutes": 48
+    },
+    "activities": [
+      {
+        "activity": 1,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "The claimant cooks the evening meal most nights and prepared a meal from fresh ingredients the evening before the assessment"
+        }
+      },
+      {
+        "activity": 2,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "The claimant reports no difficulty eating and drinking"
+        }
+      },
+      {
+        "activity": 3,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "The claimant manages her own medication and uses a phone alarm as a reminder, which is an everyday convenience"
+        }
+      },
+      {
+        "activity": 4,
+        "letter": "b",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "The claimant uses a shower stool supplied by OT in 2025 and sits to wash"
+        }
+      },
+      {
+        "activity": 5,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "Mild urgency is reported but no incontinence and no aids used"
+        }
+      },
+      {
+        "activity": 6,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 3,
+          "quote": "The claimant reports she can dress herself and that this takes her longer on bad days"
+        }
+      },
+      {
+        "activity": 7,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "Communicated clearly throughout the telephone call"
+        }
+      },
+      {
+        "activity": 8,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "Uses reading glasses only"
+        }
+      },
+      {
+        "activity": 9,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "No difficulty reported"
+        }
+      },
+      {
+        "activity": 10,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "The claimant manages her own bills online"
+        }
+      },
+      {
+        "activity": 11,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "The claimant drives familiar routes and reports she does not get lost"
+        }
+      },
+      {
+        "activity": 12,
+        "letter": "a",
+        "justification_quote": {
+          "doc": "pa4",
+          "page": 4,
+          "quote": "The claimant walks to the shop at the end of her road and works in an office two days a week, which would involve walking from the car park and around the workplace"
+        }
+      }
+    ]
+  },
+  "decision": {
+    "daily_living": {
+      "points": 2,
+      "rate": "none"
+    },
+    "mobility": {
+      "points": 0,
+      "rate": "none"
+    }
+  },
+  "expected_disputes": [
+    {
+      "activity": 1,
+      "adviser_letter": "e",
+      "error_type": "fluctuation_misapplied",
+      "why": "The assessor tested only bad fatigue days (about 4 in 10) against 50% and treated the meal cooked the night before a good-day call as typical. The numbness-only days, when she cannot safely use the hob, were ignored; under reg 7(1)(c) bad fatigue days (1e, ~42%) plus numbness-only days (1c, ~13%) exceed 50%, and 1e is the more frequent, giving 4 points.",
+      "rebuttal_evidence": [
+        {
+          "doc": "specialist",
+          "page": 2,
+          "quote": "Roughly half of the days with hand numbness were also bad fatigue days."
+        },
+        {
+          "doc": "specialist",
+          "page": 2,
+          "quote": "This gives a picture of bad fatigue days on around 4 days in 10"
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "Bad fatigue days son does the chopping, lifting pans, draining pasta."
+        },
+        {
+          "doc": "notes",
+          "page": 2,
+          "quote": "Numb hands days (energy ok) won't use the hob — dropped a pan of boiling water in June, scalded her foot slightly."
+        }
+      ]
+    },
+    {
+      "activity": 12,
+      "adviser_letter": "b",
+      "error_type": "typical_day_overstretched",
+      "why": "The assessor inferred walking over 200 metres from a short walk to the end of the road and from her office job, which no document describes, and did not ask whether she can walk that far repeatedly. case.json leaves this activity undecided; the MR evidence (cannot repeat the good-day walk, stops to rest after the shop walk, about 50 metres on bad days) would support 12b on most days, but the repeatedly point still needs the MS nurse's comment.",
+      "rebuttal_evidence": [
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "Asked could she walk back and then do it again later — \"no chance, I'd be done for the day\"."
+        },
+        {
+          "doc": "notes",
+          "page": 3,
+          "quote": "Said after the shop walk she usually has to sit on the wall outside before walking back."
+        },
+        {
+          "doc": "specialist",
+          "page": 3,
+          "quote": "On bad days she reports needing to stop after about 50 metres because her legs feel heavy."
+        }
+      ]
+    }
+  ],
+  "agree": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "must_not_claim": [
+    "That the PA4 recorded a measured walking distance or any observation of her walking (it was a telephone assessment)",
+    "That she uses a walking stick or other walking aid",
+    "That the assessor did not have the MS nurse letter or fatigue diary (it is listed as evidence considered)",
+    "That her son helps her wash or dress her upper body",
+    "That the diary gives an exact count of numbness-only days (only \"roughly half\" overlap is stated)",
+    "That disputing activities 1 and 12 alone would produce an award (6 daily living, 4 mobility)"
+  ]
+}

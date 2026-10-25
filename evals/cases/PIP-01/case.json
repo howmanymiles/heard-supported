@@ -1,0 +1,190 @@
+{
+  "id": "PIP-01",
+  "benefit": "pip",
+  "title": "Fluctuating fatigue",
+  "summary": "Woman in her 40s with relapsing-remitting MS whose fatigue and hand numbness come and go. Her PIP2 describes good days; an MS nurse fatigue diary (Jul-Sep 2026) gives approximate counts of bad days, so most activities turn on the reg 7 share of days, and preparing food only scores by combining two descriptors under reg 7(1)(c). Walking turns on whether she can manage the distance repeatedly.",
+  "exercises": [
+    "reg 7 share of days",
+    "reg 7(1)(c) combining descriptors",
+    "reliability: repeatedly",
+    "reliability: safely",
+    "reliability: reasonable time period",
+    "form minimises compared with notes",
+    "aid used every day (reg 4(2))"
+  ],
+  "client": {
+    "ref": "HS-2001",
+    "age_band": "40-49",
+    "living": "Lives with teenage son (16)",
+    "conditions_in_documents": [
+      "Relapsing-remitting multiple sclerosis",
+      "MS-related fatigue",
+      "Intermittent numbness / reduced sensation in both hands",
+      "Mild urinary urgency (no incontinence)",
+      "Low mood 2020 (resolved)"
+    ]
+  },
+  "documents": [
+    { "id": "form", "file": "documents/form.md", "type": "form", "pages": 4 },
+    { "id": "gp", "file": "documents/gp.md", "type": "gp", "pages": 2 },
+    { "id": "specialist", "file": "documents/specialist.md", "type": "specialist", "pages": 3 },
+    { "id": "notes", "file": "documents/notes.md", "type": "notes", "pages": 3 }
+  ],
+  "activities": [
+    {
+      "key": "pip:1",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "form", "page": 2, "quote": "Some days I am too tired and we have something easy or he helps." },
+        { "doc": "notes", "page": 2, "quote": "Bad fatigue days son does the chopping, lifting pans, draining pasta." },
+        { "doc": "notes", "page": 2, "quote": "Numb hands days (energy ok) won't use the hob — dropped a pan of boiling water in June, scalded her foot slightly." },
+        { "doc": "specialist", "page": 2, "quote": "This gives a picture of bad fatigue days on around 4 days in 10" },
+        { "doc": "specialist", "page": 2, "quote": "Roughly half of the days with hand numbness were also bad fatigue days." }
+      ],
+      "gaps": [
+        "Diary counts are approximate and some August days were missed; the combined share (about 55%) is close to 50%, so a firmer count would help",
+        "The overlap between numbness days and fatigue days is given only as 'roughly half', so the number of numbness-only days is an estimate",
+        "No statement from the son about what he does on bad days",
+        "Form does not mention the hob/safety issue on numbness days"
+      ],
+      "draft_descriptor": {
+        "satisfied": [
+          { "letter": "e", "daysPercent": 42 },
+          { "letter": "c", "daysPercent": 13 }
+        ]
+      },
+      "draft_note": "Neither alone is over 50%, but 1e (bad fatigue days, ~39/92) plus 1c (numbness-only days, ~12/92) is about 55%, so reg 7(1)(c) gives 1e as the more frequent: 4 points."
+    },
+    {
+      "key": "pip:2",
+      "evidence_status": "not_on_form",
+      "must_find": [
+        { "doc": "notes", "page": 2, "quote": "When hands numb son sometimes cuts up meat for her. CL says \"only now and then\", couldn't say how often." }
+      ],
+      "gaps": [
+        "Form says 'No problems'; no frequency for help cutting food",
+        "Unclear whether this only happens on numbness days (about 26% of days) or less often"
+      ],
+      "draft_descriptor": null,
+      "draft_note": "2b(iii) assistance to cut up food happens sometimes, but nothing suggests over 50% of days; frequency needed."
+    },
+    {
+      "key": "pip:3",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Self-manages medication with a phone alarm; all documents agree."
+    },
+    {
+      "key": "pip:4",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 2, "quote": "I have a stool in the shower so I can sit." },
+        { "doc": "specialist", "page": 3, "quote": "uses the shower stool supplied by OT in 2025, as she cannot stand for the length of a shower on any day" },
+        { "doc": "notes", "page": 2, "quote": "Washing: always sits on OT shower stool, has done since 2025." }
+      ],
+      "gaps": [
+        "Does not use the bath; no evidence on whether she could get in or out of an unadapted bath"
+      ],
+      "draft_descriptor": {
+        "satisfied": [ { "letter": "b", "daysPercent": 100 } ]
+      },
+      "draft_note": "Needs a shower stool to wash on every day: 4b, 2 points."
+    },
+    {
+      "key": "pip:5",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Mild urgency only, no accidents and no help needed; no difficulty with the activity."
+    },
+    {
+      "key": "pip:6",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "I can dress myself, it just takes me longer." },
+        { "doc": "notes", "page": 2, "quote": "Worst days son helps with socks and shoes, CL estimates 4-5 days a month." },
+        { "doc": "notes", "page": 2, "quote": "On bad fatigue days dresses sitting on bed, \"takes forever\", rests between items. Couldn't give time." },
+        { "doc": "specialist", "page": 1, "quote": "On those days she reports dropping things and difficulty with buttons, zips and handling hot pans." }
+      ],
+      "gaps": [
+        "No time given for dressing on bad days, so the reasonable time period test cannot be applied yet",
+        "Help with socks and shoes (6d) is about 4-5 days a month, well under 50%",
+        "Unclear whether sitting on the bed to dress is needed (possible aid) or a preference",
+        "Pull-on clothing and front-fastening bra on numbness days: whether this amounts to an aid is for the reviewer"
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Help on some days, not most: 6d only about 15% of days; reasonable time on bad fatigue days (~42%) is untested until a dressing-time diary exists."
+    },
+    {
+      "key": "pip:7",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No difficulty reported in any document."
+    },
+    {
+      "key": "pip:8",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Reading glasses only, which do not count for 8b."
+    },
+    {
+      "key": "pip:9",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No difficulty reported; past low mood resolved."
+    },
+    {
+      "key": "pip:10",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Manages own bills; slower on bad days but no help needed."
+    },
+    {
+      "key": "pip:11",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Not going out on bad days is due to physical fatigue, not psychological distress or difficulty following a route."
+    },
+    {
+      "key": "pip:12",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "form", "page": 4, "quote": "I can walk to the shop at the end of the road. My legs get heavy if I go too far." },
+        { "doc": "specialist", "page": 3, "quote": "On a good day she can walk around 200 to 300 metres at a steady pace." },
+        { "doc": "specialist", "page": 3, "quote": "On bad days she reports needing to stop after about 50 metres because her legs feel heavy." },
+        { "doc": "notes", "page": 3, "quote": "Asked could she walk back and then do it again later — \"no chance, I'd be done for the day\"." },
+        { "doc": "notes", "page": 3, "quote": "Said after the shop walk she usually has to sit on the wall outside before walking back." }
+      ],
+      "gaps": [
+        "Distance to the shop is not measured (only 'about 5 mins')",
+        "Specialist distances are self-reported, not observed",
+        "Whether she can walk over 200 metres repeatedly on good days is the deciding question and is not yet answered",
+        "Bad-day figure of 'about 50 metres' sits on the 12b/12c boundary"
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Bad days (~42%) suggest 12b or 12c, under 50% alone; it scores only if good-day walking over 200m fails the repeatedly test, which needs evidence."
+    }
+  ],
+  "must_not_claim": [
+    "That she uses a walking stick or any other walking aid",
+    "A measured walking distance or a measured dressing time",
+    "That she has bladder or bowel incontinence",
+    "That she has anxiety or depression affecting going out or engaging with people",
+    "That her son helps her wash or dress her upper body",
+    "A specific number of days a month on which her son cuts up her food"
+  ],
+  "expert_review": { "status": "draft", "notes": "" }
+}

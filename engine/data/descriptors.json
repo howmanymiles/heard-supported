@@ -1,0 +1,2050 @@
+{
+  "meta": {
+    "compiled": "2026-10-25",
+    "source_note": "Transcribed programmatically from the legislation.gov.uk revised (consolidated) XML (…/data.xml) for each provision, fetched 2026-10-25, and spot-checked against the HTML pages via WebFetch. Text is as shown on legislation.gov.uk, including \"...\" for omitted words. Descriptor letters/labels are split out into their own fields; the remaining text is unaltered except for whitespace normalisation. Sub-limbs within a descriptor or paragraph are joined with single spaces and keep their (i)/(a) labels.",
+    "versions": [
+      {
+        "id": "pip-2026-10-25",
+        "instrument": "SI 2013/377",
+        "provision": "Sch 1",
+        "latest_version_date": "2024-12-13",
+        "site_modified": "2026-05-05",
+        "site_notice": "There are currently no known outstanding effects for The Social Security (Personal Independence Payment) Regulations 2013, SCHEDULE 1."
+      },
+      {
+        "id": "pip-2026-10-25",
+        "instrument": "SI 2013/377",
+        "provision": "reg 4",
+        "latest_version_date": "2013-04-08",
+        "site_modified": "2026-05-05",
+        "site_notice": "There are currently no known outstanding effects ... Section 4."
+      },
+      {
+        "id": "pip-2026-10-25",
+        "instrument": "SI 2013/377",
+        "provision": "reg 5",
+        "latest_version_date": "2013-02-25 (original; no amendment versions listed)",
+        "site_modified": "2026-05-05"
+      },
+      {
+        "id": "pip-2026-10-25",
+        "instrument": "SI 2013/377",
+        "provision": "reg 6",
+        "latest_version_date": "2013-02-25 (original; no amendment versions listed)",
+        "site_modified": "2026-05-05"
+      },
+      {
+        "id": "pip-2026-10-25",
+        "instrument": "SI 2013/377",
+        "provision": "reg 7",
+        "latest_version_date": "2022-03-21",
+        "site_modified": "2026-05-05",
+        "site_notice": "There are currently no known outstanding effects ... Section 7."
+      },
+      {
+        "id": "uc-wca-2026-10-25",
+        "instrument": "SI 2013/376",
+        "provision": "Sch 6",
+        "latest_version_date": "2013-04-29 (only version listed)",
+        "site_modified": "2026-07-16",
+        "site_notice": "up to date with all changes known to be in force on or before 21 October 2026 (curl) / 25 October 2026 (WebFetch). There are changes that may be brought into force at a future date."
+      },
+      {
+        "id": "uc-wca-2026-10-25",
+        "instrument": "SI 2013/376",
+        "provision": "Sch 7",
+        "latest_version_date": "2013-04-29 (only version listed)",
+        "site_modified": "2026-07-16",
+        "site_notice": "up to date with all changes known to be in force on or before 25 October 2026. There are changes that may be brought into force at a future date."
+      },
+      {
+        "id": "uc-wca-2026-10-25",
+        "instrument": "SI 2013/376",
+        "provision": "Sch 8",
+        "latest_version_date": "2025-03-21",
+        "site_modified": "2026-07-16",
+        "site_notice": "up to date with all changes known to be in force on or before 25 October 2026. There are changes that may be brought into force at a future date."
+      },
+      {
+        "id": "uc-wca-2026-10-25",
+        "instrument": "SI 2013/376",
+        "provision": "Sch 9",
+        "latest_version_date": "2025-03-21",
+        "site_modified": "2026-07-16",
+        "site_notice": "up to date with all changes known to be in force on or before 25 October 2026. There are changes that may be brought into force at a future date."
+      },
+      {
+        "id": "uc-wca-2026-10-25",
+        "instrument": "SI 2013/376",
+        "provision": "regs 39, 40",
+        "latest_version_date": "2014-04-28",
+        "site_modified": "2026-07-16",
+        "site_notice": "up to date with all changes known to be in force on or before 25 October 2026. There are changes that may be brought into force at a future date."
+      }
+    ]
+  },
+  "benefits": [
+    {
+      "id": "pip",
+      "name": "Personal Independence Payment",
+      "instrument": "SI 2013/377",
+      "version": "pip-2026-10-25",
+      "effective_from": "2024-12-13 (latest Sch 1 version on legislation.gov.uk; Sch 1 Pt 2 text as amended from 2017-03-16)",
+      "source_url": "https://www.legislation.gov.uk/uksi/2013/377/schedule/1",
+      "source_urls": [
+        "https://www.legislation.gov.uk/uksi/2013/377/schedule/1/data.xml",
+        "https://www.legislation.gov.uk/uksi/2013/377/regulation/4/data.xml",
+        "https://www.legislation.gov.uk/uksi/2013/377/regulation/5/data.xml",
+        "https://www.legislation.gov.uk/uksi/2013/377/regulation/6/data.xml",
+        "https://www.legislation.gov.uk/uksi/2013/377/regulation/7/data.xml"
+      ],
+      "thresholds": {
+        "daily_living": {
+          "standard": 8,
+          "enhanced": 12,
+          "ref": "reg 5(3)"
+        },
+        "mobility": {
+          "standard": 8,
+          "enhanced": 12,
+          "ref": "reg 6(3)"
+        }
+      },
+      "rules": [
+        {
+          "id": "assessment_basis",
+          "ref": "reg 4(1)",
+          "text": "For the purposes of section 77(2) and section 78 or 79, as the case may be, of the Act, whether C has limited or severely limited ability to carry out daily living or mobility activities, as a result of C's physical or mental condition, is to be determined on the basis of an assessment.",
+          "verified": true
+        },
+        {
+          "id": "aids_and_appliances",
+          "ref": "reg 4(2)",
+          "text": "C's ability to carry out an activity is to be assessed – (a) on the basis of C's ability whilst wearing or using any aid or appliance which C normally wears or uses; or (b) as if C were wearing or using any aid or appliance which C could reasonably be expected to wear or use.",
+          "verified": true
+        },
+        {
+          "id": "reliability",
+          "ref": "reg 4(2A)",
+          "text": "Where C’s ability to carry out an activity is assessed, C is to be assessed as satisfying a descriptor only if C can do so— (a) safely; (b) to an acceptable standard; (c) repeatedly; and (d) within a reasonable time period.",
+          "verified": true,
+          "note": "reg 4(4) defines \"safely\", \"repeatedly\" and \"reasonable time period\" only; \"acceptable standard\" is not defined in reg 4(4) (as fetched)."
+        },
+        {
+          "id": "severely_limited_not_also_limited",
+          "ref": "reg 4(3)",
+          "text": "Where C has been assessed as having severely limited ability to carry out activities, C is not to be treated as also having limited ability in relation to the same activities.",
+          "verified": true
+        },
+        {
+          "id": "def_safely",
+          "ref": "reg 4(4)(a)",
+          "text": "“safely” means in a manner unlikely to cause harm to C or to another person, either during or after completion of the activity;",
+          "verified": true
+        },
+        {
+          "id": "def_repeatedly",
+          "ref": "reg 4(4)(b)",
+          "text": "“repeatedly” means as often as the activity being assessed is reasonably required to be completed; and",
+          "verified": true
+        },
+        {
+          "id": "def_reasonable_time_period",
+          "ref": "reg 4(4)(c)",
+          "text": "“reasonable time period” means no more than twice as long as the maximum period that a person without a physical or mental condition which limits that person’s ability to carry out the activity in question would normally take to complete that activity.",
+          "verified": true
+        },
+        {
+          "id": "daily_living_scoring",
+          "ref": "reg 5(1)",
+          "text": "The score C obtains in relation to daily living activities is determined by adding together the number of points (if any) awarded for each activity listed in column 1 of the table in Part 2 of Schedule 1 (“the daily living activities table”).",
+          "verified": true
+        },
+        {
+          "id": "daily_living_points",
+          "ref": "reg 5(2)",
+          "text": "For the purpose of paragraph (1), the number of points awarded to C for each activity listed in column 1 of the daily living activities table is the number shown in column 3 of the table against whichever of the descriptors set out in column 2 of the table for the activity applies to C under regulation 7.",
+          "verified": true
+        },
+        {
+          "id": "daily_living_thresholds",
+          "ref": "reg 5(3)",
+          "text": "Where C has undergone an assessment, C has — (a) limited ability to carry out daily living activities where C obtains a score of at least 8 points in relation to daily living activities; and (b) severely limited ability to carry out daily living activities where C obtains a score of at least 12 points in relation to daily living activities.",
+          "verified": true
+        },
+        {
+          "id": "mobility_scoring",
+          "ref": "reg 6(1)",
+          "text": "The score C obtains in relation to mobility activities is determined by adding together the number of points (if any) awarded for each activity listed in column 1 of the table in Part 3 of Schedule 1 (“the mobility activities table”).",
+          "verified": true
+        },
+        {
+          "id": "mobility_points",
+          "ref": "reg 6(2)",
+          "text": "For the purpose of paragraph (1), the number of points awarded to C for each activity listed in column 1 of the mobility activities table is the number shown in column 3 of the table against whichever of the descriptors set out in column 2 of the table for the activity applies to C under regulation 7.",
+          "verified": true
+        },
+        {
+          "id": "mobility_thresholds",
+          "ref": "reg 6(3)",
+          "text": "Where C has undergone an assessment, C has — (a) limited ability to carry out mobility activities where C obtains a score of at least 8 points in relation to mobility activities; and (b) severely limited ability to carry out mobility activities where C obtains a score of at least 12 points in relation to mobility activities.",
+          "verified": true
+        },
+        {
+          "id": "over_50_percent_rule",
+          "ref": "reg 7(1)",
+          "text": "The descriptor which applies to C in relation to each activity in the tables referred to in regulations 5 and 6 is— (a) where one descriptor is satisfied on over 50% of the days of the required period, that descriptor; (b) where two or more descriptors are each satisfied on over 50% of the days of the required period, the descriptor which scores the higher or highest number of points; and (c) where no descriptor is satisfied on over 50% of the days of the required period but two or more descriptors (other than a descriptor which scores 0 points) are satisfied for periods which, when added together, amount to over 50% of the days of the required period– (i) the descriptor which is satisfied for the greater or greatest proportion of days of the required period; or, (ii) where both or all descriptors are satisfied for the same proportion, the descriptor which scores the higher or highest number of points.",
+          "verified": true
+        },
+        {
+          "id": "descriptor_satisfied_on_a_day",
+          "ref": "reg 7(2)",
+          "text": "For the purposes of paragraph (1), a descriptor is satisfied on a day in the required period if it is likely that, if C had been assessed on that day, C would have satisfied that descriptor.",
+          "verified": true
+        },
+        {
+          "id": "required_period",
+          "ref": "reg 7(3)",
+          "text": "In paragraphs (1) and (2), “required period” means— (a) in the case where entitlement to personal independence payment falls to be determined, the period of 3 months ending with the prescribed date together with— (i) in relation to a claim after an interval for the purpose of regulation 15 or 15A, the period of 9 months beginning with the date on which that claim is made; (ii) in relation to any other claim, the period of 9 months beginning with the day after the prescribed date. (b) in the case where personal independence payment has been awarded to C— (i) during the period of 3 months following a determination of entitlement under a claim for the purpose of regulation 15 or 15A, the period of 3 months ending with the prescribed date together with, for each day of the award, the period of 9 months beginning with the day after that date; (ii) in any other case, for each day of the award, the period of 3 months ending with that date together with the period of 9 months beginning with the day after that date.",
+          "verified": true
+        }
+      ],
+      "definitions": [
+        {
+          "term": "aided",
+          "text": "“aided” means with – (a) the use of an aid or appliance; or (b) supervision, prompting or assistance;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "assistance",
+          "text": "“assistance” means physical intervention by another person and does not include speech;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "assistance dog",
+          "text": "“assistance dog” means a dog trained to guide or assist a person with a sensory impairment;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "basic verbal information",
+          "text": "“basic verbal information” means information in C's native language conveyed verbally in a simple sentence;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "basic written information",
+          "text": "“basic written information” means signs, symbols and dates written or printed standard size text in C's native language;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "bathe",
+          "text": "“bathe” includes get into or out of an unadapted bath or shower;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "communication support",
+          "text": "“communication support” means support from a person trained or experienced in communicating with people with specific communication needs, including interpreting verbal information into a non-verbal form and vice versa;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "complex budgeting decisions",
+          "text": "“complex budgeting decisions” means decisions involving – (a) calculating household and personal budgets; (b) managing and paying bills; and (c) planning future purchases;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "complex verbal information",
+          "text": "“complex verbal information” means information in C's native language conveyed verbally in either more than one sentence or one complicated sentence;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "complex written information",
+          "text": "“complex written information” means more than one sentence of written or printed standard size text in C's native language;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "cook",
+          "text": "“cook” means heat food at or above waist height;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "dress and undress",
+          "text": "“dress and undress” includes put on and take off socks and shoes;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "engage socially",
+          "text": "“engage socially” means – (a) interact with others in a contextually and socially appropriate manner; (b) understand body language; and (c) establish relationships;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "manage incontinence",
+          "text": "“manage incontinence” means manage involuntary evacuation of the bowel or bladder, including use a collecting device or self-catheterisation, and clean oneself afterwards;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "manage medication",
+          "text": "“manage medication ...” means take medication ..., where a failure to do so is likely to result in a deterioration in C's health;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true,
+          "note": "\"...\" is reproduced exactly as shown on legislation.gov.uk and marks words omitted by amendment (S.I. 2017/194 or S.I. 2024/374)."
+        },
+        {
+          "term": "manage therapy",
+          "text": "“manage therapy” means undertake therapy, where a failure to do so is likely to result in a deterioration in C’s health;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "medication",
+          "text": "“medication” means medication to be taken at home which is prescribed or recommended by a registered – (a) doctor; (b) nurse; or (c) pharmacist;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "monitor a health condition",
+          "text": "“monitor a health condition” means – (a) detect significant changes in C's health condition which are likely to lead to a deterioration in C's health; and (b) take action advised by a – (i) registered doctor; (ii) registered nurse; ... (iii) health professional who is regulated by the Health Professions Council; or (iv) a physician associate registered under the Anaesthesia Associates and Physician Associates Order 2024, without which C's health is likely to deteriorate;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true,
+          "note": "\"...\" is reproduced exactly as shown on legislation.gov.uk and marks words omitted by amendment (S.I. 2017/194 or S.I. 2024/374)."
+        },
+        {
+          "term": "orientation aid",
+          "text": "“orientation aid” means a specialist aid designed to assist disabled people to follow a route safely;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "prepare",
+          "text": "“prepare”, in the context of food, means make food ready for cooking or eating;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "prompting",
+          "text": "“prompting” means reminding, encouraging or explaining by another person;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "psychological distress",
+          "text": "“psychological distress” means distress related to an enduring mental health condition or an intellectual or cognitive impairment;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "read",
+          "text": "“read” includes read signs, symbols and words but does not include read Braille;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "simple budgeting decisions",
+          "text": "“simple budgeting decisions” means decisions involving – (a) calculating the cost of goods; and (b) calculating change required after a purchase;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "simple meal",
+          "text": "“simple meal” means a cooked one-course meal for one using fresh ingredients;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "social support",
+          "text": "“social support” means support from a person trained or experienced in assisting people to engage in social situations;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "stand",
+          "text": "“stand” means stand upright with at least one biological foot on the ground;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "supervision",
+          "text": "“supervision” means the continuous presence of another person for the purpose of ensuring C's safety;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "take nutrition",
+          "text": "“take nutrition” means – (a) cut food into pieces, convey food and drink to one's mouth and chew and swallow food and drink; or (b) take nutrition by using a therapeutic source;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "therapeutic source",
+          "text": "“therapeutic source” means parenteral or enteral tube feeding, using a rate-limiting device such as a delivery system or feed pump;",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "therapy",
+          "text": "“therapy” means therapy to be undertaken at home which is prescribed or recommended by a— (a) registered – (i) doctor; (ii) nurse; ... (iii) pharmacist; or (iv) a physician associate; or (b) health professional regulated by the Health Professions Council; but does not include taking or applying, or otherwise receiving or administering, medication (whether orally, topically or by any other means), or any action which, in C’s case, falls within the definition of “monitor a health condition",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": false,
+          "note": "Text as shown on legislation.gov.uk (XML and HTML, both checked) ends \"...falls within the definition of “monitor a health condition\" with no closing quotation mark or terminal punctuation (inserted words per S.I. 2017/194 reg 2(2)(e)). Ending appears truncated in the source rendering; expert should check against S.I. 2017/194 printed text."
+        },
+        {
+          "term": "toilet needs",
+          "text": "“toilet needs” means – (a) getting on and off an unadapted toilet; (b) evacuating the bladder and bowel; and (c) cleaning oneself afterwards; and",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        },
+        {
+          "term": "unaided",
+          "text": "“unaided” means without – (a) the use of an aid or appliance; or (b) supervision, prompting or assistance.",
+          "ref": "Sch 1 Pt 1 para 1",
+          "verified": true
+        }
+      ],
+      "activities": [
+        {
+          "component": "daily_living",
+          "number": 1,
+          "number_in_table": 1,
+          "name": "Preparing food",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "1. Preparing food.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can prepare and cook a simple meal unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs to use an aid or appliance to be able to either prepare or cook a simple meal.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Cannot cook a simple meal using a conventional cooker but is able to do so using a microwave.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Needs prompting to be able to either prepare or cook a simple meal.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Needs supervision or assistance to either prepare or cook a simple meal.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "f",
+              "text": "Cannot prepare and cook food.",
+              "points": 8,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "daily_living",
+          "number": 2,
+          "number_in_table": 2,
+          "name": "Taking nutrition",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "2. Taking nutrition.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can take nutrition unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs – (i) to use an aid or appliance to be able to take nutrition; or (ii) supervision to be able to take nutrition; or (iii) assistance to be able to cut up food.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Needs a therapeutic source to be able to take nutrition.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Needs prompting to be able to take nutrition.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Needs assistance to be able to manage a therapeutic source to take nutrition.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "f",
+              "text": "Cannot convey food and drink to their mouth and needs another person to do so.",
+              "points": 10,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "daily_living",
+          "number": 3,
+          "number_in_table": 3,
+          "name": "Managing therapy or monitoring a health condition",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "3. Managing therapy or monitoring a health condition.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Either – (i) does not receive medication or therapy or need to monitor a health condition; or (ii) can manage medication or therapy or monitor a health condition unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs any one or more of the following – (i) to use an aid or appliance to be able to manage medication; ... (ii) supervision, prompting or assistance to be able to manage medication .... (iii) supervision, prompting or assistance to be able to monitor a health condition.",
+              "points": 1,
+              "verified": true,
+              "note": "\"...\" is reproduced exactly as shown on legislation.gov.uk and marks words omitted by amendment (S.I. 2017/194 or S.I. 2024/374)."
+            },
+            {
+              "letter": "c",
+              "text": "Needs supervision, prompting or assistance to be able to manage therapy that takes no more than 3.5 hours a week.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Needs supervision, prompting or assistance to be able to manage therapy that takes more than 3.5 but no more than 7 hours a week.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Needs supervision, prompting or assistance to be able to manage therapy that takes more than 7 but no more than 14 hours a week.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "f",
+              "text": "Needs supervision, prompting or assistance to be able to manage therapy that takes more than 14 hours a week.",
+              "points": 8,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "daily_living",
+          "number": 4,
+          "number_in_table": 4,
+          "name": "Washing and bathing",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "4. Washing and bathing.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can wash and bathe unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs to use an aid or appliance to be able to wash or bathe.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Needs supervision or prompting to be able to wash or bathe.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Needs assistance to be able to wash either their hair or body below the waist.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Needs assistance to be able to get in or out of a bath or shower.",
+              "points": 3,
+              "verified": true
+            },
+            {
+              "letter": "f",
+              "text": "Needs assistance to be able to wash their body between the shoulders and waist.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "g",
+              "text": "Cannot wash and bathe at all and needs another person to wash their entire body.",
+              "points": 8,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "daily_living",
+          "number": 5,
+          "number_in_table": 5,
+          "name": "Managing toilet needs or incontinence",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "5. Managing toilet needs or incontinence.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can manage toilet needs or incontinence unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs to use an aid or appliance to be able to manage toilet needs or incontinence.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Needs supervision or prompting to be able to manage toilet needs.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Needs assistance to be able to manage toilet needs.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Needs assistance to be able to manage incontinence of either bladder or bowel.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "f",
+              "text": "Needs assistance to be able to manage incontinence of both bladder and bowel.",
+              "points": 8,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "daily_living",
+          "number": 6,
+          "number_in_table": 6,
+          "name": "Dressing and undressing",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "6. Dressing and undressing.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can dress and undress unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs to use an aid or appliance to be able to dress or undress.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Needs either - (i) prompting to be able to dress, undress or determine appropriate circumstances for remaining clothed; or (ii) prompting or assistance to be able to select appropriate clothing.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Needs assistance to be able to dress or undress their lower body.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Needs assistance to be able to dress or undress their upper body.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "f",
+              "text": "Cannot dress or undress at all.",
+              "points": 8,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "daily_living",
+          "number": 7,
+          "number_in_table": 7,
+          "name": "Communicating verbally",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "7. Communicating verbally.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can express and understand verbal information unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs to use an aid or appliance to be able to speak or hear.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Needs communication support to be able to express or understand complex verbal information.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Needs communication support to be able to express or understand basic verbal information.",
+              "points": 8,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Cannot express or understand verbal information at all even with communication support.",
+              "points": 12,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "daily_living",
+          "number": 8,
+          "number_in_table": 8,
+          "name": "Reading and understanding signs, symbols and words",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "8. Reading and understanding signs, symbols and words.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can read and understand basic and complex written information either unaided or using spectacles or contact lenses.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs to use an aid or appliance, other than spectacles or contact lenses, to be able to read or understand either basic or complex written information.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Needs prompting to be able to read or understand complex written information.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Needs prompting to be able to read or understand basic written information.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Cannot read or understand signs, symbols or words at all.",
+              "points": 8,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "daily_living",
+          "number": 9,
+          "number_in_table": 9,
+          "name": "Engaging with other people face to face",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "9. Engaging with other people face to face.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can engage with other people unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs prompting to be able to engage with other people.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Needs social support to be able to engage with other people.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Cannot engage with other people due to such engagement causing either – (i) overwhelming psychological distress to the claimant; or (ii) the claimant to exhibit behaviour which would result in a substantial risk of harm to the claimant or another person.",
+              "points": 8,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "daily_living",
+          "number": 10,
+          "number_in_table": 10,
+          "name": "Making budgeting decisions",
+          "ref": "Sch 1 Pt 2",
+          "heading_verbatim": "10. Making budgeting decisions.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can manage complex budgeting decisions unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs prompting or assistance to be able to make complex budgeting decisions.",
+              "points": 2,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Needs prompting or assistance to be able to make simple budgeting decisions.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Cannot make any budgeting decisions at all.",
+              "points": 6,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "component": "mobility",
+          "number": 11,
+          "number_in_table": 1,
+          "name": "Planning and following journeys",
+          "ref": "Sch 1 Pt 3",
+          "heading_verbatim": "1. Planning and following journeys.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can plan and follow the route of a journey unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Needs prompting to be able to undertake any journey to avoid overwhelming psychological distress to the claimant.",
+              "points": 4,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Cannot plan the route of a journey.",
+              "points": 8,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Cannot follow the route of an unfamiliar journey without another person, assistance dog or orientation aid.",
+              "points": 10,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Cannot undertake any journey because it would cause overwhelming psychological distress to the claimant.",
+              "points": 10,
+              "verified": true
+            },
+            {
+              "letter": "f",
+              "text": "Cannot follow the route of a familiar journey without another person, an assistance dog or an orientation aid.",
+              "points": 12,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true,
+          "note_numbering": "Numbered 1 in Sch 1 Pt 3; conventionally referred to as activity 11."
+        },
+        {
+          "component": "mobility",
+          "number": 12,
+          "number_in_table": 2,
+          "name": "Moving around",
+          "ref": "Sch 1 Pt 3",
+          "heading_verbatim": "2. Moving around.",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Can stand and then move more than 200 metres, either aided or unaided.",
+              "points": 0,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Can stand and then move more than 50 metres but no more than 200 metres, either aided or unaided",
+              "points": 4,
+              "verified": true,
+              "note": "No terminal full stop in the source text; reproduced as shown."
+            },
+            {
+              "letter": "c",
+              "text": "Can stand and then move unaided more than 20 metres but no more than 50 metres.",
+              "points": 8,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Can stand and then move using an aid or appliance more than 20 metres but no more than 50 metres.",
+              "points": 10,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "Can stand and then move more than 1 metre but no more than 20 metres, either aided or unaided.",
+              "points": 12,
+              "verified": true
+            },
+            {
+              "letter": "f",
+              "text": "Cannot, either aided or unaided, – (i) stand; or (ii) move more than 1 metre.",
+              "points": 12,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true,
+          "note_numbering": "Numbered 2 in Sch 1 Pt 3; conventionally referred to as activity 12."
+        }
+      ]
+    },
+    {
+      "id": "uc-wca",
+      "name": "Universal Credit: Work Capability Assessment (LCW / LCWRA)",
+      "instrument": "SI 2013/376",
+      "version": "uc-wca-2026-10-25",
+      "effective_from": "2013-04-29 (Schs 6 and 7: no amendment versions listed); Schs 8 and 9 latest version 2025-03-21",
+      "source_url": "https://www.legislation.gov.uk/uksi/2013/376/schedule/6",
+      "source_urls": [
+        "https://www.legislation.gov.uk/uksi/2013/376/schedule/6/data.xml",
+        "https://www.legislation.gov.uk/uksi/2013/376/schedule/7/data.xml",
+        "https://www.legislation.gov.uk/uksi/2013/376/schedule/8/data.xml",
+        "https://www.legislation.gov.uk/uksi/2013/376/schedule/9/data.xml",
+        "https://www.legislation.gov.uk/uksi/2013/376/regulation/39/data.xml",
+        "https://www.legislation.gov.uk/uksi/2013/376/regulation/40/data.xml"
+      ],
+      "lcw_threshold": 15,
+      "lcw_threshold_ref": "reg 39(3)",
+      "lcwra_rule": "at least one Schedule 7 descriptor applies (reg 40(2)(a))",
+      "rules": [
+        {
+          "id": "lcw_assessment",
+          "ref": "reg 39(2)",
+          "text": "An assessment under this Part is an assessment as to the extent to which a claimant who has some specific disease or bodily or mental disablement is capable of performing the activities prescribed in Schedule 6 or is incapable by reason of such disease or bodily or mental disablement of performing those activities.",
+          "verified": true
+        },
+        {
+          "id": "lcw_threshold",
+          "ref": "reg 39(3)",
+          "text": "A claimant has limited capability for work on the basis of an assessment under this Part if, by adding the points listed in column (3) of Schedule 6 against each descriptor listed in column (2) of that Schedule that applies in the claimant's case, the claimant obtains a total score of at least— (a) 15 points whether singly or by a combination of descriptors specified in Part 1 of that Schedule; (b) 15 points whether singly or by a combination of descriptors specified in Part 2 of that Schedule; or (c) 15 points by a combination of descriptors specified in Parts 1 and 2 of that Schedule.",
+          "verified": true
+        },
+        {
+          "id": "lcw_cause_condition",
+          "ref": "reg 39(4)",
+          "text": "In assessing the extent of a claimant's capability to perform any activity listed in Schedule 6, it is a condition that the claimant's incapability to perform the activity arises— (a) in respect of any descriptor listed in Part 1 of Schedule 6, from a specific bodily disease or disablement; (b) in respect of any descriptor listed in Part 2 of Schedule 6, from a specific mental illness or disablement; or (c) in respect of any descriptor or descriptors listed in— (i) Part 1 of Schedule 6, as a direct result of treatment provided by a registered medical practitioner for a specific physical disease or disablement, or (ii) Part 2 of Schedule 6, as a direct result of treatment provided by a registered medical practitioner for a specific mental illness or disablement.",
+          "verified": true
+        },
+        {
+          "id": "lcw_highest_descriptor_per_activity",
+          "ref": "reg 39(5)",
+          "text": "Where more than one descriptor specified for an activity applies to a claimant, only the descriptor with the highest score in respect of each activity which applies is to be counted.",
+          "verified": true
+        },
+        {
+          "id": "treated_as_lcw",
+          "ref": "reg 39(6)",
+          "text": "Subject to paragraph (7), a claimant is to be treated as having limited capability for work if any of the circumstances set out in Schedule 8 applies.",
+          "verified": true
+        },
+        {
+          "id": "treated_as_lcw_sch8_paras_4_5_only_if_not_assessed_lcw",
+          "ref": "reg 39(7)",
+          "text": "Where the circumstances set out in paragraph 4 or 5 of Schedule 8 apply, a claimant may only be treated as having limited capability for work if the claimant does not have limited capability for work as determined in accordance with an assessment under this Part.",
+          "verified": true
+        },
+        {
+          "id": "lcwra_assessment",
+          "ref": "reg 40(2)",
+          "text": "A claimant has limited capability for work and work-related activity on the basis of an assessment under this Part if, by reason of the claimant's physical or mental condition,— (a) at least one of the descriptors set out in Schedule 7 applies to the claimant; (b) the claimant's capability for work and work-related activity is limited; and (c) the limitation is such that it is not reasonable to require that claimant to undertake such activity.",
+          "verified": true
+        },
+        {
+          "id": "lcwra_cause_condition",
+          "ref": "reg 40(3)",
+          "text": "In assessing the extent of a claimant's capability to perform any activity listed in Schedule 7, it is a condition that the claimant's incapability to perform the activity arises— (a) in respect of descriptors 1 to 8, 15(a), 15(b), 16(a) and 16(b)— (i) from a specific bodily disease or disablement; or (ii) as a direct result of treatment provided by a registered medical practitioner for a specific physical disease or disablement; or (b) in respect of descriptors 9 to 14, 15(c), 15(d), 16(c) and 16(d)— (i) from a specific mental illness or disablement; or (ii) as a direct result of treatment provided by a registered medical practitioner for a specific mental illness or disablement.",
+          "verified": true
+        },
+        {
+          "id": "lcwra_majority_of_time",
+          "ref": "reg 40(4)",
+          "text": "A descriptor applies to a claimant if that descriptor applies to the claimant for the majority of the time or, as the case may be, on the majority of the occasions on which the claimant undertakes or attempts to undertake the activity described by that descriptor.",
+          "verified": true
+        },
+        {
+          "id": "treated_as_lcwra",
+          "ref": "reg 40(5)",
+          "text": "Subject to paragraph (6), a claimant is to be treated as having limited capability for work and work-related activity if any of the circumstances set out in Schedule 9 applies.",
+          "verified": true
+        },
+        {
+          "id": "treated_as_lcwra_sch9_para_4_only_if_not_assessed_lcwra",
+          "ref": "reg 40(6)",
+          "text": "Where the circumstances set out in paragraph 4 of Schedule 9 apply, a claimant may only be treated as having limited capability for work and work-related activity if the claimant does not have limited capability for work and work-related activity as determined in accordance with an assessment under this Part.",
+          "verified": true
+        }
+      ],
+      "activities": [
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 1,
+          "name": "Mobilising unaided by another person with or without a walking stick, manual wheelchair or other aid if such aid is normally or could reasonably be worn or used",
+          "heading_verbatim": "1. Mobilising unaided by another person with or without a walking stick, manual wheelchair or other aid if such aid is normally or could reasonably be worn or used.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot, unaided by another person, either: (i) mobilise more than 50 metres on level ground without stopping in order to avoid significant discomfort or exhaustion; or (ii) repeatedly mobilise 50 metres within a reasonable timescale because of significant discomfort or exhaustion.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Cannot, unaided by another person, mount or descend two steps even with the support of a handrail.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Cannot, unaided by another person, either: (i) mobilise more than 100 metres on level ground without stopping in order to avoid significant discomfort or exhaustion; or (ii) repeatedly mobilise 100 metres within a reasonable timescale because of significant discomfort or exhaustion.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Cannot, unaided by another person, either: (i) mobilise more than 200 metres on level ground without stopping in order to avoid significant discomfort or exhaustion; or (ii) repeatedly mobilise 200 metres within a reasonable timescale because of significant discomfort or exhaustion.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 2,
+          "name": "Standing and sitting",
+          "heading_verbatim": "2. Standing and sitting.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot move between one seated position and another seated position which are located next to one another without receiving physical assistance from another person.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Cannot, for the majority of the time, remain at a work station: (i) standing unassisted by another person (even if free to move around); (ii) sitting (even in an adjustable chair); or (iii) a combination of paragraphs (i) and (ii), for more than 30 minutes, before needing to move away in order to avoid significant discomfort or exhaustion.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Cannot, for the majority of the time, remain at a work station: (i) standing unassisted by another person (even if free to move around); (ii) sitting (even in an adjustable chair); or (iii) a combination of paragraphs (i) and (ii), for more than an hour before needing to move away in order to avoid significant discomfort or exhaustion.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 3,
+          "name": "Reaching",
+          "heading_verbatim": "3. Reaching.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot raise either arm as if to put something in the top pocket of a coat or jacket.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Cannot raise either arm to top of head as if to put on a hat.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Cannot raise either arm above head height as if to reach for something.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 4,
+          "name": "Picking up and moving or transferring by the use of the upper body and arms",
+          "heading_verbatim": "4. Picking up and moving or transferring by the use of the upper body and arms.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot pick up and move a 0.5 litre carton full of liquid.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Cannot pick up and move a one litre carton full of liquid.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Cannot transfer a light but bulky object such as an empty cardboard box.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 5,
+          "name": "Manual dexterity",
+          "heading_verbatim": "5. Manual dexterity.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot press a button (such as a telephone keypad) with either hand or cannot turn the pages of a book with either hand.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Cannot pick up a £1 coin or equivalent with either hand.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Cannot use a pen or pencil to make a meaningful mark with either hand.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "Cannot single-handedly use a suitable keyboard or mouse.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "e",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 6,
+          "name": "Making self understood through speaking, writing, typing, or other means which are normally or could reasonably be used, unaided by another person",
+          "heading_verbatim": "6. Making self understood through speaking, writing, typing, or other means which are normally or could reasonably be used, unaided by another person.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot convey a simple message, such as the presence of a hazard.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Has significant difficulty conveying a simple message to strangers.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Has some difficulty conveying a simple message to strangers.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 7,
+          "name": "Understanding communication by: (i) verbal means (such as hearing or lip reading) alone; (ii) non-verbal means (such as reading 16 point print or Braille) alone; or (iii) a combination of sub-paragraphs (i) and (ii), using any aid that is normally or could reasonably be used, unaided by another person",
+          "heading_verbatim": "7. Understanding communication by: (i) verbal means (such as hearing or lip reading) alone; (ii) non-verbal means (such as reading 16 point print or Braille) alone; or (iii) a combination of sub-paragraphs (i) and (ii), using any aid that is normally or could reasonably be used, unaided by another person.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot understand a simple message, such as the location of a fire escape, due to sensory impairment.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Has significant difficulty understanding a simple message from a stranger due to sensory impairment.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Has some difficulty understanding a simple message from a stranger due to sensory impairment.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 8,
+          "name": "Navigation and maintaining safety using a guide dog or other aid if either or both are normally used or could reasonably be used",
+          "heading_verbatim": "8. Navigation and maintaining safety using a guide dog or other aid if either or both are normally used or could reasonably be used.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Unable to navigate around familiar surroundings, without being accompanied by another person, due to sensory impairment.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Cannot safely complete a potentially hazardous task such as crossing the road, without being accompanied by another person, due to sensory impairment.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Unable to navigate around unfamiliar surroundings, without being accompanied by another person, due to sensory impairment.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 9,
+          "name": "Absence or loss of control whilst conscious leading to extensive evacuation of the bowel and/or bladder, other than enuresis (bed-wetting), despite the wearing or use of any aids or adaptations which are normally or could reasonably be worn or used",
+          "heading_verbatim": "9. Absence or loss of control whilst conscious leading to extensive evacuation of the bowel and/or bladder, other than enuresis (bed-wetting), despite the wearing or use of any aids or adaptations which are normally or could reasonably be worn or used.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "At least once a month experiences: (i) loss of control leading to extensive evacuation of the bowel and/or voiding of the bladder; or (ii) substantial leakage of the contents of a collecting device, sufficient to require cleaning and a change in clothing.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "The majority of the time is at risk of loss of control leading to extensive evacuation of the bowel and/or voiding of the bladder, sufficient to require cleaning and a change in clothing, if not able to reach a toilet quickly.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Neither of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "physical",
+          "number": 10,
+          "name": "Consciousness during waking moments",
+          "heading_verbatim": "10. Consciousness during waking moments.",
+          "ref": "UC Regs Sch 6 Pt 1",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "At least once a week, has an involuntary episode of lost or altered consciousness resulting in significantly disrupted awareness or concentration.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "At least once a month, has an involuntary episode of lost or altered consciousness resulting in significantly disrupted awareness or concentration.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Neither of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "mental",
+          "number": 11,
+          "name": "Learning tasks",
+          "heading_verbatim": "11. Learning tasks.",
+          "ref": "UC Regs Sch 6 Pt 2",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot learn how to complete a simple task, such as setting an alarm clock.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Cannot learn anything beyond a simple task, such as setting an alarm clock.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Cannot learn anything beyond a moderately complex task, such as the steps involved in operating a washing machine to clean clothes.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "mental",
+          "number": 12,
+          "name": "Awareness of everyday hazards (such as boiling water or sharp objects)",
+          "heading_verbatim": "12. Awareness of everyday hazards (such as boiling water or sharp objects).",
+          "ref": "UC Regs Sch 6 Pt 2",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Reduced awareness of everyday hazards leads to a significant risk of: (i) injury to self or others; or (ii) damage to property or possessions, such that the claimant requires supervision for the majority of the time to maintain safety.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Reduced awareness of everyday hazards leads to a significant risk of: (i) injury to self or others; or (ii) damage to property or possessions, such that the claimant frequently requires supervision to maintain safety.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Reduced awareness of everyday hazards leads to a significant risk of: (i) injury to self or others; or (ii) damage to property or possessions, such that the claimant occasionally requires supervision to maintain safety.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "mental",
+          "number": 13,
+          "name": "Initiating and completing personal action (which means planning, organisation, problem solving, prioritising or switching tasks)",
+          "heading_verbatim": "13. Initiating and completing personal action (which means planning, organisation, problem solving, prioritising or switching tasks).",
+          "ref": "UC Regs Sch 6 Pt 2",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot, due to impaired mental function, reliably initiate or complete at least two sequential personal actions.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Cannot, due to impaired mental function, reliably initiate or complete at least two sequential personal actions for the majority of the time.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Frequently cannot, due to impaired mental function, reliably initiate or complete at least two sequential personal actions.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "mental",
+          "number": 14,
+          "name": "Coping with change",
+          "heading_verbatim": "14. Coping with change.",
+          "ref": "UC Regs Sch 6 Pt 2",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot cope with any change to the extent that day to day life cannot be managed.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Cannot cope with minor planned change (such as a pre-arranged change to the routine time scheduled for a lunch break), to the extent that, overall, day to day life is made significantly more difficult.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Cannot cope with minor unplanned change (such as the timing of an appointment on the day it is due to occur), to the extent that, overall, day to day life is made significantly more difficult.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "mental",
+          "number": 15,
+          "name": "Getting about",
+          "heading_verbatim": "15. Getting about.",
+          "ref": "UC Regs Sch 6 Pt 2",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Cannot get to any place outside the claimant's home with which the claimant is familiar.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Is unable to get to a specified place with which the claimant is familiar, without being accompanied by another person.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Is unable to get to a specified place with which the claimant is unfamiliar without being accompanied by another person.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "mental",
+          "number": 16,
+          "name": "Coping with social engagement due to cognitive impairment or mental disorder",
+          "heading_verbatim": "16. Coping with social engagement due to cognitive impairment or mental disorder.",
+          "ref": "UC Regs Sch 6 Pt 2",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Engagement in social contact is always precluded due to difficulty relating to others or significant distress experienced by the claimant.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Engagement in social contact with someone unfamiliar to the claimant is always precluded due to difficulty relating to others or significant distress experienced by the claimant.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Engagement in social contact with someone unfamiliar to the claimant is not possible for the majority of the time due to difficulty relating to others or significant distress experienced by the claimant.",
+              "points": 6,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "6",
+          "part": "mental",
+          "number": 17,
+          "name": "Appropriateness of behaviour with other people, due to cognitive impairment or mental disorder",
+          "heading_verbatim": "17. Appropriateness of behaviour with other people, due to cognitive impairment or mental disorder.",
+          "ref": "UC Regs Sch 6 Pt 2",
+          "descriptors": [
+            {
+              "letter": "a",
+              "text": "Has, on a daily basis, uncontrollable episodes of aggressive or disinhibited behaviour that would be unreasonable in any workplace.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "b",
+              "text": "Frequently has uncontrollable episodes of aggressive or disinhibited behaviour that would be unreasonable in any workplace.",
+              "points": 15,
+              "verified": true
+            },
+            {
+              "letter": "c",
+              "text": "Occasionally has uncontrollable episodes of aggressive or disinhibited behaviour that would be unreasonable in any workplace.",
+              "points": 9,
+              "verified": true
+            },
+            {
+              "letter": "d",
+              "text": "None of the above applies.",
+              "points": 0,
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        }
+      ],
+      "lcwra_activities": [
+        {
+          "schedule": "7",
+          "number": 1,
+          "name": "Mobilising unaided by another person with or without a walking stick, manual wheelchair or other aid if such aid is normally or could reasonably be worn or used",
+          "heading_verbatim": "1. Mobilising unaided by another person with or without a walking stick, manual wheelchair or other aid if such aid is normally or could reasonably be worn or used.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "1",
+              "text": "Cannot either: (a) mobilise more than 50 metres on level ground without stopping in order to avoid significant discomfort or exhaustion; or (b) repeatedly mobilise 50 metres within a reasonable timescale because of significant discomfort or exhaustion.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 2,
+          "name": "Transferring from one seated position to another",
+          "heading_verbatim": "2. Transferring from one seated position to another.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "2",
+              "text": "Cannot move between one seated position and another seated position located next to one another without receiving physical assistance from another person.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 3,
+          "name": "Reaching",
+          "heading_verbatim": "3. Reaching.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "3",
+              "text": "Cannot raise either arm as if to put something in the top pocket of a coat or jacket.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 4,
+          "name": "Picking up and moving or transferring by the use of the upper body and arms (excluding standing, sitting, bending or kneeling and all other activities specified in this Schedule)",
+          "heading_verbatim": "4. Picking up and moving or transferring by the use of the upper body and arms (excluding standing, sitting, bending or kneeling and all other activities specified in this Schedule).",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "4",
+              "text": "Cannot pick up and move a 0.5 litre carton full of liquid.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 5,
+          "name": "Manual dexterity",
+          "heading_verbatim": "5. Manual dexterity.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "5",
+              "text": "Cannot press a button (such as a telephone keypad) with either hand or cannot turn the pages of a book with either hand.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 6,
+          "name": "Making self understood through speaking, writing, typing, or other means which are normally, or could reasonably be, used unaided by another person",
+          "heading_verbatim": "6. Making self understood through speaking, writing, typing, or other means which are normally, or could reasonably be, used unaided by another person.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "6",
+              "text": "Cannot convey a simple message, such as the presence of a hazard.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 7,
+          "name": "Understanding communication by: (i) verbal means (such as hearing or lip reading) alone; (ii) non-verbal means (such as reading 16 point print or Braille) alone; or (iii) a combination of sub-paragraphs (i) and (ii), using any aid that is normally, or could reasonably, be used unaided by another person",
+          "heading_verbatim": "7. Understanding communication by: (i) verbal means (such as hearing or lip reading) alone; (ii) non-verbal means (such as reading 16 point print or Braille) alone; or (iii) a combination of sub-paragraphs (i) and (ii), using any aid that is normally, or could reasonably, be used unaided by another person.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "7",
+              "text": "Cannot understand a simple message, such as the location of a fire escape, due to sensory impairment.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 8,
+          "name": "Absence or loss of control whilst conscious leading to extensive evacuation of the bowel and/or voiding of the bladder, other than enuresis (bed-wetting), despite the wearing or use of any aids or adaptations which are normally or could reasonably be worn or used",
+          "heading_verbatim": "8. Absence or loss of control whilst conscious leading to extensive evacuation of the bowel and/or voiding of the bladder, other than enuresis (bed-wetting), despite the wearing or use of any aids or adaptations which are normally or could reasonably be worn or used.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "8",
+              "text": "At least once a week experiences: (a) loss of control leading to extensive evacuation of the bowel and/or voiding of the bladder; or (b) substantial leakage of the contents of a collecting device sufficient to require the individual to clean themselves and change clothing.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 9,
+          "name": "Learning tasks",
+          "heading_verbatim": "9. Learning tasks.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "9",
+              "text": "Cannot learn how to complete a simple task, such as setting an alarm clock, due to cognitive impairment or mental disorder.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 10,
+          "name": "Awareness of hazard",
+          "heading_verbatim": "10. Awareness of hazard.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "10",
+              "text": "Reduced awareness of everyday hazards, due to cognitive impairment or mental disorder, leads to a significant risk of: (a) injury to self or others; or (b) damage to property or possessions, such that the claimant requires supervision for the majority of the time to maintain safety.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 11,
+          "name": "Initiating and completing personal action (which means planning, organisation, problem solving, prioritising or switching tasks)",
+          "heading_verbatim": "11. Initiating and completing personal action (which means planning, organisation, problem solving, prioritising or switching tasks).",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "11",
+              "text": "Cannot, due to impaired mental function, reliably initiate or complete at least two sequential personal actions.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 12,
+          "name": "Coping with change",
+          "heading_verbatim": "12. Coping with change.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "12",
+              "text": "Cannot cope with any change, due to cognitive impairment or mental disorder, to the extent that day to day life cannot be managed.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 13,
+          "name": "Coping with social engagement, due to cognitive impairment or mental disorder",
+          "heading_verbatim": "13. Coping with social engagement, due to cognitive impairment or mental disorder.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "13",
+              "text": "Engagement in social contact is always precluded due to difficulty relating to others or significant distress experienced by the claimant.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 14,
+          "name": "Appropriateness of behaviour with other people, due to cognitive impairment or mental disorder",
+          "heading_verbatim": "14. Appropriateness of behaviour with other people, due to cognitive impairment or mental disorder.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "14",
+              "text": "Has, on a daily basis, uncontrollable episodes of aggressive or disinhibited behaviour that would be unreasonable in any workplace.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 15,
+          "name": "Conveying food or drink to the mouth",
+          "heading_verbatim": "15. Conveying food or drink to the mouth.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "15(a)",
+              "text": "Cannot convey food or drink to the claimant's own mouth without receiving physical assistance from someone else;",
+              "verified": true
+            },
+            {
+              "number": "15(b)",
+              "text": "Cannot convey food or drink to the claimant's own mouth without repeatedly stopping or experiencing breathlessness or severe discomfort;",
+              "verified": true
+            },
+            {
+              "number": "15(c)",
+              "text": "Cannot convey food or drink to the claimant's own mouth without receiving regular prompting given by someone else in the claimant's presence; or",
+              "verified": true
+            },
+            {
+              "number": "15(d)",
+              "text": "Owing to a severe disorder of mood or behaviour, fails to convey food or drink to the claimant's own mouth without receiving: (i) physical assistance from someone else; or (ii) regular prompting given by someone else in the claimant's presence.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        },
+        {
+          "schedule": "7",
+          "number": 16,
+          "name": "Chewing or swallowing food or drink",
+          "heading_verbatim": "16. Chewing or swallowing food or drink.",
+          "ref": "UC Regs Sch 7",
+          "descriptors": [
+            {
+              "number": "16(a)",
+              "text": "Cannot chew or swallow food or drink;",
+              "verified": true
+            },
+            {
+              "number": "16(b)",
+              "text": "Cannot chew or swallow food or drink without repeatedly stopping or experiencing breathlessness or severe discomfort;",
+              "verified": true
+            },
+            {
+              "number": "16(c)",
+              "text": "Cannot chew or swallow food or drink without repeatedly receiving regular prompting given by someone else in the claimant's presence; or",
+              "verified": true
+            },
+            {
+              "number": "16(d)",
+              "text": "Owing to a severe disorder of mood or behaviour, fails to: (i) chew or swallow food or drink; or (ii) chew or swallow food or drink without regular prompting given by someone else in the claimant's presence.",
+              "verified": true
+            }
+          ],
+          "evidence_prompts": [],
+          "verified": true
+        }
+      ],
+      "treated_as_lcw": [
+        {
+          "schedule": "8",
+          "para": 1,
+          "title": "Receiving certain treatments",
+          "text": "The claimant is receiving— (a) regular weekly treatment by way of haemodialysis for chronic renal failure; (b) treatment by way of plasmapheresis; or (c) regular weekly treatment by way of total parenteral nutrition for gross impairment of enteric function, or is recovering from any of those forms of treatment in circumstances in which the Secretary of State is satisfied that the claimant should be treated as having limited capability for work.",
+          "ref": "UC Regs Sch 8 para 1",
+          "verified": true
+        },
+        {
+          "schedule": "8",
+          "para": 2,
+          "title": "In hospital",
+          "text": "(1) The claimant is— (a) undergoing medical or other treatment as a patient in a hospital or similar institution; or (b) recovering from such treatment in circumstances in which the Secretary of State is satisfied that the claimant should be treated as having limited capability for work. (2) The circumstances in which a claimant is to be regarded as undergoing treatment falling within sub-paragraph (1)(a) include where the claimant is attending a residential programme of rehabilitation for the treatment of drug or alcohol dependency. (3) For the purposes of this paragraph, a claimant is to be regarded as undergoing treatment as a patient in a hospital or similar institution only if that claimant has been advised by a health care professional to stay for a period of 24 hours or longer following medical or other treatment.",
+          "ref": "UC Regs Sch 8 para 2",
+          "verified": true
+        },
+        {
+          "schedule": "8",
+          "para": 3,
+          "title": "Prevented from working by law",
+          "text": "(1) The claimant— (a) is excluded or abstains from work pursuant to a request or notice in writing lawfully made or given under an enactment; or (b) is otherwise prevented from working pursuant to an enactment, by reason of it being known or reasonably suspected that the claimant is infected or contaminated by, or has been in contact with a case of, a relevant infection or contamination. (2) In sub-paragraph (1) “relevant infection or contamination” means— (a) in England and Wales— (i) any incidence or spread of infection or contamination, within the meaning of section 45A(3) of the Public Health (Control of Disease) Act 1984 in respect of which regulations are made under Part 2A of that Act (public health protection) for the purpose of preventing, protecting against, controlling or providing a public health response to, such incidence or spread, or (ii) tuberculosis or any infectious disease to which regulation 9 of the Public Health (Aircraft) Regulations 1979 (powers in respect of persons leaving aircraft) applies or to which regulation 10 of the Public Health (Ships) Regulations 1979 (powers in respect of certain persons on ships) applies; and (b) in Scotland any— (i) infectious disease within the meaning of section 1(5) of the Public Health etc (Scotland) Act 2008, or exposure to an organism causing that disease; or (ii) contamination within the meaning of section 1(5) of that Act, or exposure to a contaminant, to which sections 56 to 58 of that Act (compensation) apply.",
+          "ref": "UC Regs Sch 8 para 3",
+          "verified": true
+        },
+        {
+          "schedule": "8",
+          "para": 4,
+          "title": "Risk to self or others",
+          "text": "(1) The claimant is suffering from a specific illness, disease or disablement by reason of which there would be a substantial risk to the physical or mental health of any person were the claimant found not to have limited capability for work. (2) This paragraph does not apply where the risk could be reduced by a significant amount by— (a) reasonable adjustments being made in the claimant's workplace; or (b) the claimant taking medication to manage their condition where such medication has been prescribed for the claimant by a registered medical practitioner treating the claimant.",
+          "ref": "UC Regs Sch 8 para 4",
+          "verified": true
+        },
+        {
+          "schedule": "8",
+          "para": 5,
+          "title": "Life threatening disease",
+          "text": "The claimant is suffering from a life threatening disease in relation to which— (a) there is medical evidence that the disease is uncontrollable, or uncontrolled, by a recognised therapeutic procedure; and (b) in the case of a disease that is uncontrolled, there is a reasonable cause for it not to be controlled by a recognised therapeutic procedure.",
+          "ref": "UC Regs Sch 8 para 5",
+          "verified": true
+        },
+        {
+          "schedule": "8",
+          "para": 6,
+          "title": "Disabled and over the age for state pension credit",
+          "text": "The claimant has reached the qualifying age for state pension credit and is entitled to disability living allowance, Scottish adult disability living allowance, personal independence payment or adult disability payment.",
+          "ref": "UC Regs Sch 8 para 6",
+          "verified": true
+        }
+      ],
+      "treated_as_lcwra": [
+        {
+          "schedule": "9",
+          "para": 1,
+          "title": "Terminal illness",
+          "text": "The claimant is terminally ill.",
+          "ref": "UC Regs Sch 9 para 1",
+          "verified": true
+        },
+        {
+          "schedule": "9",
+          "para": 2,
+          "title": "Pregnancy",
+          "text": "The claimant is a pregnant woman and there is a serious risk of damage to her health or to the health of her unborn child if she does not refrain from work and work-related activity.",
+          "ref": "UC Regs Sch 9 para 2",
+          "verified": true
+        },
+        {
+          "schedule": "9",
+          "para": 3,
+          "title": "Receiving treatment for cancer",
+          "text": "The claimant is— (a) receiving treatment for cancer by way of chemotherapy or radiotherapy; (b) likely to receive such treatment within 6 months after the date of the determination of capability for work and work-related activity; or (c) recovering from such treatment, and the Secretary of State is satisfied that the claimant should be treated as having limited capability for work and work-related activity.",
+          "ref": "UC Regs Sch 9 para 3",
+          "verified": true
+        },
+        {
+          "schedule": "9",
+          "para": 4,
+          "title": "Risk to self or others",
+          "text": "The claimant is suffering from a specific illness, disease or disablement by reason of which there would be a substantial risk to the physical or mental health of any person were the claimant found not to have limited capability for work and work-related activity.",
+          "ref": "UC Regs Sch 9 para 4",
+          "verified": true
+        },
+        {
+          "schedule": "9",
+          "para": 5,
+          "title": "Disabled and over the age for state pension credit",
+          "text": "The claimant has reached the qualifying age for state pension credit and is entitled to attendance allowance, pension age disability payment, the care component of disability living allowance at the highest rate, the care component of Scottish adult disability living allowance at the highest rate in accordance with regulation 6(4) of the Disability Assistance (Scottish Adult Disability Living Allowance) Regulations 2025 or the daily living component of personal independence payment at the enhanced rate or the daily living component of adult disability payment at the enhanced rate in accordance with regulation 5(3) of the Disability Assistance for Working Age People (Scotland) Regulations 2022.",
+          "ref": "UC Regs Sch 9 para 5",
+          "verified": true
+        }
+      ]
+    }
+  ]
+}

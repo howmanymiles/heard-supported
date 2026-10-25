@@ -1,0 +1,204 @@
+{
+  "id": "PIP-02",
+  "benefit": "pip",
+  "title": "Depression and social anxiety",
+  "summary": "Woman in her 20s with severe recurrent depression and social anxiety, under the CMHT, living with her parents. Tests prompting (food, washing, medication), social support for engaging with others, a budgeting answer on the form that the notes contradict, and journeys she cannot make without her mother. She is physically well, so several activities are genuinely no difficulty.",
+  "exercises": [
+    "prompting vs supervision",
+    "medication prompting (3b) and failure likely to cause deterioration",
+    "social support from an experienced family member (9c)",
+    "status conflict: form vs notes on budgeting",
+    "planning and following journeys: psychological distress, 11e vs 11f",
+    "genuine nodiff activities in a mental health claim",
+    "repeatedly: washing only twice a week with prompting"
+  ],
+  "client": {
+    "ref": "HS-2002",
+    "age_band": "20-29",
+    "living": "Lives with parents",
+    "conditions_in_documents": [
+      "Recurrent depressive disorder, current episode severe",
+      "Social anxiety disorder",
+      "Asthma, mild intermittent",
+      "Acne vulgaris (resolved)"
+    ]
+  },
+  "documents": [
+    { "id": "form", "file": "documents/form.md", "type": "form", "pages": 4 },
+    { "id": "gp", "file": "documents/gp.md", "type": "gp", "pages": 2 },
+    { "id": "cpn", "file": "documents/cpn.md", "type": "cpn", "pages": 3 },
+    { "id": "notes", "file": "documents/notes.md", "type": "notes", "pages": 3 }
+  ],
+  "activities": [
+    {
+      "key": "pip:1",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 2, "quote": "Mum makes the dinner and tells me to come and help but most of the time I don't." },
+        { "doc": "cpn", "page": 2, "quote": "When her mother prompts and stays in the kitchen with her she will help with simple tasks." },
+        { "doc": "notes", "page": 2, "quote": "she'll peel/chop if mum is there and keeps her at it. Without mum asking she won't come down." },
+        { "doc": "notes", "page": 2, "quote": "Can use hob/oven, no physical problem. Mum \"every day really\"." }
+      ],
+      "gaps": [
+        "No account of her preparing and cooking a whole simple meal even with prompting; only helping with tasks",
+        "Mother's presence is for motivation, not safety, so supervision (1e) is not supported"
+      ],
+      "draft_descriptor": {
+        "satisfied": [ { "letter": "d", "daysPercent": 100 } ]
+      },
+      "draft_note": "Needs prompting to prepare or cook on most days; nothing points to a safety risk: 1d, 2 points."
+    },
+    {
+      "key": "pip:2",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Poor appetite but eats what is put in front of her without reminders; missed meals come from not preparing food (activity 1)."
+    },
+    {
+      "key": "pip:3",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 2, "quote": "Mum reminds me about my tablets because I forget or I just don't bother." },
+        { "doc": "cpn", "page": 2, "quote": "she was missing doses most days, and her mood deteriorated. Adherence has been good since the reminders started." },
+        { "doc": "notes", "page": 2, "quote": "Mum puts tablet next to her cup of tea every morning and checks." }
+      ],
+      "gaps": [
+        "No home therapy yet (on psychology waiting list), so 3c-3f are not in play"
+      ],
+      "draft_descriptor": {
+        "satisfied": [ { "letter": "b", "daysPercent": 100 } ]
+      },
+      "draft_note": "Daily prompting to take sertraline; missing doses led to deterioration: 3b, 1 point."
+    },
+    {
+      "key": "pip:4",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 2, "quote": "I don't shower as much as I should. Mum has to go on at me." },
+        { "doc": "cpn", "page": 2, "quote": "she will not shower unless prompted, and that without prompting she has gone over a week without washing" },
+        { "doc": "notes", "page": 2, "quote": "Mum says \"most days I'm on at her and most days it doesn't happen\"." }
+      ],
+      "gaps": [
+        "Even with prompting she showers only about twice a week; whether that is to an acceptable standard and as often as reasonably required is a point the reviewer could press",
+        "No statement from her mother yet"
+      ],
+      "draft_descriptor": {
+        "satisfied": [ { "letter": "c", "daysPercent": 100 } ]
+      },
+      "draft_note": "Will not wash without prompting: 4c, 2 points."
+    },
+    {
+      "key": "pip:5",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No difficulty reported in any document."
+    },
+    {
+      "key": "pip:6",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "I stay in my joggers most days. I can get dressed." },
+        { "doc": "cpn", "page": 2, "quote": "I have seen her on visits in the same clothes as the previous visit on several occasions." },
+        { "doc": "notes", "page": 2, "quote": "Mum says if there's an appointment she has to tell her to get changed. Didn't say how often otherwise." }
+      ],
+      "gaps": [
+        "How often she needs prompting to dress or change is not recorded",
+        "Not clear whether she would get dressed and undressed each day at all without prompting"
+      ],
+      "draft_descriptor": null,
+      "draft_note": "6c(i) prompting is likely but the documents do not show it on over 50% of days; it would take daily living from 11 to 13."
+    },
+    {
+      "key": "pip:7",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Speaks and understands normally; avoiding strangers belongs under activity 9."
+    },
+    {
+      "key": "pip:8",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Can read and understand; her mother opening letters is avoidance, not a reading difficulty (relevant to activity 10)."
+    },
+    {
+      "key": "pip:9",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "If I have to talk to someone I don't know my heart goes and I feel sick and I want to get out." },
+        { "doc": "cpn", "page": 3, "quote": "She does not engage with unfamiliar professionals without her mother, who has supported her through all of her appointments and knows how to calm her." },
+        { "doc": "notes", "page": 3, "quote": "Mum has supported her through all of this since 2024 and knows what helps (breathing, letting her sit by the door)." }
+      ],
+      "gaps": [
+        "Whether her mother counts as 'experienced' for social support needs stating explicitly",
+        "9d is arguable (left CMHT waiting room), but she does engage when her mother is there, so 9d is not supported over 50% of days"
+      ],
+      "draft_descriptor": {
+        "satisfied": [ { "letter": "c", "daysPercent": 100 } ]
+      },
+      "draft_note": "Engages only with support from her mother, who is experienced in calming her: 9c, 4 points."
+    },
+    {
+      "key": "pip:10",
+      "evidence_status": "conflict",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "I can manage my money fine." },
+        { "doc": "notes", "page": 3, "quote": "in Feb 2026 CL ran up £400 on online orders she didn't need when low, and missed phone contract payments, account went to collections." },
+        { "doc": "notes", "page": 3, "quote": "Since then mum holds her bank card and pays her bills, CL gets cash for small things." },
+        { "doc": "notes", "page": 3, "quote": "CL can work out change and prices fine (\"did Higher maths\"). CL agreed with mum's account when asked." }
+      ],
+      "gaps": [
+        "Form contradicts the notes; the form answer needs correcting or explaining before assessment",
+        "No CPN or GP evidence on budgeting yet (adviser has asked)"
+      ],
+      "draft_descriptor": {
+        "satisfied": [ { "letter": "b", "daysPercent": 100 } ]
+      },
+      "draft_note": "Simple decisions fine; complex budgeting (bills, planning purchases) needs assistance after the Feb 2026 debts: 10b, 2 points."
+    },
+    {
+      "key": "pip:11",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 4, "quote": "I used to get the bus to college but I had a panic attack on it last year and I haven't been on one since." },
+        { "doc": "form", "page": 4, "quote": "I can use maps on my phone, it's not that I don't know the way." },
+        { "doc": "cpn", "page": 3, "quote": "She does not leave the house alone. Journeys happen only with her mother, by car." },
+        { "doc": "cpn", "page": 3, "quote": "When she has attempted short journeys on her own as part of graded exposure work, she has turned back within a few minutes each time." },
+        { "doc": "notes", "page": 3, "quote": "Mum said if she's with her CL will manage it, \"it's me being there\"." }
+      ],
+      "gaps": [
+        "Distress on the journey is described (panic attack, turning back) but nobody uses the words 'overwhelming psychological distress'",
+        "11e is not met because she does make journeys with her mother; the reviewer must choose between 11b (prompting) and 11f (another person needed even for familiar journeys)",
+        "Planning is not affected (11c not in play): she knows routes and uses phone maps"
+      ],
+      "draft_descriptor": {
+        "satisfied": [ { "letter": "f", "daysPercent": 100 } ]
+      },
+      "draft_note": "Cannot follow even a familiar route without her mother because of psychological distress, which case law allows to count for 11d/11f: 11f, 12 points (11b is the fallback)."
+    },
+    {
+      "key": "pip:12",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Physically well; GP and CPN confirm no mobility problems."
+    }
+  ],
+  "must_not_claim": [
+    "That she has self-harmed or has current suicidal thoughts",
+    "That she has a home therapy programme or attends psychological therapy (she is on the waiting list)",
+    "That she has a walking or physical mobility difficulty",
+    "That she needs prompting to eat once food is in front of her",
+    "That she has agoraphobia or a diagnosis other than depression, social anxiety and asthma",
+    "That her mother is her appointee or holds power of attorney"
+  ],
+  "expert_review": { "status": "draft", "notes": "" }
+}

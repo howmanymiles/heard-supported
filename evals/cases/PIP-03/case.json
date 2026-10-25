@@ -1,0 +1,187 @@
+{
+  "id": "PIP-03",
+  "benefit": "pip",
+  "title": "Breathless and unsteady",
+  "summary": "Woman in her early sixties, living alone, with severe COPD and bilateral knee osteoarthritis. The PIP2 says she walks 'about 50 metres', but a physiotherapy walk test stopped at 18 metres and the adviser's notes show a short shop trip only managed with repeated stops. Aids for washing, toileting and dressing are recorded in the OT report but under-reported or absent on the form.",
+  "exercises": [
+    "conflict: self-estimate vs measured distance",
+    "reliability: repeatedly and within a reasonable time (moving around)",
+    "reg 7 share of days",
+    "aid recorded only in OT report",
+    "minimising on the form",
+    "do not attribute getting to the toilet to activity 5"
+  ],
+  "client": {
+    "ref": "HS-2003",
+    "age_band": "60-64",
+    "living": "Lives alone",
+    "conditions_in_documents": [
+      "Chronic obstructive pulmonary disease",
+      "Osteoarthritis of both knees",
+      "Hypertension"
+    ]
+  },
+  "documents": [
+    { "id": "form", "file": "documents/form.md", "type": "form", "pages": 4 },
+    { "id": "gp", "file": "documents/gp.md", "type": "gp", "pages": 2 },
+    { "id": "physio", "file": "documents/physio.md", "type": "physio", "pages": 4 },
+    { "id": "notes", "file": "documents/notes.md", "type": "notes", "pages": 3 }
+  ],
+  "activities": [
+    {
+      "key": "pip:1",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "form", "page": 1, "quote": "If I'm doing potatoes I sit down to peel them." },
+        { "doc": "notes", "page": 2, "quote": "Sits on her kitchen stool to prepare veg. Can't stand at cooker for more than a few mins." },
+        { "doc": "physio", "page": 4, "quote": "Perching stool for kitchen offered. Patient declined, prefers to use her own kitchen stool." }
+      ],
+      "gaps": [
+        "No detail of whether she can safely cook a simple meal on the hob or only by microwave",
+        "How often she avoids cooking altogether on bad days",
+        "Whether lifting or draining a pan is ever done, and what happens when she tries"
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "b" } ] },
+      "draft_note": "Needs to sit on a stool (an aid) to prepare food; 1c (microwave only) is the alternative at the same 2 points."
+    },
+    {
+      "key": "pip:2",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Form says no problems; nothing in other documents."
+    },
+    {
+      "key": "pip:3",
+      "evidence_status": "partial",
+      "must_find": [
+        { "doc": "gp", "page": 2, "quote": "Salbutamol 100 micrograms inhaler, 2 puffs as required, via spacer" },
+        { "doc": "notes", "page": 2, "quote": "Manages own inhalers, pharmacy blister pack for BP tablet. No issues." }
+      ],
+      "gaps": [
+        "Whether the spacer or blister pack is needed because of her condition rather than for convenience",
+        "No evidence of any difficulty using inhalers or rescue pack during exacerbations"
+      ],
+      "draft_descriptor": null,
+      "draft_note": "Spacer and blister pack are mentioned, but nothing shows she needs them to manage medication; expert to decide whether 3b is arguable."
+    },
+    {
+      "key": "pip:4",
+      "evidence_status": "good",
+      "must_find": [
+        { "doc": "form", "page": 2, "quote": "I sit on it to wash. I couldn't stand in the shower long enough otherwise." },
+        { "doc": "physio", "page": 4, "quote": "Shower seat: already in situ, provided 2024. Patient uses it for every shower." },
+        { "doc": "notes", "page": 2, "quote": "Uses shower seat every time she showers. Showers twice a week, strip wash sitting at sink other days." }
+      ],
+      "gaps": [
+        "Whether she can wash her hair or lower body without help on bad chest days",
+        "Time taken to wash, including rests"
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "b", "daysPercent": 100 } ] },
+      "draft_note": "Uses the shower seat every time she showers and sits to wash on other days; form, OT and notes agree."
+    },
+    {
+      "key": "pip:5",
+      "evidence_status": "not_on_form",
+      "must_find": [
+        { "doc": "physio", "page": 3, "quote": "Rises from WC with difficulty due to knee pain." },
+        { "doc": "physio", "page": 4, "quote": "Toilet frame fitted around WC on this visit. Patient tried it and found rising much easier." },
+        { "doc": "form", "page": 2, "quote": "No problems with the toilet itself." }
+      ],
+      "gaps": [
+        "Whether she has used the toilet frame regularly since it was fitted on 2026-06-02",
+        "Getting along the hall to the bathroom is not part of this activity; that evidence belongs to moving around"
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "b" } ] },
+      "draft_note": "OT observed difficulty rising and fitted a toilet frame; form and client do not mention it, so ongoing use needs confirming."
+    },
+    {
+      "key": "pip:6",
+      "evidence_status": "not_on_form",
+      "must_find": [
+        { "doc": "physio", "page": 4, "quote": "Long-handled shoe horn issued. Patient demonstrated safe use and reports using it daily to put on her shoes." },
+        { "doc": "physio", "page": 3, "quote": "Dressing: unable to flex knees enough to reach feet comfortably." },
+        { "doc": "form", "page": 2, "quote": "I can dress myself. It takes me a while and I sit on the bed to do it." }
+      ],
+      "gaps": [
+        "How she manages socks, which she says are the hardest part; no sock aid recorded",
+        "Whether 20 minutes with rests is within a reasonable time period",
+        "Adviser did not ask about dressing equipment"
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "b", "daysPercent": 100 } ] },
+      "draft_note": "Long-handled shoe horn used daily, recorded only in the OT report."
+    },
+    {
+      "key": "pip:7",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "No problems reported with speaking or hearing."
+    },
+    {
+      "key": "pip:8",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Reading glasses only, which descriptor a allows."
+    },
+    {
+      "key": "pip:9",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Sociable; goes to bingo monthly. No difficulty described."
+    },
+    {
+      "key": "pip:10",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Manages own bills and shopping; daughter only helped set up online banking."
+    },
+    {
+      "key": "pip:11",
+      "evidence_status": "nodiff",
+      "must_find": [],
+      "gaps": [],
+      "draft_descriptor": null,
+      "draft_note": "Knows her area and finds her way; worry about getting breathless is physical, not psychological distress from a mental condition."
+    },
+    {
+      "key": "pip:12",
+      "evidence_status": "conflict",
+      "must_find": [
+        { "doc": "form", "page": 3, "quote": "I can walk about 50 metres before I need to stop and get my breath." },
+        { "doc": "physio", "page": 1, "quote": "Walk abandoned at 18 metres when patient stopped due to breathlessness and right knee pain." },
+        { "doc": "physio", "page": 1, "quote": "She then walked a further 12 metres before stopping again and declined to continue." },
+        { "doc": "physio", "page": 1, "quote": "Patient reported today as an average day." },
+        { "doc": "notes", "page": 1, "quote": "stops at next door's wall to lean and get breath, then again at the bus shelter, sometimes a third time." },
+        { "doc": "notes", "page": 1, "quote": "Better days maybe 1 or 2 a week, when she can get to the shop with fewer stops." },
+        { "doc": "physio", "page": 3, "quote": "On arrival she needed to sit on the shower seat for 2 to 3 minutes to recover her breath before she could continue." },
+        { "doc": "notes", "page": 2, "quote": "If she needs to go again soon after she has to wait until she has her breath back." }
+      ],
+      "gaps": [
+        "Form estimate (about 50 m) conflicts with measured 18 m; the conflict should be explained, not ignored",
+        "Corner shop distance is paced by the adviser (approx. 80 m), not measured, and is only achieved with 2 to 3 stops over about 15 minutes",
+        "No record of how far she can walk on a better day before the first stop",
+        "Form says shop trip 'most days'; notes say about 3 days a week; a diary has been requested"
+      ],
+      "draft_descriptor": { "satisfied": [ { "letter": "e", "daysPercent": 70 } ] },
+      "draft_note": "Measured 18 m on an average day, with long recovery and a shorter second walk, so she cannot reliably go more than 20 m; better days are 1 to 2 a week."
+    }
+  ],
+  "must_not_claim": [
+    "That she uses a rollator or walking frame (physio records she uses a stick and a rollator was not provided)",
+    "That she uses home oxygen",
+    "That she has had falls (physio records no falls in 12 months, one near-fall)",
+    "That she can walk 80 metres without stopping",
+    "That anxiety or a mental health condition affects her journeys",
+    "That she uses a sock aid or needs another person's help to dress"
+  ],
+  "expert_review": { "status": "draft", "notes": "" }
+}
