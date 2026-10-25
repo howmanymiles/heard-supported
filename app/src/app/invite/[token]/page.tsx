@@ -1,11 +1,14 @@
+import { headers } from 'next/headers';
 import { peekInvite } from '@/lib/access';
+import { hit, clientIp, LIMITS } from '@/lib/ratelimit';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Invite({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const i = /^[A-Za-z0-9_-]{20,100}$/.test(token) ? await peekInvite(token) : null;
-  const problem = !i ? 'This invitation link is not valid.' : i.revoked ? 'This invitation has been cancelled.' : i.used ? 'This invitation has already been used.' : i.expired ? 'This invitation has expired.' : i.status !== 'active' ? 'Your agency’s account is not active yet.' : null;
+  const allowed = hit(`invite:${clientIp(await headers())}`, LIMITS.invitePerIp.max, LIMITS.invitePerIp.window).ok;
+  const i = allowed && /^[A-Za-z0-9_-]{20,100}$/.test(token) ? await peekInvite(token) : null;
+  const problem = !allowed ? 'Too many invitation links have been opened from this connection. Wait an hour and try again.' : !i ? 'This invitation link is not valid.' : i.revoked ? 'This invitation has been cancelled.' : i.used ? 'This invitation has already been used.' : i.expired ? 'This invitation has expired.' : i.status !== 'active' ? 'Your agency’s account is not active yet.' : null;
   return (
     <div className="stack-lg" style={{ maxWidth: 640 }}>
       <div className="head"><h1>Your invitation</h1></div>

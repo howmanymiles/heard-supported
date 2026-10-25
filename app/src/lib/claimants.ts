@@ -6,6 +6,7 @@
 import type { PoolClient } from 'pg';
 import { asAgency, audit } from './db.ts';
 import type { Me } from './auth.ts';
+import { limit, LIMITS } from './ratelimit.ts';
 
 /** Draft wording for the agency and its data protection lead to approve. Change the version when the wording changes. */
 export const CONSENT_STATEMENT = {
@@ -117,6 +118,7 @@ export async function listClaimants(me: Me, q?: string): Promise<ClaimantRow[]> 
 }
 
 export async function getClaimant(me: Me, id: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   return asAgency(me.agencyId, async c => {
     const k = (await c.query("select id, name, preferred_name, to_char(date_of_birth, 'YYYY-MM-DD') as date_of_birth, agency_ref, created_at from claimants where id = $1", [id])).rows[0] as ClaimantRow | undefined;
     if (!k) return null;
@@ -134,6 +136,8 @@ export async function getClaimant(me: Me, id: string) {
  * fictional-data environment, for test cases.
  */
 export async function aiGate(me: Me, caseId: string): Promise<{ names: string[] }> {
+  limit(`ai:u:${me.userId}`, LIMITS.aiPerUser.max, LIMITS.aiPerUser.window, 'You have used the AI a lot in the last hour. Wait a while and try again, or ask your admin if this keeps happening.');
+  limit(`ai:a:${me.agencyId}`, LIMITS.aiPerAgency.max, LIMITS.aiPerAgency.window, 'Your agency has reached today’s limit on AI use. It resets within 24 hours; contact us if you need it raised.');
   return asAgency(me.agencyId, async c => {
     const cs = (await c.query('select claimant_id from cases where id = $1', [caseId])).rows[0];
     if (!cs) throw new Error('Case not found.');

@@ -61,6 +61,7 @@ export async function createCase(me: Me, yourRef: string | null, benefit: Benefi
 }
 
 export async function getCase(me: Me, id: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   return asAgency(me.agencyId, async c => {
     const cs = await c.query(`select c.*, u.name as adviser_name from cases c left join users u on u.id = c.adviser_id where c.id = $1`, [id]);
     if (!cs.rowCount) return null;
