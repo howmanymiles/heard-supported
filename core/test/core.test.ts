@@ -123,3 +123,11 @@ test('MR time limits: one calendar month, late up to 13 months', async () => {
   assert.equal(mrTiming('2026-12-07', '2028-01-07').status, 'late');
   assert.equal(mrTiming('2026-12-07', '2028-01-08').status, 'out_of_time');
 });
+
+test('WCA evidence can be linked to substantial risk as well as to activities', () => {
+  const [, user] = buildMessages('uc-wca', [{ label: 'D1', name: 'Letter', pages: [{ page: 1, text: 'Risk of relapse.' }] }]);
+  assert.match(user.content, /sch8:4  Substantial risk/);
+  assert.match(user.content, /sch9:4  Substantial risk/);
+  const [, pipUser] = buildMessages('pip', [{ label: 'D1', name: 'Letter', pages: [{ page: 1, text: 'x' }] }]);
+  assert.doesNotMatch(pipUser.content, /sch9:4/);
+});

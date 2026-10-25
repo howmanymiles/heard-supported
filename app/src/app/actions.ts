@@ -132,8 +132,7 @@ export async function assessAction(_: ActionState, form: FormData): Promise<Acti
   try {
     const r = await readAssessment(me, caseId);
     revalidatePath(`/cases/${caseId}/mr`);
-    const found = r.activities.filter(a => a.letter).length;
-    return { ok: `DWP descriptor found for ${found} of 12 activities. Check each one against the papers and confirm.` };
+    return { ok: `DWP finding found for ${r.found} of ${r.of} ${r.of === 12 ? 'activities' : 'items'}. Check each one against the papers and confirm.` };
   } catch (e) {
     return { error: msg(e) };
   }
@@ -158,7 +157,8 @@ export async function mrDatesAction(_: ActionState, form: FormData): Promise<Act
   const caseId = String(form.get('caseId'));
   const d = (k: string) => { const v = String(form.get(k) ?? '').trim(); return v === '' ? null : v; };
   try {
-    await saveMrDates(me, caseId, d('decisionDate'), d('requestDate'), String(form.get('lateReason') ?? ''));
+    const outcome = form.has('outcome') ? (d('outcome') as string | null) : undefined;
+    await saveMrDates(me, caseId, d('decisionDate'), d('requestDate'), String(form.get('lateReason') ?? ''), outcome);
   } catch (e) {
     return { error: msg(e) };
   }
@@ -171,6 +171,16 @@ export async function draftAction(_: ActionState, form: FormData): Promise<Actio
   const caseId = String(form.get('caseId'));
   const mr = await getMr(me, caseId);
   if (!mr) return { error: 'Case not found.' };
+  if (mr.case.benefit === 'uc-wca') {
+    const { buildWcaComparison, buildWcaDraft } = await import('@/lib/mr-wca');
+    const w = buildWcaComparison(mr.choices, mr.decisions, mr.evidence, mr.case.decision_outcome);
+    if (!w.comparison) return { error: `The DWP finding is still missing for ${w.missing.join(', ')}.` };
+    if (w.unconfirmed.length) return { error: `Confirm the DWP finding for ${w.unconfirmed.join(', ')} first.` };
+    const report = mr.docs.find(d => d.kind === 'uc85a') ? 'UC85A report' : 'UC85 report';
+    await saveMrDraft(me, caseId, buildWcaDraft({ ref: mr.case.ref, decisionDate: mr.decisionDate, timing: mr.timing, lateReason: mr.case.late_reason, noticeOutcome: mr.case.decision_outcome, reportName: report, comparison: w.comparison }));
+    revalidatePath(`/cases/${caseId}/mr`);
+    return { ok: 'Draft created from the comparison. Edit it below and save.' };
+  }
   const { comparison, missing, unconfirmed } = buildComparison(mr.choices, mr.decisions, mr.evidence);
   if (!comparison || missing.length) return { error: `The DWP descriptor is still missing for activity ${missing.join(', ')}.` };
   if (unconfirmed.length) return { error: `Confirm the DWP descriptor for activity ${unconfirmed.join(', ')} first.` };

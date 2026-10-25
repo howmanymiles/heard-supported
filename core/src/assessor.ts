@@ -61,15 +61,19 @@ export function similarity(a: string, b: string): number {
   return na + nb ? (2 * shared) / (na + nb) : 0;
 }
 
-/** Which descriptor of a PIP activity this wording is, if it clearly is one. */
-export function matchDescriptor(activity: number, wording: string): { letter: string; score: number } | null {
-  const act = pipActs.find(a => a.number === activity);
-  if (!act) return null;
-  const scored = act.descriptors.map(d => ({ letter: d.letter!, score: similarity(wording, d.text) })).sort((x, y) => y.score - x.score);
+/** Which of these descriptors the wording is, if it is clearly one of them. */
+export function matchAmong(options: Array<{ id: string; text: string }>, wording: string): { letter: string; score: number } | null {
+  const scored = options.map(d => ({ letter: d.id, score: similarity(wording, d.text) })).sort((x, y) => y.score - x.score);
   const [best, next] = scored;
   if (!best || best.score < 0.8) return null;
   if (next && best.score - next.score < 0.1) return null; // too close to call
   return best;
+}
+
+/** Which descriptor of a PIP activity this wording is, if it clearly is one. */
+export function matchDescriptor(activity: number, wording: string): { letter: string; score: number } | null {
+  const act = pipActs.find(a => a.number === activity);
+  return act ? matchAmong(act.descriptors.map(d => ({ id: d.letter!, text: d.text })), wording) : null;
 }
 
 /** A descriptor letter written in a PA4-style quote: "Descriptor chosen: c", "12b", or the descriptor's wording. */
@@ -104,11 +108,30 @@ export function parseUkDate(s: string): string | null {
 
 // ---------- checking the model's answer (pure) ----------
 
-type RawCite = { doc?: unknown; page?: unknown; quote?: unknown };
+export type RawCite = { doc?: unknown; page?: unknown; quote?: unknown };
 export type RawAssessor = {
   decision_date?: (RawCite & { date?: unknown }) | null;
   activities?: Array<{ activity?: unknown; decision?: RawCite | null; pa4?: (RawCite & { letter?: unknown }) | null; justification?: RawCite | null }>;
 };
+
+/** Checks a cited quote is word for word on the page it names; records why not. */
+export function makeCiteChecker(pages: Array<{ docId: string; page: number; text: string }>, alias: Record<string, string>, dropped: Array<{ activity?: number | string; field: string; reason: string }>) {
+  const index = new Map(pages.map(p => [`${p.docId}:${p.page}`, normalise(p.text)]));
+  return (c: RawCite | null | undefined, field: string, activity: number | string | undefined, minWords: number, maxWords: number): ResolvedCite | undefined => {
+    if (!c || typeof c.quote !== 'string' || typeof c.doc !== 'string') return undefined;
+    const page = Number(c.page);
+    const docId = alias[c.doc];
+    const text = docId ? index.get(`${docId}:${page}`) : undefined;
+    const n = c.quote.trim().split(/\s+/).filter(Boolean).length;
+    let reason: string | null = null;
+    if (!text) reason = 'unknown_page';
+    else if (n < minWords) reason = 'too_short';
+    else if (n > maxWords) reason = 'too_long';
+    else if (!text.includes(normalise(c.quote))) reason = 'not_verbatim';
+    if (reason) { dropped.push({ activity, field, reason }); return undefined; }
+    return { doc: c.doc, page, quote: c.quote.trim(), docId: docId! };
+  };
+}
 
 export function resolveAssessor(
   raw: RawAssessor,

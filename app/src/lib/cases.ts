@@ -5,8 +5,10 @@ import { putDocument, getDocument } from './storage.ts';
 import type { Me } from './auth.ts';
 
 export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number };
-export type DocKind = 'evidence' | 'pa4' | 'decision' | 'other';
-export const DOC_KINDS: DocKind[] = ['evidence', 'pa4', 'decision', 'other'];
+export type DocKind = 'evidence' | 'pa4' | 'uc85' | 'uc85a' | 'decision' | 'other';
+export const DOC_KINDS: DocKind[] = ['evidence', 'pa4', 'uc85', 'uc85a', 'decision', 'other'];
+/** Papers that record the DWP's position rather than the client's evidence. */
+export const PAPER_KINDS: DocKind[] = ['pa4', 'uc85', 'uc85a', 'decision'];
 export type DocRow = { id: string; name: string; kind: DocKind; content_type: string; size_bytes: number; read_status: string; page_count: number | null; low_confidence_lines: number | null; created_at: Date };
 export type EvidenceRow = { id: string; document_id: string; doc_name: string; page_no: number; quote: string; activities: string[]; note: string | null; status: string; source: string };
 export type GapRow = { id: string; activity: string; gap: string; status: string };
@@ -169,7 +171,19 @@ export async function setGapStatus(me: Me, caseId: string, gapId: string, status
   });
 }
 
+export const RISK_KEYS: Record<string, string> = { 'sch8:4': 'Schedule 8 paragraph 4 (substantial risk, LCW)', 'sch9:4': 'Schedule 9 paragraph 4 (substantial risk, LCWRA)' };
+
 export async function saveDecision(me: Me, caseId: string, benefit: Benefit, activity: string, letter: string, daysPerWeek: number | null) {
+  if (benefit === 'uc-wca' && RISK_KEYS[activity]) {
+    if (letter && letter !== 'applies' && letter !== 'not_applies') throw new Error('Choose whether it applies.');
+    await asAgency(me.agencyId, async c => {
+      await c.query(`insert into decisions (case_id, agency_id, activity, satisfied, updated_by) values ($1, $2, $3, $4, $5)
+        on conflict (case_id, activity) do update set satisfied = excluded.satisfied, updated_by = excluded.updated_by, updated_at = now()`,
+        [caseId, me.agencyId, activity, JSON.stringify(letter ? [letter] : []), me.userId]);
+      await audit(c, me.agencyId, me.userId, caseId, letter ? `${RISK_KEYS[activity]}: ${letter === 'applies' ? 'applies' : 'does not apply'}` : `${RISK_KEYS[activity]}: cleared`);
+    });
+    return;
+  }
   const act = activityList(benefit).find(a => a.key === activity);
   if (!act) throw new Error('Unknown activity.');
   if (daysPerWeek !== null && (daysPerWeek < 0 || daysPerWeek > 7)) throw new Error('Days per week must be between 0 and 7.');

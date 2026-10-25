@@ -11,16 +11,22 @@ export function pipInputs(decisions: DecisionRow[]) {
     .map(d => ({ activity: Number(d.activity.split(':')[1]), satisfied: d.satisfied as Array<{ letter: string; daysPercent?: number }> }));
 }
 
+/** The adviser's WCA decisions in the engine's input shape, including substantial risk (Sch 8 / Sch 9 para 4). */
+export function wcaInputs(decisions: DecisionRow[]) {
+  const lcw = decisions.filter(d => d.activity.startsWith('sch6:') && Array.isArray(d.satisfied) && d.satisfied.length)
+    .map(d => ({ activity: Number(d.activity.split(':')[1]), letters: (d.satisfied as Array<{ letter: string }>).map(s => s.letter) }));
+  const lcwra = decisions.filter(d => d.activity.startsWith('sch7:')).flatMap(d => d.satisfied as string[]);
+  const risk = (k: string) => (decisions.find(d => d.activity === k)?.satisfied as string[] | undefined)?.[0] === 'applies' ? [4] : [];
+  return { lcw, lcwra, treatedAsLcw: risk('sch8:4'), treatedAsLcwra: risk('sch9:4') };
+}
+
 /** Works the adviser's decisions through the regulations. Never chooses anything itself. */
 export function score(benefit: Benefit, decisions: DecisionRow[]) {
   if (benefit === 'pip') {
     const r = assessPip(data, pipInputs(decisions));
     return { kind: 'pip' as const, result: r };
   }
-  const lcw = decisions.filter(d => d.activity.startsWith('sch6:') && Array.isArray(d.satisfied) && d.satisfied.length)
-    .map(d => ({ activity: Number(d.activity.split(':')[1]), letters: (d.satisfied as Array<{ letter: string }>).map(s => s.letter) }));
-  const lcwra = decisions.filter(d => d.activity.startsWith('sch7:')).flatMap(d => d.satisfied as string[]);
-  return { kind: 'wca' as const, result: assessWca(data, { lcw, lcwra }) };
+  return { kind: 'wca' as const, result: assessWca(data, wcaInputs(decisions)) };
 }
 
 export function descriptorsFor(activityKey: string) {

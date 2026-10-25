@@ -7,8 +7,8 @@
 //   node run.ts --mr         PIP cases, reading the PA4 and decision letter
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractEvidence, extractAssessor, splitTextPages, parseUkDate, type ExtractionDoc } from '@hs/core';
-import { scoreCase, scoreAssessor, type CaseFile } from './score.ts';
+import { extractEvidence, extractAssessor, extractWcaAssessor, splitTextPages, parseUkDate, type ExtractionDoc } from '@hs/core';
+import { scoreCase, scoreAssessor, scoreWcaAssessor, type CaseFile } from './score.ts';
 
 const here = import.meta.dirname;
 const casesDir = path.join(here, 'cases');
@@ -28,6 +28,24 @@ if (mrStage) {
   for (const id of ids) {
     const read = (f: string) => fs.readFileSync(path.join(casesDir, id, 'documents', `${f}.md`), 'utf8');
     const mr = JSON.parse(fs.readFileSync(path.join(casesDir, id, 'mr.json'), 'utf8'));
+    if (mr.report) {
+      const docs = [
+        { id: `${id}/decision`, name: 'decision notice', kind: 'decision' as const, pages: splitTextPages(read('decision')) },
+        { id: `${id}/${mr.report.doc}`, name: mr.report.type.toUpperCase(), kind: mr.report.type, pages: splitTextPages(read(mr.report.doc)) },
+      ];
+      process.stdout.write(`${id} … `);
+      try {
+        const r = await extractWcaAssessor(docs);
+        const s = scoreWcaAssessor(mr, r);
+        rows.push({ id, ...s, model: r.model });
+        fs.writeFileSync(path.join(outDir, `${id}.json`), JSON.stringify({ score: s, result: r }, null, 2));
+        console.log(`findings ${s.lettersCorrect}/${s.of} right, ${s.lettersMissing} left for adviser, ${s.lettersWrong} wrong; date ${s.dateCorrect ? 'right' : 'WRONG/missing'}; award ${s.outcomeCorrect ? 'right' : 'WRONG/missing'}; dropped ${s.dropped}`);
+      } catch (e) {
+        console.log(`FAILED: ${(e as Error).message}`);
+        rows.push({ id, error: (e as Error).message });
+      }
+      continue;
+    }
     const docs = [
       { id: `${id}/decision`, name: 'decision letter', kind: 'decision' as const, pages: splitTextPages(read('decision')) },
       { id: `${id}/pa4`, name: 'PA4 assessment report', kind: 'pa4' as const, pages: splitTextPages(read('pa4')) },
@@ -47,9 +65,9 @@ if (mrStage) {
   }
   const ok = rows.filter(r => !r.error);
   const sum = (k: string) => ok.reduce((n, r) => n + r[k], 0);
-  const summary = { at: new Date().toISOString(), stage: 'mr', cases: ids, model: ok[0]?.model ?? null, lettersCorrect: sum('lettersCorrect'), lettersWrong: sum('lettersWrong'), lettersMissing: sum('lettersMissing'), of: ok.length * 12, justificationsFound: sum('justificationsFound'), datesCorrect: ok.filter(r => r.dateCorrect).length, failed: rows.length - ok.length, rows };
+  const summary = { at: new Date().toISOString(), stage: 'mr', cases: ids, model: ok[0]?.model ?? null, lettersCorrect: sum('lettersCorrect'), lettersWrong: sum('lettersWrong'), lettersMissing: sum('lettersMissing'), of: ok.reduce((n, r) => n + (r.of ?? 12), 0), justificationsFound: sum('justificationsFound'), datesCorrect: ok.filter(r => r.dateCorrect).length, failed: rows.length - ok.length, rows };
   fs.writeFileSync(path.join(outDir, 'summary.json'), JSON.stringify(summary, null, 2));
-  console.log(`\nDescriptors right ${summary.lettersCorrect}/${summary.of}, wrong ${summary.lettersWrong} (the number that matters), left for the adviser ${summary.lettersMissing}. Reasons found ${summary.justificationsFound}/${summary.of}. Dates right ${summary.datesCorrect}/${ok.length}.`);
+  console.log(`\nFindings right ${summary.lettersCorrect}/${summary.of}, wrong ${summary.lettersWrong} (the number that matters), left for the adviser ${summary.lettersMissing}. PIP reasons found ${summary.justificationsFound}. Dates right ${summary.datesCorrect}/${ok.length}.`);
   console.log(`Results: ${path.relative(process.cwd(), outDir)}`);
   process.exit(summary.failed || summary.lettersWrong ? 1 : 0);
 }

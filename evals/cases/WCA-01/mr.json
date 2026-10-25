@@ -1,0 +1,180 @@
+{
+  "id": "WCA-01",
+  "report": {
+    "doc": "uc85",
+    "type": "uc85",
+    "sch6": [
+      {
+        "activity": 1,
+        "letter": "e",
+        "justification_quote": {
+          "doc": "uc85",
+          "page": 3,
+          "quote": "The claimant walked 25 metres at the assessment centre at a normal pace without stopping and without an aid"
+        }
+      },
+      {
+        "activity": 2,
+        "letter": "d",
+        "justification_quote": {
+          "doc": "uc85",
+          "page": 3,
+          "quote": "The claimant sat for the 47-minute assessment without needing to stand or change position"
+        }
+      },
+      {
+        "activity": 3,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 4,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 5,
+        "letter": "e",
+        "justification_quote": null
+      },
+      {
+        "activity": 6,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 7,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 8,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 9,
+        "letter": "c",
+        "justification_quote": null
+      },
+      {
+        "activity": 10,
+        "letter": "c",
+        "justification_quote": null
+      },
+      {
+        "activity": 11,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 12,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 13,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 14,
+        "letter": "d",
+        "justification_quote": {
+          "doc": "uc85",
+          "page": 5,
+          "quote": "The claimant attended the assessment alone at an unfamiliar centre and coped well"
+        }
+      },
+      {
+        "activity": 15,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 16,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 17,
+        "letter": "d",
+        "justification_quote": null
+      }
+    ],
+    "sch7": [],
+    "sch8_4": "not_applies",
+    "sch9_4": "not_applies"
+  },
+  "decision": {
+    "date": "2026-12-01",
+    "outcome": "none"
+  },
+  "expected_disputes": [
+    {
+      "activity": "sch6:1",
+      "adviser": "d",
+      "error_type": "evidence_ignored",
+      "why": "The physiotherapist's 6-minute walk test (240 metres with a rest at about 170 metres) was not in the evidence considered; a 25-metre walk at the centre does not show 200 metres repeatedly.",
+      "rebuttal_evidence": [
+        {
+          "doc": "physio",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "activity": "sch6:2",
+      "adviser": "c",
+      "error_type": "observation_overrelied",
+      "why": "Sitting through one assessment is relied on over the physiotherapist's finding of a position change at about 25 minutes and the UC50 account; the activity is about remaining at a work station for the majority of the time.",
+      "rebuttal_evidence": [
+        {
+          "doc": "physio",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "activity": "sch6:14",
+      "adviser": "c",
+      "error_type": "observation_overrelied",
+      "why": "Attending a pre-arranged appointment is planned change; the GP describes distress when plans change unexpectedly, which is the unplanned change in 14(c).",
+      "rebuttal_evidence": [
+        {
+          "doc": "gp",
+          "page": 3
+        }
+      ]
+    }
+  ],
+  "agree": [
+    "sch6:3",
+    "sch6:4",
+    "sch6:5",
+    "sch6:6",
+    "sch6:7",
+    "sch6:8",
+    "sch6:9",
+    "sch6:10",
+    "sch6:11",
+    "sch6:12",
+    "sch6:13",
+    "sch6:15",
+    "sch6:16",
+    "sch6:17",
+    "sch7",
+    "sch8:4",
+    "sch9:4"
+  ],
+  "must_not_claim": [
+    "The assessor considered the physiotherapy report",
+    "The claimant uses a walking stick",
+    "The claimant cannot drive",
+    "A history of self-harm"
+  ],
+  "expert_review": {
+    "status": "draft",
+    "notes": ""
+  }
+}

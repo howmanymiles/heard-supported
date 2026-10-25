@@ -1,6 +1,6 @@
 // Scores one extraction run against a synthetic case's answer file.
 // Pure: no network, so it is unit-tested and reused by the runner.
-import { normalise, type VerifiedEvidence, type Gap, type AssessorResult } from '@hs/core';
+import { normalise, type VerifiedEvidence, type Gap, type AssessorResult, type WcaAssessorResult } from '@hs/core';
 
 export type MustFind = { doc: string; page: number; quote: string };
 export type CaseActivity = { key: string; evidence_status: string; must_find: MustFind[]; gaps: string[] };
@@ -77,4 +77,22 @@ export function scoreAssessor(mr: MrAnswer, r: Pick<AssessorResult, 'activities'
     if (j && got?.justification && got.justification.docId === pa4DocId && got.justification.page === j.page && samePassage(got.justification.quote, j.quote)) justificationsFound++;
   }
   return { lettersCorrect, lettersWrong, lettersMissing, wrong, justificationsFound, dateCorrect: !!letterDate && r.decisionDate?.date === letterDate, dropped: r.dropped.length };
+}
+
+export type WcaMrAnswer = { report: { sch6: Array<{ activity: number; letter: string }>; sch7: string[]; sch8_4: string; sch9_4: string }; decision: { date: string; outcome: string } };
+
+/** WCA: 17 Schedule 6 findings, Schedule 7, and both substantial-risk findings (20 items). */
+export function scoreWcaAssessor(mr: WcaMrAnswer, r: Pick<WcaAssessorResult, 'sch6' | 'sch7' | 'sch8_4' | 'sch9_4' | 'decisionDate' | 'outcome' | 'dropped'>) {
+  let lettersCorrect = 0, lettersWrong = 0, lettersMissing = 0;
+  const wrong: Array<{ item: string; got: string; want: string }> = [];
+  const tally = (item: string, got: string | null, want: string) => {
+    if (got === null) lettersMissing++;
+    else if (got === want) lettersCorrect++;
+    else { lettersWrong++; wrong.push({ item, got, want }); }
+  };
+  for (const w of mr.report.sch6) tally(`sch6:${w.activity}`, r.sch6.find(a => a.activity === w.activity)?.letter ?? null, w.letter);
+  tally('sch7', r.sch7.ids === null ? null : [...r.sch7.ids].sort().join(','), [...mr.report.sch7].sort().join(','));
+  tally('sch8:4', r.sch8_4.value, mr.report.sch8_4);
+  tally('sch9:4', r.sch9_4.value, mr.report.sch9_4);
+  return { of: 20, lettersCorrect, lettersWrong, lettersMissing, wrong, justificationsFound: 0, dateCorrect: r.decisionDate?.date === mr.decision.date, outcomeCorrect: r.outcome.value === mr.decision.outcome, dropped: r.dropped.length };
 }

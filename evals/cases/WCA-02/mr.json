@@ -1,0 +1,176 @@
+{
+  "id": "WCA-02",
+  "report": {
+    "doc": "uc85a",
+    "type": "uc85a",
+    "sch6": [
+      {
+        "activity": 1,
+        "letter": "e",
+        "justification_quote": null
+      },
+      {
+        "activity": 2,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 3,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 4,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 5,
+        "letter": "e",
+        "justification_quote": null
+      },
+      {
+        "activity": 6,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 7,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 8,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 9,
+        "letter": "c",
+        "justification_quote": null
+      },
+      {
+        "activity": 10,
+        "letter": "c",
+        "justification_quote": null
+      },
+      {
+        "activity": 11,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 12,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 13,
+        "letter": "d",
+        "justification_quote": {
+          "doc": "uc85a",
+          "page": 2,
+          "quote": "The claimant manages her personal care and meals with occasional prompting from her sister"
+        }
+      },
+      {
+        "activity": 14,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 15,
+        "letter": "d",
+        "justification_quote": null
+      },
+      {
+        "activity": 16,
+        "letter": "c",
+        "justification_quote": {
+          "doc": "uc85a",
+          "page": 2,
+          "quote": "The claimant reports she does not answer the door to people she does not know"
+        }
+      },
+      {
+        "activity": 17,
+        "letter": "d",
+        "justification_quote": null
+      }
+    ],
+    "sch7": [],
+    "sch8_4": "not_applies",
+    "sch9_4": "not_applies"
+  },
+  "decision": {
+    "date": "2026-11-17",
+    "outcome": "none"
+  },
+  "expected_disputes": [
+    {
+      "activity": "sch6:13",
+      "adviser": "c",
+      "error_type": "evidence_ignored",
+      "why": "The sister's account (unwashed and undressed three or four days a week, eating only when prompted) shows frequent failure, not occasional prompting; the consultant's letter was not considered.",
+      "rebuttal_evidence": [
+        {
+          "doc": "notes",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "activity": "sch8:4",
+      "adviser": "applies",
+      "error_type": "evidence_ignored",
+      "why": "The consultant psychiatrist's letter of 30 September 2026, not in the evidence considered, gives the substantial risk of relapse and self-neglect; LCW is not reached on points.",
+      "rebuttal_evidence": [
+        {
+          "doc": "psychiatrist",
+          "page": 4
+        }
+      ]
+    },
+    {
+      "activity": "sch9:4",
+      "adviser": "applies",
+      "error_type": "evidence_ignored",
+      "why": "The same opinion goes to the risk from work-related activity with the possibility of sanction.",
+      "rebuttal_evidence": [
+        {
+          "doc": "psychiatrist",
+          "page": 4
+        }
+      ]
+    }
+  ],
+  "agree": [
+    "sch6:1",
+    "sch6:2",
+    "sch6:3",
+    "sch6:4",
+    "sch6:5",
+    "sch6:6",
+    "sch6:7",
+    "sch6:8",
+    "sch6:9",
+    "sch6:10",
+    "sch6:11",
+    "sch6:12",
+    "sch6:14",
+    "sch6:15",
+    "sch6:16",
+    "sch6:17",
+    "sch7"
+  ],
+  "must_not_claim": [
+    "The claimant was assessed face to face",
+    "The assessor considered the psychiatrist's letter",
+    "The claimant has self-harmed",
+    "The claimant is not taking her medication"
+  ],
+  "expert_review": {
+    "status": "draft",
+    "notes": ""
+  }
+}

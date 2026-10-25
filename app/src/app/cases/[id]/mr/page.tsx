@@ -7,11 +7,14 @@ import { descriptorsFor } from '@/lib/score';
 import { UploadForm, AssessForm, MrDatesForm, DraftForm, SaveDraftForm } from '../../../forms';
 import { choiceAction, confirmAllAction, loadSyntheticMrAction } from '../../../actions';
 import { CaseTabs } from '../tabs';
+import { WcaComparisonView } from './wca-view';
+import { buildWcaComparison } from '@/lib/mr-wca';
 
 export const dynamic = 'force-dynamic';
 
 const RATE: Record<string, string> = { none: 'no award', standard: 'standard rate', enhanced: 'enhanced rate' };
-const SOURCE: Record<string, string> = { decision_letter: 'from the decision letter', pa4: 'from the PA4', adviser: 'set by you' };
+const SOURCE: Record<string, string> = { decision_letter: 'from the decision letter', pa4: 'from the PA4', report: 'from the report', adviser: 'set by you' };
+const KIND_SHORT: Record<string, string> = { pa4: 'PA4', uc85: 'UC85', uc85a: 'UC85A', decision: 'decision' };
 const long = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 export default async function MrPage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,21 +25,15 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
   const { case: cs, docs, choices, decisions, evidence, timing, run } = mr;
   const syntheticOnly = process.env.DATA_MODE === 'synthetic-only';
 
-  if (cs.benefit !== 'pip') {
-    return (
-      <div className="stack-lg">
-        <p className="crumbs"><Link href="/">← Cases</Link></p>
-        <div className="head"><h1><span className="mono">{cs.ref}</span></h1></div>
-        <CaseTabs id={id} benefit={cs.benefit} current="mr" />
-        <p className="panel">Reconsideration support for Work Capability Assessment cases is coming next.</p>
-      </div>
-    );
-  }
-
-  const papers = docs.filter(d => d.kind === 'pa4' || d.kind === 'decision');
+  const isPip = cs.benefit === 'pip';
+  const paperKinds = isPip ? ['decision', 'pa4'] : ['uc85', 'uc85a', 'decision'];
+  const papers = docs.filter(d => paperKinds.includes(d.kind));
   const unreadPapers = papers.filter(d => d.read_status !== 'read').length;
-  const synthId = /^TEST-(PIP-\d\d)-/.exec(cs.ref)?.[1];
-  const { comparison: cmp, missing, unconfirmed } = buildComparison(choices, decisions, evidence);
+  const synthId = /^TEST-((?:PIP|WCA)-\d\d)-/.exec(cs.ref)?.[1];
+  const pip = isPip ? buildComparison(choices, decisions, evidence) : null;
+  const wca = isPip ? null : buildWcaComparison(choices, decisions, evidence, cs.decision_outcome);
+  const { comparison: cmp, missing, unconfirmed } = pip ?? { comparison: null, missing: [] as number[], unconfirmed: [] as number[] };
+  const ready = isPip ? !!cmp && !unconfirmed.length : !!wca?.comparison && !wca.unconfirmed.length;
   const acts = activityList('pip');
   const choiceFor = (key: string) => choices.find(c => c.activity === key) as ChoiceRow | undefined;
   const docName = (docId: string) => docs.find(d => d.id === docId)?.name ?? 'document';
@@ -47,7 +44,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
       <p className="crumbs"><Link href="/">← Cases</Link></p>
       <div className="head">
         <h1><span className="mono">{cs.ref}</span></h1>
-        <p className="soft">Personal Independence Payment · Mandatory reconsideration</p>
+        <p className="soft">{isPip ? 'Personal Independence Payment' : 'Universal Credit · Work Capability Assessment'} · Mandatory reconsideration</p>
       </div>
       <CaseTabs id={id} benefit={cs.benefit} current="mr" />
 
@@ -61,7 +58,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
               : <p><b>Outside the 13-month limit</b>, which ended on {long(timing.lateLimit)}. A reconsideration cannot normally be accepted now; consider a new claim or other routes.</p>
         ) : <p className="soft">Add the date of the decision letter, or read the decision papers, to see the time limit.</p>}
         <p className="soft small">Check the date the client actually received the letter; a delay in receiving it can be part of the reason for a late request.</p>
-        <MrDatesForm caseId={id} decisionDate={mr.decisionDate} requestDate={mr.requestDate} lateReason={cs.late_reason} />
+        <MrDatesForm caseId={id} decisionDate={mr.decisionDate} requestDate={mr.requestDate} lateReason={cs.late_reason} outcome={isPip ? undefined : (cs.decision_outcome ?? null)} />
       </section>
 
       <section className="panel stack" aria-label="Decision papers">
@@ -69,19 +66,21 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
         {papers.length ? <ul className="plain">{papers.map(d => (
           <li key={d.id} className="doc">
             {d.read_status === 'read' ? <Link href={`/cases/${id}/documents/${d.id}`}>{d.name}</Link> : <span>{d.name}</span>}
-            <span className="soft small"> · {d.kind === 'pa4' ? 'PA4' : 'decision letter'} · {d.read_status === 'read' ? `${d.page_count} pages` : d.read_status === 'failed' ? 'reading failed' : 'not read yet'}</span>
-          </li>))}</ul> : <p className="soft">Upload the decision letter and the PA4 assessment report. They are read for the DWP’s position, not as evidence.</p>}
+             <span className="soft small"> · {KIND_SHORT[d.kind] ?? d.kind} · {d.read_status === 'read' ? `${d.page_count} pages` : d.read_status === 'failed' ? 'reading failed' : 'not read yet'}</span>
+          </li>))}</ul> : <p className="soft">{isPip ? 'Upload the decision letter and the PA4 assessment report.' : 'Upload the UC85 or UC85A report and the decision notice. The report holds the descriptors; the notice gives the date and award.'} They are read for the DWP’s position, not as evidence.</p>}
         {synthId && !papers.length && (
           <form action={loadSyntheticMrAction}><input type="hidden" name="caseId" value={id} /><input type="hidden" name="syntheticId" value={synthId} />
-            <button className="btn">Load the fictional PA4 and decision letter for {synthId}</button></form>
+            <button className="btn">Load the fictional decision papers for {synthId}</button></form>
         )}
-        <UploadForm caseId={id} syntheticOnly={syntheticOnly} kinds={['decision', 'pa4']} label="Add a decision paper" />
+        <UploadForm caseId={id} syntheticOnly={syntheticOnly} kinds={paperKinds} label="Add a decision paper" />
         {papers.length > 0 && <AssessForm caseId={id} label={unreadPapers ? 'Read the decision papers' : 'Read the decision papers again'} />}
-        {run && <p className="soft small">Last read: DWP descriptor found for {run.verified} of 12 activities; {run.rejected} quotes dropped because they could not be found word for word or did not match the regulations’ wording. Model: {run.model}.</p>}
+        {run && <p className="soft small">Last read: DWP finding found for {run.verified} of {isPip ? '12 activities' : '20 items'}; {run.rejected} quotes dropped because they could not be found word for word or did not match the regulations’ wording. Model: {run.model}.</p>}
         <p className="soft small">The AI only points to where the descriptor is written. The letter is worked out from the regulations’ wording, and you confirm each one.</p>
       </section>
 
-      {choices.length > 0 && (
+      {!isPip && choices.length > 0 && wca && <WcaComparisonView id={id} docs={docs} choices={choices} result={wca} />}
+
+      {isPip && choices.length > 0 && (
         <section className="stack" aria-label="Comparison">
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
             <h2 className="h2">DWP position and yours</h2>
@@ -104,7 +103,7 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
                 const ch = choiceFor(a.key);
                 const row = cmp?.activities.find(x => `pip:${x.activity}` === a.key);
                 const options = descriptorsFor(a.key);
-                const q = ch?.decision_quote ?? ch?.pa4_quote;
+                const q = ch?.decision_quote ?? ch?.report_quote;
                 return (
                   <tr key={a.key}>
                     <td data-label="Activity"><b>{a.label}</b></td>
@@ -142,12 +141,12 @@ export default async function MrPage({ params }: { params: Promise<{ id: string 
 
       <section className="panel stack" aria-label="Request">
         <h2 className="eyebrow">Reconsideration request</h2>
-        {cmp && !unconfirmed.length
+        {ready
           ? <>
               <p className="soft small">Built from the confirmed DWP descriptors, your decisions and the evidence you accepted. Nothing in it is written by the AI. Edit it before sending.</p>
               <DraftForm caseId={id} hasDraft={!!cs.mr_draft} />
             </>
-          : <p className="soft">Confirm the DWP descriptor for all 12 activities to draft the request.</p>}
+          : <p className="soft">{isPip ? 'Confirm the DWP descriptor for all 12 activities to draft the request.' : 'Confirm every DWP finding (17 Schedule 6 activities, Schedule 7 and both substantial-risk paragraphs) to draft the request.'}</p>}
         {cs.mr_draft && <SaveDraftForm caseId={id} draft={cs.mr_draft} />}
       </section>
     </div>

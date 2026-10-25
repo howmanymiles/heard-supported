@@ -36,9 +36,17 @@ const FORMAT = `Reply with JSON only, in this shape:
 {"evidence":[{"doc":"D1","page":1,"quote":"exact words","activities":["pip:1"],"note":"why it matters, at most 15 words"}],
  "gaps":[{"activity":"pip:1","gap":"what is missing, one sentence"}]}`;
 
+/** Substantial risk (UC Regs Sch 8 para 4 and Sch 9 para 4): evidence can be linked to these as well as to activities. */
+export const RISK_EVIDENCE_KEYS = [
+  { key: 'sch8:4', label: 'Substantial risk to anyone’s physical or mental health if found not to have limited capability for work (Schedule 8 paragraph 4)' },
+  { key: 'sch9:4', label: 'Substantial risk to anyone’s physical or mental health if found not to have limited capability for work-related activity (Schedule 9 paragraph 4)' },
+];
+const evidenceKeys = (benefit: Benefit) => [...activityList(benefit).map(a => a.key), ...(benefit === 'uc-wca' ? RISK_EVIDENCE_KEYS.map(r => r.key) : [])];
+
 export function buildMessages(benefit: Benefit, docs: Array<{ label: string; name: string; pages: Array<{ page: number; text: string }> }>) {
   const acts = activityList(benefit);
-  const actText = acts.map(a => `${a.key}  ${a.label}\n${a.descriptors.map(d => `    ${d}`).join('\n')}`).join('\n');
+  const actText = acts.map(a => `${a.key}  ${a.label}\n${a.descriptors.map(d => `    ${d}`).join('\n')}`).join('\n')
+    + (benefit === 'uc-wca' ? '\n' + RISK_EVIDENCE_KEYS.map(r => `${r.key}  ${r.label}`).join('\n') : '');
   const docText = docs.flatMap(d => d.pages.map(p => `=== ${d.label}: ${d.name}, page ${p.page} ===\n${p.text}`)).join('\n\n');
   return [
     { role: 'system' as const, content: [RULES_COMMON, benefit === 'pip' ? GAPS_PIP : GAPS_WCA, FORMAT].join('\n\n') },
@@ -59,7 +67,7 @@ export async function extractEvidence(benefit: Benefit, docs: ExtractionDoc[], o
   }));
   const alias = Object.fromEntries(labelled.map(d => [d.label, d.id]));
   const pageTexts = labelled.flatMap(d => d.pages.map(p => ({ docId: d.id, page: p.page, text: p.text })));
-  const valid = new Set(activityList(benefit).map(a => a.key));
+  const valid = new Set(evidenceKeys(benefit));
 
   const { data, model } = await chatJson<{ evidence?: ProposedEvidence[]; gaps?: Gap[] }>(buildMessages(benefit, labelled), opts);
   const proposed = (data.evidence ?? []).filter(e => e && typeof e.quote === 'string' && Array.isArray(e.activities));

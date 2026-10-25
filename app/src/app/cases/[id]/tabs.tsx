@@ -4,7 +4,7 @@ export function CaseTabs({ id, benefit, current }: { id: string; benefit: string
   return (
     <nav className="tabs" aria-label="Case stages">
       <Link href={`/cases/${id}`} aria-current={current === 'evidence' ? 'page' : undefined}>Evidence and decisions</Link>
-      {benefit === 'pip' && <Link href={`/cases/${id}/mr`} aria-current={current === 'mr' ? 'page' : undefined}>Mandatory reconsideration</Link>}
+      <Link href={`/cases/${id}/mr`} aria-current={current === 'mr' ? 'page' : undefined}>Mandatory reconsideration</Link>
     </nav>
   );
 }

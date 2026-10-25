@@ -37,7 +37,7 @@ export function CreateCaseForm() {
   );
 }
 
-const KIND_LABEL: Record<string, string> = { evidence: 'Evidence', pa4: 'PA4 assessment report', decision: 'Decision letter', other: 'Other' };
+const KIND_LABEL: Record<string, string> = { evidence: 'Evidence', pa4: 'PA4 assessment report', uc85: 'UC85 assessment report', uc85a: 'UC85A paper-based assessment', decision: 'Decision letter or notice', other: 'Other' };
 
 export function UploadForm({ caseId, syntheticOnly, kinds = ['evidence'], label = 'Add documents' }: { caseId: string; syntheticOnly: boolean; kinds?: string[]; label?: string }) {
   const [state, action] = useActionState(uploadAction, {});
@@ -84,13 +84,13 @@ export function AssessForm({ caseId, label }: { caseId: string; label: string })
   );
 }
 
-export function MrDatesForm({ caseId, decisionDate, requestDate, lateReason }: { caseId: string; decisionDate: string | null; requestDate: string | null; lateReason: string | null }) {
+export function MrDatesForm({ caseId, decisionDate, requestDate, lateReason, outcome }: { caseId: string; decisionDate: string | null; requestDate: string | null; lateReason: string | null; outcome?: string | null }) {
   const [state, action] = useActionState(mrDatesAction, {});
   return (
     <form action={action} className="stack">
       <input type="hidden" name="caseId" value={caseId} />
       <div className="row">
-        <label className="field">Date of the decision letter
+        <label className="field">Date of the decision
           <input type="date" name="decisionDate" defaultValue={decisionDate ?? ''} />
         </label>
         <label className="field">Date the request is sent
@@ -98,6 +98,16 @@ export function MrDatesForm({ caseId, decisionDate, requestDate, lateReason }: {
           <span className="hint">Leave blank until it is sent; today is used meanwhile.</span>
         </label>
       </div>
+      {outcome !== undefined && (
+        <label className="field small-field">Award in the decision notice
+          <select name="outcome" defaultValue={outcome ?? ''}>
+            <option value="">Not recorded</option>
+            <option value="none">No limited capability for work</option>
+            <option value="lcw">LCW, not LCWRA</option>
+            <option value="lcwra">LCWRA</option>
+          </select>
+        </label>
+      )}
       <label className="field">Reason the request is late, if it is
         <textarea name="lateReason" rows={3} defaultValue={lateReason ?? ''} />
         <span className="hint">The DWP can accept a late request up to 13 months after the decision if the claimant explains why it is late.</span>

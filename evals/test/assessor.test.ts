@@ -8,7 +8,7 @@ import path from 'node:path';
 import { matchDescriptor, letterFromQuote, parseUkDate, resolveAssessor, splitTextPages, type RawAssessor } from '@hs/core';
 
 const root = path.join(import.meta.dirname, '..', 'cases');
-const pipCases = fs.readdirSync(root).filter(id => fs.existsSync(path.join(root, id, 'mr.json')));
+const pipCases = fs.readdirSync(root).filter(id => id.startsWith('PIP-') && fs.existsSync(path.join(root, id, 'mr.json')));
 
 function load(id: string) {
   const dir = path.join(root, id);

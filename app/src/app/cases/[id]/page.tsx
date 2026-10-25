@@ -115,6 +115,34 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
           );
         })}
       </section>
+
+      {cs.benefit === 'uc-wca' && (
+        <section className="panel stack" id="risk" aria-label="Substantial risk">
+          <h2 className="h2">Substantial risk</h2>
+          <p className="soft small">Schedule 8 paragraph 4 treats the claimant as having LCW where LCW is not reached on points (reg 39(7)); Schedule 9 paragraph 4 treats them as having LCWRA where no Schedule 7 descriptor applies (reg 40(6)).</p>
+          <div className="grid-2">
+            {(['sch8:4', 'sch9:4'] as const).map(k => {
+              const cur = (decisions.find(d => d.activity === k)?.satisfied as string[] | undefined)?.[0] ?? '';
+              const ev = byAct(k); const g = gaps.filter(x => x.activity === k && x.status === 'open');
+              return (
+                <div key={k} className="stack">
+                {ev.length ? <ol className="plain stack">{ev.map(evidenceItem)}</ol> : <p className="soft small">No evidence linked yet.</p>}
+                {g.map(x => <p key={x.id} className="gap"><span>{x.gap}</span></p>)}
+                <form action={decisionAction} className="stack decision">
+                  <input type="hidden" name="caseId" value={id} /><input type="hidden" name="benefit" value={cs.benefit} /><input type="hidden" name="activity" value={k} />
+                  <fieldset><legend className="eyebrow">{k === 'sch8:4' ? 'Schedule 8 paragraph 4 (LCW)' : 'Schedule 9 paragraph 4 (LCWRA)'}</legend>
+                    <label className="opt"><input type="radio" name="letter" value="" defaultChecked={!cur} /> <span>Not decided</span></label>
+                    <label className="opt"><input type="radio" name="letter" value="applies" defaultChecked={cur === 'applies'} /> <span>Applies</span></label>
+                    <label className="opt"><input type="radio" name="letter" value="not_applies" defaultChecked={cur === 'not_applies'} /> <span>Does not apply</span></label>
+                  </fieldset>
+                  <div><button className="btn" type="submit">Save</button></div>
+                </form>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

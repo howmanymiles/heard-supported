@@ -8,3 +8,4 @@ export * from './extract.ts';
 export * from './pages.ts';
 export * from './assessor.ts';
 export * from './deadlines.ts';
+export * from './assessor-wca.ts';

@@ -80,7 +80,7 @@ after(async () => { if (url) { await db.pool().end(); server.close(); } });
 test('reading the decision papers records the DWP position, the letter date and the stage', { skip }, async () => {
   answer = faithfulAnswer();
   const r = await mr.readAssessment(me.a, caseId);
-  assert.equal(r.activities.filter(a => a.letter).length, 12);
+  assert.equal(r.found, 12);
   assert.deepEqual(r.dropped, []);
   const m = (await mr.getMr(me.a, caseId))!;
   assert.equal(m.decisionDate, '2026-12-07');
