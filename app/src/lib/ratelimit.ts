@@ -47,7 +47,7 @@ export function clientIp(h: Headers): string {
 /** The limits in one place. */
 export const LIMITS = {
   aiPerUser: { max: 40, window: 60 * 60 },            // AI steps per adviser per hour
-  aiPerAgency: { max: 400, window: 24 * 60 * 60 },    // per agency per day
+  aiPerAgency: { min: 400, perAdviser: 20, window: 24 * 60 * 60 },   // per agency per day: 20 per adviser with access, at least 400
   signupPerIp: { max: 5, window: 60 * 60 },
   invitePerIp: { max: 20, window: 60 * 60 },
   signInPerIp: { max: 30, window: 10 * 60 },

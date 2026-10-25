@@ -26,7 +26,7 @@ Heard & Supported now holds a client's **name, preferred name and date of birth*
 **The AI**
 - Azure AI Foundry in an EU Data Zone; no keys (managed identity only).
 - The AI only points: every quote it suggests is checked word for word against the page. The engine's code applies the descriptors and the law; the adviser confirms. Text in an uploaded document that tries to instruct the AI can at worst produce a suggestion the adviser rejects; it cannot change a decision, a record or another case.
-- Use is limited per adviser (40 steps an hour) and per agency (400 a day).
+- Use is limited per adviser (40 steps an hour) and per agency (20 steps a day per adviser with access, at least 400).
 
 **The audit record**
 - Every change is recorded, and so is every time someone opens a client's record, a case or a document. Admins and supervisors can see "Who has used this record" for any client, which answers a subject access request about access.

@@ -4,7 +4,7 @@
 // and the client's names are removed from every page before the AI sees it.
 
 import type { PoolClient } from 'pg';
-import { asAgency, audit, viewed } from './db.ts';
+import { asAgency, audit, viewed, pool } from './db.ts';
 import type { Me } from './auth.ts';
 import { limit, LIMITS } from './ratelimit.ts';
 
@@ -138,7 +138,8 @@ export async function getClaimant(me: Me, id: string) {
  */
 export async function aiGate(me: Me, caseId: string): Promise<{ names: string[] }> {
   limit(`ai:u:${me.userId}`, LIMITS.aiPerUser.max, LIMITS.aiPerUser.window, 'You have used the AI a lot in the last hour. Wait a while and try again, or ask your admin if this keeps happening.');
-  limit(`ai:a:${me.agencyId}`, LIMITS.aiPerAgency.max, LIMITS.aiPerAgency.window, 'Your agency has reached today’s limit on AI use. It resets within 24 hours; contact us if you need it raised.');
+  const advisers = (await pool().query('select count(*)::int n from users where agency_id = $1 and active', [me.agencyId])).rows[0].n as number;
+  limit(`ai:a:${me.agencyId}`, Math.max(LIMITS.aiPerAgency.min, LIMITS.aiPerAgency.perAdviser * advisers), LIMITS.aiPerAgency.window, 'Your agency has reached today’s limit on AI use. It resets within 24 hours; contact us if you need it raised.');
   return asAgency(me.agencyId, async c => {
     const cs = (await c.query('select claimant_id, anonymised_at from cases where id = $1', [caseId])).rows[0];
     if (!cs) throw new Error('Case not found.');

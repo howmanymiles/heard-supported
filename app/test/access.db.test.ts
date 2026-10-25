@@ -22,8 +22,8 @@ before(async () => {
 after(async () => { if (url) await db.pool().end(); });
 
 test('an agency signs up, is approved, and its first admin gets in only with the invitation and the right account', { skip }, async () => {
-  await assert.rejects(ac.signUpAgency({ name: 'Govan Advice', registeredNumber: '', contactName: 'Ann', contactEmail: `ann-${T}@govan.example`, acceptTerms: false }), /data processing terms/);
-  const id = await ac.signUpAgency({ name: 'Govan Advice', registeredNumber: 'SC000000', contactName: 'Ann', contactEmail: `Ann-${T}@Govan.example`, acceptTerms: true });
+  await assert.rejects(ac.signUpAgency({ name: 'Govan Advice', registeredNumber: '', contactName: 'Ann', contactEmail: `ann-${T}@govan.example`, acceptTerms: false, noClaimantFees: true }), /data processing terms/);
+  const id = await ac.signUpAgency({ name: 'Govan Advice', registeredNumber: 'SC000000', contactName: 'Ann', contactEmail: `Ann-${T}@Govan.example`, acceptTerms: true, noClaimantFees: true });
   assert.equal((await db.pool().query('select status, terms_version from agencies where id = $1', [id])).rows[0].status, 'pending');
 
   const ann = who('Ann', `ann-${T}@govan.example`);
@@ -42,7 +42,7 @@ test('an agency signs up, is approved, and its first admin gets in only with the
 });
 
 test('admins and supervisors invite; roles, removal and the last admin are guarded', { skip }, async () => {
-  const id = await ac.signUpAgency({ name: 'Paisley Rights', registeredNumber: '', contactName: 'Bo', contactEmail: `bo-${T}@p.example`, acceptTerms: true });
+  const id = await ac.signUpAgency({ name: 'Paisley Rights', registeredNumber: '', contactName: 'Bo', contactEmail: `bo-${T}@p.example`, acceptTerms: true, noClaimantFees: true });
   const { token } = await ac.approveAgency(id, 'Stephen');
   const r = await ac.resolveSignIn(who('Bo', `bo-${T}@p.example`), token);
   const bo = { ...r, name: 'Bo' } as any;
@@ -85,7 +85,7 @@ test('admins and supervisors invite; roles, removal and the last admin are guard
   assert.ok(await ac.currentUser(al.userId));
 
   // Another agency's admin can't touch these people.
-  const other = await ac.signUpAgency({ name: 'Other', registeredNumber: '', contactName: 'Zed', contactEmail: `zed-${T}@o.example`, acceptTerms: true });
+  const other = await ac.signUpAgency({ name: 'Other', registeredNumber: '', contactName: 'Zed', contactEmail: `zed-${T}@o.example`, acceptTerms: true, noClaimantFees: true });
   const zt = (await ac.approveAgency(other, 'Stephen')).token;
   const zed = { ...(await ac.resolveSignIn(who('Zed', `zed-${T}@o.example`), zt)), name: 'Zed' } as any;
   await assert.rejects(ac.deactivate(zed, al.userId), /not in your agency/);
@@ -110,7 +110,7 @@ test('the first admin of a brand-new installation needs no invitation; nobody el
 });
 
 test('an agency is tied to its Microsoft organisation: an account elsewhere claiming the invited email is refused', { skip }, async () => {
-  const id = await ac.signUpAgency({ name: 'Leith Advice', registeredNumber: '', contactName: 'Cy', contactEmail: `cy-${T}@leith.example`, acceptTerms: true });
+  const id = await ac.signUpAgency({ name: 'Leith Advice', registeredNumber: '', contactName: 'Cy', contactEmail: `cy-${T}@leith.example`, acceptTerms: true, noClaimantFees: true });
   const { token } = await ac.approveAgency(id, 'Stephen');
   const cy = { ...(await ac.resolveSignIn(who('Cy', `cy-${T}@leith.example`, 'tenant-leith'), token)), name: 'Cy' } as any;
   assert.equal((await db.pool().query('select entra_tenant_id from agencies where id = $1', [id])).rows[0].entra_tenant_id, 'tenant-leith');
@@ -121,4 +121,10 @@ test('an agency is tied to its Microsoft organisation: an account elsewhere clai
   assert.equal(dee.role, 'adviser');
   // The same object id in another organisation is a different account.
   await assert.rejects(ac.resolveSignIn({ ...who('Dee', `dee-${T}@leith.example`, 'tenant-other') }, null), code('no_invite'));
+});
+
+test('organisations that charge claimants or take a share of awards cannot sign up', { skip }, async () => {
+  await assert.rejects(ac.signUpAgency({ name: 'Claims R Us', registeredNumber: '', contactName: 'Ed', contactEmail: `ed-${T}@claims.example`, acceptTerms: true, noClaimantFees: false }), /don’t charge claimants/);
+  const id = await ac.signUpAgency({ name: 'Free Advice', registeredNumber: '', contactName: 'Flo', contactEmail: `flo-${T}@free.example`, acceptTerms: true, noClaimantFees: true });
+  assert.ok((await db.pool().query('select no_claimant_fees_declared_at from agencies where id = $1', [id])).rows[0].no_claimant_fees_declared_at);
 });

@@ -40,6 +40,24 @@ export default function Terms() {
       </section>
 
       <section className="stack">
+        <h2>Who can use it</h2>
+        <p>Heard &amp; Supported is for organisations that give their help free to claimants: advice charities, Citizens Advice, law centres, and council and health board welfare rights teams. It isn’t for organisations that charge claimants, or take a share of any award or back payment, however the fee is described. An agency confirms this when it signs up. If an agency starts charging claimants, its access ends.</p>
+      </section>
+
+      <section className="stack">
+        <h2>Fair use</h2>
+        <p>Your licence covers as many cases as your advisers take on. There is no case limit, and we would rather you took on the marginal case than rationed it. In return:</p>
+        <ul>
+          <li><b>One person, one account.</b> Each adviser signs in as themselves. Sharing a sign-in defeats the second sign-in step and the record of who did what, and isn’t allowed. Your licence is priced on the people with access, so add people rather than share.</li>
+          <li><b>Your own clients.</b> Use it for your agency’s own clients. Don’t run cases for other organisations, or resell or pass on access.</li>
+          <li><b>Only what the case needs.</b> Upload the client’s papers and evidence for their claim, reconsideration or appeal, and nothing else.</li>
+          <li><b>No automation.</b> Don’t use scripts, bots or bulk downloads, or try to get round the limits on AI use. If you need data out in bulk, ask us.</li>
+          <li><b>No testing our security without permission.</b> If you find a weakness, tell us privately and don’t share it.</li>
+        </ul>
+        <p>To keep the service fair for everyone, the AI steps have a daily ceiling for each agency, set by how many advisers it has, and a lower hourly one for each adviser. Normal casework stays well within both. If your use is far beyond normal, we’ll talk to you first. We don’t cut off an agency without warning, except to stop misuse or protect clients’ information.</p>
+      </section>
+
+      <section className="stack">
         <h2>Your clients’ information</h2>
         <p>Your agency is the controller of its clients’ information and we process it on your agency’s behalf, under the data processing terms your agency accepted when it signed up. We don’t use it for anything else, we don’t sell it, and we don’t use it to train AI models.</p>
       </section>

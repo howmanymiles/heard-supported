@@ -16,6 +16,7 @@ export function SignUpForm({ terms }: { terms: string }) {
         <label className="field">Your work email<input type="email" name="contactEmail" required maxLength={200} autoComplete="email" /><span className="hint">You’ll be your organisation’s first admin, and sign in with the Microsoft account for this email.</span></label>
       </div>
       <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px' }}><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+      <label><input type="checkbox" name="noFees" value="yes" required /> My organisation gives its help free to claimants. We don’t charge them, and don’t take a share of any award.</label>
       <label><input type="checkbox" name="terms" value="yes" required /> I accept the <a href="/terms" target="_blank">terms of use</a> and the data processing terms (version {terms}) on behalf of my organisation.</label>
       <div><Submit pending="Sending…">Ask to join</Submit></div>
       {state.error && <p className="msg msg-error" role="alert">{state.error}</p>}

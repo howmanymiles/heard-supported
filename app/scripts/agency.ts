@@ -26,7 +26,7 @@ try {
     console.log(cmd === 'suspend' ? 'Suspended: nobody at that agency can sign in.' : 'Reinstated.');
   } else if (cmd === 'dev' && a && b) {
     if (process.env.DATA_MODE !== 'synthetic-only') throw new Error('Only in the fictional-data environment (DATA_MODE=synthetic-only).');
-    const id = await signUpAgency({ name: a, registeredNumber: '', contactName: 'Development admin', contactEmail: b, acceptTerms: true });
+    const id = await signUpAgency({ name: a, registeredNumber: '', contactName: 'Development admin', contactEmail: b, acceptTerms: true, noClaimantFees: true });
     const { token } = await approveAgency(id, 'development setup');
     console.log(`Agency ${id} ready. Admin invitation for ${b}:\n${link(token)}`);
   } else {

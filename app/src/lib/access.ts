@@ -6,7 +6,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { pool, audit, asAgency } from './db.ts';
 import type { Me } from './auth.ts';
 
-export const TERMS_VERSION = 'draft-2026-10';
+export const TERMS_VERSION = 'draft-2026-10-25';
 export const INVITE_DAYS = 7;
 export const ROLES = { adviser: 'Adviser', supervisor: 'Supervisor', admin: 'Admin' } as const;
 type Role = keyof typeof ROLES;
@@ -41,7 +41,7 @@ const deny = (code: keyof typeof SIGN_IN_PROBLEMS) => new AccessError(SIGN_IN_PR
 
 // ---------- agency sign-up and approval ----------
 
-export type SignUp = { name: string; registeredNumber: string; contactName: string; contactEmail: string; acceptTerms: boolean };
+export type SignUp = { name: string; registeredNumber: string; contactName: string; contactEmail: string; acceptTerms: boolean; noClaimantFees: boolean };
 
 /** Public: an agency asks to join. Nothing works for it until we approve it. */
 export async function signUpAgency(s: SignUp): Promise<string> {
@@ -50,8 +50,9 @@ export async function signUpAgency(s: SignUp): Promise<string> {
   if (!s.contactName.trim()) throw new AccessError('Enter your name.');
   if (!EMAIL.test(email)) throw new AccessError('Enter your work email address.');
   if (!s.acceptTerms) throw new AccessError('Accept the data processing terms to sign up.');
-  const r = await pool().query(`insert into agencies (name, status, registered_number, contact_name, contact_email, terms_version, terms_accepted_at)
-    values ($1, 'pending', $2, $3, $4, $5, now()) returning id`, [name, s.registeredNumber.trim().slice(0, 40) || null, s.contactName.trim().slice(0, 120), email, TERMS_VERSION]);
+  if (!s.noClaimantFees) throw new AccessError('Heard & Supported is only for organisations that don’t charge claimants or take a share of their awards.');
+  const r = await pool().query(`insert into agencies (name, status, registered_number, contact_name, contact_email, terms_version, terms_accepted_at, no_claimant_fees_declared_at)
+    values ($1, 'pending', $2, $3, $4, $5, now(), now()) returning id`, [name, s.registeredNumber.trim().slice(0, 40) || null, s.contactName.trim().slice(0, 120), email, TERMS_VERSION]);
   return r.rows[0].id;
 }
 
