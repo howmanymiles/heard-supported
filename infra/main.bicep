@@ -248,13 +248,15 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-
 
 // Cheaper models, for evaluation against the fictional cases before any switch.
 // Pay-per-use: no cost unless called. One deployment at a time on the account.
+// GlobalStandard because this subscription has no Data Zone quota for these models yet;
+// acceptable for fictional data only. A switch for real data needs Data Zone quota.
 @description('Deploy the cheaper models for evaluation.')
 param trialModels bool = true
 
 resource modelMini 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = if (trialModels) {
   parent: ai
   name: 'review-model-mini'
-  sku: { name: 'DataZoneStandard', capacity: 50 }
+  sku: { name: 'GlobalStandard', capacity: 20 }
   properties: { model: { format: 'OpenAI', name: 'gpt-4o-mini', version: '2024-07-18' } }
   dependsOn: [modelDeployment]
 }
@@ -262,7 +264,7 @@ resource modelMini 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01'
 resource model41Mini 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = if (trialModels) {
   parent: ai
   name: 'review-model-41mini'
-  sku: { name: 'DataZoneStandard', capacity: 50 }
+  sku: { name: 'GlobalStandard', capacity: 20 }
   properties: { model: { format: 'OpenAI', name: 'gpt-4.1-mini', version: '2025-04-14' } }
   dependsOn: [modelMini]
 }
