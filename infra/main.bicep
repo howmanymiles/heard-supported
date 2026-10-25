@@ -255,9 +255,9 @@ param trialModels bool = true
 
 resource modelMini 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = if (trialModels) {
   parent: ai
-  name: 'review-model-mini'
+  name: 'review-model-41nano'
   sku: { name: 'GlobalStandard', capacity: 20 }
-  properties: { model: { format: 'OpenAI', name: 'gpt-4o-mini', version: '2024-07-18' } }
+  properties: { model: { format: 'OpenAI', name: 'gpt-4.1-nano', version: '2025-04-14' } }
   dependsOn: [modelDeployment]
 }
 

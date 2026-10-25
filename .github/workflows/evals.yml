@@ -15,7 +15,7 @@ on:
       model:
         description: "Model to test"
         type: choice
-        options: [gpt-4o, gpt-4o-mini, gpt-4.1-mini]
+        options: [gpt-4o, gpt-4.1-mini, gpt-4.1-nano]
         default: gpt-4o
 
 permissions:
@@ -41,7 +41,7 @@ jobs:
           AI=$(az cognitiveservices account list -g "${{ vars.RESOURCE_GROUP }}" --query "[?kind=='AIServices'].properties.endpoints.\"OpenAI Language Model Instance API\" | [0]" -o tsv)
           echo "AI_ENDPOINT=$AI" >> "$GITHUB_ENV"
           case "${{ inputs.model }}" in
-            gpt-4o-mini) DEP=review-model-mini ;;
+            gpt-4.1-nano) DEP=review-model-41nano ;;
             gpt-4.1-mini) DEP=review-model-41mini ;;
             *) DEP=review-model ;;
           esac

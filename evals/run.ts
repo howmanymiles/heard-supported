@@ -26,7 +26,7 @@ const outDir = path.join(here, 'results', mrStage ? `${stamp}-mr` : appealStage 
 fs.mkdirSync(outDir, { recursive: true });
 
 // Prices per million tokens, GBP, Azure Data Zone (EU), October 2026, from the Azure retail prices API.
-const PRICES: Record<string, [number, number]> = { 'gpt-4o': [2.1, 8.3], 'gpt-4o-mini': [0.13, 0.5], 'gpt-4.1-mini': [0.3, 1.3], 'gpt-4.1': [1.7, 6.6] };
+const PRICES: Record<string, [number, number]> = { 'gpt-4o': [2.1, 8.3], 'gpt-4.1-nano': [0.08, 0.3], 'gpt-4.1-mini': [0.3, 1.3], 'gpt-4.1': [1.7, 6.6] };
 /** Print the result line, plus a GitHub annotation so it shows on the workflow run without signing in. */
 function report(stage: string, line: string) {
   const model = process.env.EVAL_MODEL ?? process.env.AI_DEPLOYMENT ?? 'unknown';
