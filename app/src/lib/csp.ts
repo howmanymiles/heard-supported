@@ -9,7 +9,7 @@ export function csp(nonce: string, dev = process.env.NODE_ENV !== 'production') 
     "img-src 'self' data: blob:",
     "font-src 'self'",
     "connect-src 'self'",
-    "frame-src 'self' blob:",                  // document previews
+    "frame-src 'none'",
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'self' https://login.microsoftonline.com",
