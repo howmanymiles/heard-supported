@@ -65,6 +65,8 @@ jobs:
               modelName="${{ vars.MODEL_NAME }}" \
               modelVersion="${{ vars.MODEL_VERSION }}" \
               modelFormat="${{ vars.MODEL_FORMAT }}" \
+              modelSku="${{ vars.MODEL_SKU || 'DataZoneStandard' }}" \
+              modelCapacity="${{ vars.MODEL_CAPACITY || '20' }}" \
               entraClientId="${{ vars.ENTRA_CLIENT_ID }}" \
               entraClientSecret="${{ secrets.ENTRA_CLIENT_SECRET }}" \
               nextAuthSecret="${{ secrets.NEXTAUTH_SECRET }}" \

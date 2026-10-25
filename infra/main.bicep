@@ -26,6 +26,10 @@ param modelVersion string
 @description('Model format: OpenAI for Azure OpenAI models; other families use their own publisher name.')
 param modelFormat string = 'OpenAI'
 
+@description('Model deployment type. DataZoneStandard keeps processing in the EU; Standard keeps it in aiLocation. GlobalStandard is for synthetic data only.')
+@allowed(['DataZoneStandard', 'Standard', 'GlobalStandard'])
+param modelSku string = 'DataZoneStandard'
+
 @description('Deployment capacity in thousands of tokens per minute.')
 param modelCapacity int = 20
 
@@ -191,7 +195,7 @@ resource ai 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
 resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
   parent: ai
   name: 'review-model'
-  sku: { name: 'DataZoneStandard', capacity: modelCapacity }
+  sku: { name: modelSku, capacity: modelCapacity }
   properties: {
     model: { format: modelFormat, name: modelName, version: modelVersion }
   }
