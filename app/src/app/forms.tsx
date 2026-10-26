@@ -33,6 +33,7 @@ export function UploadForm({ caseId, syntheticOnly, kinds = ['evidence'], label 
         <input type="file" name="file" id="upload-file" multiple accept=".pdf,.docx,.jpg,.jpeg,.png,.tif,.tiff,.txt,.md" />
         <span className="hint">PDF, Word, photos or scans, up to 20 MB each. If you add several at once, they’re all recorded as the same type.</span>
       </label>
+      <p className="small warn" role="note"><b>Don’t upload appointment letters.</b> They don’t show how the condition affects the claimant, and every page uploaded is sent to the AI each time the claim is checked.</p>
       {syntheticOnly && (
         <label className="check"><input type="checkbox" name="fictional" value="yes" id="upload-fictional" required /> This is a fictional test document, not a real client’s</label>
       )}
@@ -72,7 +73,7 @@ export function ReviewPanel({ caseId, pc }: { caseId: string; pc: import('@/lib/
     <form action={action} className="stack precheck">
       <input type="hidden" name="caseId" value={caseId} />
       <h3 className="eyebrow">Before the check: is everything in?</h3>
-      <p className="small">Each check sends all the client’s papers, so it’s cheaper and better to upload everything first and check once.</p>
+      <p className="small">Each check sends all the client’s papers, so it’s cheaper and better to upload everything first and check once. Leave out appointment letters: they don’t help and still get sent.</p>
       <div>
         <p className="small"><b>Uploaded:</b> {pc.have.length ? pc.have.join(', ') : 'no document types chosen yet'}{pc.untyped ? ` (and ${docsWord(pc.untyped)} with no type chosen, which aren’t counted below)` : ''}.</p>
         {!pc.claimForm.present && <p className="small warn">No {pc.claimForm.label} uploaded. It’s what the claim is checked against.</p>}
