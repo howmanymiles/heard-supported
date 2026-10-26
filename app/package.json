@@ -23,8 +23,8 @@
     "next-auth": "4.24.15",
     "pg": "^8.13.1",
     "postcss": "^8.5.31",
-    "react": "19.1.10",
-    "react-dom": "19.1.10"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
