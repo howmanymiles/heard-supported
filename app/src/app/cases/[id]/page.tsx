@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { docType } from '@/lib/doctypes';
+import { ClaimGrid } from './claim-grid';
 import { notFound } from 'next/navigation';
 import { activityList, LOW_CONFIDENCE, terms } from '@hs/core';
 import { requireMe } from '@/lib/auth';
@@ -96,6 +97,11 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
       </div>
 
       <section className="stack">
+        <details className="panel" open={!Object.keys(data.claimed).length}>
+          <summary><h2 className="h2" style={{ display: 'inline' }}>What the claimant is claiming</h2> <span className="soft small">{Object.keys(data.claimed).length ? `${Object.keys(data.claimed).length} activities recorded` : 'from their claim form'}</span></summary>
+          <ClaimGrid caseId={id} benefit={cs.benefit} formName={cs.benefit === 'uc-wca' ? 'UC50' : cs.benefit === 'adp' ? 'ADP application' : 'PIP2'} initial={data.claimed}
+            activities={acts.filter(a => !a.key.startsWith('sch7:')).map(a => ({ key: a.key, label: a.label, group: a.group, options: descriptorsFor(a.key, cs.benefit, cs.decision_date).map(o => ({ id: String(o.id), text: o.text, points: o.points })) }))} />
+        </details>
         <h2 className="h2">Activities</h2>
         {acts.map(a => {
           const ev = byAct(a.key); const g = gaps.filter(x => x.activity === a.key && x.status === 'open'); const dec = decisionFor(a.key);

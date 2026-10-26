@@ -348,3 +348,16 @@ export async function issueResultsAction(_: ActionState, form: FormData): Promis
   revalidatePath(`/cases/${caseId}/outcome`);
   return { ok: 'Results saved.' };
 }
+
+export async function claimedAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const entries: Record<string, string> = {};
+  for (const [k, v] of form.entries()) if (k.startsWith('claim:')) entries[k.slice(6)] = String(v);
+  try {
+    const { saveClaimed } = await import('@/lib/cases');
+    const n = await saveClaimed(me, caseId, parseBenefit(form.get('benefit')), entries);
+    revalidatePath(`/cases/${caseId}`);
+    return { ok: `Saved: what the claimant is claiming, for ${n} activit${n === 1 ? 'y' : 'ies'}.` };
+  } catch (e) { return { error: msg(e) }; }
+}

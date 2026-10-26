@@ -19,7 +19,7 @@ export function setBlobDeleterForTests(f: BlobDeleter) { deleteBlob = f; }
 async function anonymiseCase(c: PoolClient, caseId: string, reason: 'retention' | 'erasure') {
   const paths = (await c.query("select blob_path from documents where case_id = $1 and blob_path <> 'none'", [caseId])).rows.map(r => r.blob_path as string);
   for (const p of paths) await deleteBlob(p);
-  for (const t of ['documents', 'evidence', 'gaps', 'decisions', 'assessor_choices', 'letters'])
+  for (const t of ['documents', 'evidence', 'gaps', 'decisions', 'claimed', 'assessor_choices', 'letters'])
     await c.query(`delete from ${t} where case_id = $1`, [caseId]);           // pages and evidence go with their documents too
   await c.query(`update cases set claimant_id = null, external_ref = null, late_reason = null, appeal_late_reason = null,
       mr_draft = null, appeal_draft = null, decision_outcome_quote = null, response_reasoning = null, submission_review = null,

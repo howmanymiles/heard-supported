@@ -147,3 +147,17 @@ textarea.draft { font-family: var(--mono); font-size: 14px; line-height: 1.55; }
 .combo-opt { padding: 7px 12px; cursor: pointer; font-size: 14px; }
 .combo-opt.active { background: var(--accent-tint); }
 .combo-none { padding: 8px 12px; }
+
+/* Choices: the selected one must be obvious at a glance. */
+.opt:has(input:checked) { border: 2px solid var(--accent); background: var(--accent-tint); padding: 7px 9px; font-weight: 600; box-shadow: inset 4px 0 0 var(--accent); }
+.claim-row { display: grid; grid-template-columns: minmax(180px, 260px) auto; gap: 6px 16px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.claim-row .claim-text { grid-column: 1 / -1; }
+@media (max-width: 720px) { .claim-row { grid-template-columns: 1fr; } }
+.claim-name { font-size: 14px; font-weight: 600; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg-btn { min-width: 52px; padding: 6px 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
+.seg-btn:hover { border-color: var(--accent); }
+.seg-btn .seg-pts { color: var(--muted); font-size: 12px; }
+.seg-btn.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
+.seg-btn.on .seg-pts { color: var(--on-accent); opacity: .85; }
+.seg-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }

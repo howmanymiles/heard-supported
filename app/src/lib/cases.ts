@@ -7,6 +7,7 @@ import type { Me } from './auth.ts';
 import { aiGate, storeGate } from './claimants.ts';
 import { officeOfUser } from './offices.ts';
 import { nextRef } from './refs.ts';
+import { descriptorsFor } from './score.ts';
 
 export type CaseRow = { id: string; ref: string; benefit: Benefit; stage: string; status: string; adviser_name: string | null; created_at: Date; documents: number; suggested: number;
   decision_date: string | null; mr_request_date: string | null; mr_notice_date: string | null; appeal_sent_date: string | null;
@@ -62,10 +63,11 @@ export async function getCase(me: Me, id: string) {
       from evidence e join documents d on d.id = e.document_id where e.case_id = $1 order by d.created_at, e.page_no`, [id])).rows as EvidenceRow[];
     const gaps = (await c.query('select id, activity, gap, status from gaps where case_id = $1 order by created_at', [id])).rows as GapRow[];
     const decisions = (await c.query('select activity, satisfied, days_per_week from decisions where case_id = $1', [id])).rows as DecisionRow[];
+    const claimed = Object.fromEntries((await c.query('select activity, letter from claimed where case_id = $1', [id])).rows.map(r => [r.activity, r.letter as string]));
     const runs = (await c.query('select model, verified, rejected, identifiers_removed, created_at from extraction_runs where case_id = $1 order by created_at desc limit 1', [id])).rows;
     const log = (await c.query(`select a.action, a.at, u.name from audit a left join users u on u.id = a.user_id where a.case_id = $1 and a.kind = 'change' order by a.at desc limit 50`, [id])).rows;
     await viewed(c, me.agencyId, me.userId, { caseId: id, claimantId: cs.rows[0].claimant_id, action: 'Opened the case' });
-    return { case: cs.rows[0], docs, evidence, gaps, decisions, lastRun: runs[0] ?? null, log };
+    return { case: cs.rows[0], docs, evidence, gaps, decisions, claimed, lastRun: runs[0] ?? null, log };
   });
 }
 
@@ -187,6 +189,28 @@ export async function setGapStatus(me: Me, caseId: string, gapId: string, status
 }
 
 export const RISK_KEYS: Record<string, string> = { 'sch8:4': 'Schedule 8 paragraph 4 (substantial risk, LCW)', 'sch9:4': 'Schedule 9 paragraph 4 (substantial risk, LCWRA)' };
+
+/** What the claimant is claiming on their form, for every activity at once: one save, one audit entry. */
+export async function saveClaimed(me: Me, caseId: string, benefit: Benefit, entries: Record<string, string>) {
+  const acts = activityList(benefit).filter(a => !a.key.startsWith('sch7:'));
+  const rows: Array<[string, string]> = [];
+  for (const a of acts) {
+    const letter = (entries[a.key] ?? '').trim();
+    if (!letter) continue;
+    const valid = descriptorsFor(a.key, benefit).map(d => String(d.id));
+    if (!valid.includes(letter)) throw new Error(`Choose one of the descriptors for ${a.label}.`);
+    rows.push([a.key, letter]);
+  }
+  await asAgency(me.agencyId, async c => {
+    if (!(await c.query('select 1 from cases where id = $1', [caseId])).rowCount) throw new Error('Case not found.');
+    await storeGate(c, caseId);
+    await c.query('delete from claimed where case_id = $1', [caseId]);
+    for (const [activity, letter] of rows)
+      await c.query('insert into claimed (case_id, agency_id, activity, letter, updated_by) values ($1, $2, $3, $4, $5)', [caseId, me.agencyId, activity, letter, me.userId]);
+    await audit(c, me.agencyId, me.userId, caseId, `Claimant's claim recorded from the form: ${rows.length} activit${rows.length === 1 ? 'y' : 'ies'}`);
+  });
+  return rows.length;
+}
 
 export async function saveDecision(me: Me, caseId: string, benefit: Benefit, activity: string, letter: string, daysPerWeek: number | null) {
   if (benefit === 'uc-wca' && RISK_KEYS[activity]) {
