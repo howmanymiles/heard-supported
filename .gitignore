@@ -6,3 +6,4 @@ evals/results/
 !.env.example
 *.log
 app/src/data/synthetic.json
+*.tsbuildinfo
