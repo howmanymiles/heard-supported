@@ -8,7 +8,8 @@ import { requireMe } from '@/lib/auth';
 import { getCase, type EvidenceRow } from '@/lib/cases';
 import { caseClient } from '@/lib/claimants';
 import { score, descriptorsFor, lawForCase } from '@/lib/score';
-import { UploadForm, ReviewForm } from '../../forms';
+import { UploadForm, ReviewPanel } from '../../forms';
+import { precheck } from '@/lib/precheck';
 import { evidenceAction, gapAction } from '../../actions';
 
 const F = 'decisions'; // the one form that saves every "your view" choice (decisions-bar.tsx)
@@ -35,7 +36,6 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
   const acts = activityList(cs.benefit);
   const s = score(cs.benefit, decisions, cs.decision_date);
   const law = lawForCase(cs.benefit, cs.decision_date);
-  const unread = docs.filter(d => d.read_status !== 'read').length;
   const byAct = (key: string) => evidence.filter(e => e.activities.includes(key));
   const decisionFor = (key: string) => decisions.find(d => d.activity === key);
   const syntheticOnly = process.env.DATA_MODE === 'synthetic-only';
@@ -89,7 +89,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
                 {d.low_confidence_lines ? <> · <span className="warn">{d.low_confidence_lines} lines to check by eye</span></> : null}</span>
             </li>))}</ul> : <p className="soft">No documents yet.</p>}
           <UploadForm caseId={id} syntheticOnly={syntheticOnly} kinds={['evidence', 'notes']} benefit={cs.benefit} />
-          {docs.length > 0 && <ReviewForm caseId={id} label={unread ? `Read ${unread} new document${unread > 1 ? 's' : ''} and review` : 'Review evidence again'} />}
+          {docs.length > 0 && <ReviewPanel caseId={id} pc={precheck(cs.benefit, data.docs, data.claimed, lastRun?.created_at ?? null)} />}
           {lastRun && <p className="soft small">Last review: {lastRun.verified} cited suggestions; {lastRun.rejected} dropped because their quotes could not be found on the page; {lastRun.identifiers_removed} identifiers removed before the AI saw the text. Model: {lastRun.model}.</p>}
           <p className="soft small">Lines read with confidence below {Math.round(LOW_CONFIDENCE * 100)}% are flagged for you to check against the original.</p>
         </section>

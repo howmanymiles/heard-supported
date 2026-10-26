@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { DocTypePicker } from './doctype-picker';
 import { docTypesFor } from '@/lib/doctypes';
@@ -42,12 +42,52 @@ export function UploadForm({ caseId, syntheticOnly, kinds = ['evidence'], label 
   );
 }
 
-export function ReviewForm({ caseId, label }: { caseId: string; label: string }) {
+/**
+ * Before the AI checks the claim: is everything in? Shows what's uploaded, what usually
+ * helps for what's claimed and is missing, and what the check will send. The check runs
+ * only when the adviser says that's everything.
+ */
+export function ReviewPanel({ caseId, pc }: { caseId: string; pc: import('@/lib/precheck').Precheck }) {
   const [state, action] = useActionState(reviewAction, {});
+  const [open, setOpen] = useState(false);
+  useEffect(() => { if (state.ok) setOpen(false); }, [state]);
+  const docsWord = (n: number) => `${n} document${n === 1 ? '' : 's'}`;
+  const sends = pc.unread
+    ? `Reads ${docsWord(pc.unread)} not yet read, then sends every page of the client’s papers to the AI (${pc.pages ? `${pc.pages} pages so far, plus the new ones` : 'page count known once read'}).`
+    : `Sends every page of the client’s papers to the AI: ${pc.pages} page${pc.pages === 1 ? '' : 's'}.`;
+
+  if (!open) return (
+    <div className="stack">
+      <div className="row" style={{ alignItems: 'center' }}>
+        <button type="button" className={pc.nothingNew ? 'btn' : 'btn btn-primary'} onClick={() => setOpen(true)}>
+          {pc.nothingNew ? 'Check the claim again' : pc.checkedBefore ? `Check the claim: ${docsWord(pc.newDocs)} added since the last check` : 'Check the claim against the evidence'}
+        </button>
+        {pc.nothingNew && <span className="soft small">Nothing new since the last check.</span>}
+      </div>
+      <Status state={state} />
+    </div>
+  );
+
   return (
-    <form action={action} className="stack">
+    <form action={action} className="stack precheck">
       <input type="hidden" name="caseId" value={caseId} />
-      <div><Submit pending="Reading and reviewing… this can take a minute">{label}</Submit></div>
+      <h3 className="eyebrow">Before the check: is everything in?</h3>
+      <p className="small">Each check sends all the client’s papers, so it’s cheaper and better to upload everything first and check once.</p>
+      <div>
+        <p className="small"><b>Uploaded:</b> {pc.have.length ? pc.have.join(', ') : 'no document types chosen yet'}{pc.untyped ? ` (and ${docsWord(pc.untyped)} with no type chosen, which aren’t counted below)` : ''}.</p>
+        {!pc.claimForm.present && <p className="small warn">No {pc.claimForm.label} uploaded. It’s what the claim is checked against.</p>}
+        {!pc.claimedCount && <p className="small warn">You haven’t recorded what the claimant is claiming yet, so the check can’t compare against it. Fill in “What the claimant is claiming” first.</p>}
+      </div>
+      {pc.suggestions.length > 0 && <div>
+        <p className="small"><b>Often helps, not uploaded:</b></p>
+        <ul className="small precheck-list">{pc.suggestions.map((s, i) => <li key={i}>{s.docs.join(' or ')} <span className="soft">· for {s.for.join('; ')}</span></li>)}</ul>
+      </div>}
+      {!pc.have.some(h => /diary|statement/i.test(h)) && !pc.suggestions.some(x => x.docs.some(d => /diary/i.test(d))) && <p className="small soft">Often missed: a daily living diary, or a statement from someone who helps the claimant.</p>}
+      <p className="small soft">{sends}</p>
+      <div className="row" style={{ alignItems: 'center' }}>
+        <Submit pending="Reading and checking… this can take a minute">That’s everything: check the claim</Submit>
+        <button type="button" className="btn btn-quiet" onClick={() => setOpen(false)}>I’ll add more first</button>
+      </div>
       <Status state={state} />
     </form>
   );
