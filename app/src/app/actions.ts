@@ -349,6 +349,23 @@ export async function issueResultsAction(_: ActionState, form: FormData): Promis
   return { ok: 'Results saved.' };
 }
 
+export async function decisionsAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requireMe();
+  const caseId = String(form.get('caseId'));
+  const entries: Array<{ activity: string; letter: string; days: number | null }> = [];
+  for (const [k, v] of form.entries()) if (k.startsWith('letter:')) {
+    const activity = k.slice(7);
+    const d = String(form.get(`days:${activity}`) ?? '').trim();
+    entries.push({ activity, letter: String(v), days: d === '' ? null : Number(d) });
+  }
+  try {
+    const { saveDecisions } = await import('@/lib/cases');
+    const n = await saveDecisions(me, caseId, parseBenefit(form.get('benefit')), entries);
+    revalidatePath(`/cases/${caseId}`);
+    return { ok: n ? `Saved your view for ${n} activit${n === 1 ? 'y' : 'ies'}.` : 'Nothing had changed.' };
+  } catch (e) { return { error: msg(e) }; }
+}
+
 export async function claimedAction(_: ActionState, form: FormData): Promise<ActionState> {
   const me = await requireMe();
   const caseId = String(form.get('caseId'));

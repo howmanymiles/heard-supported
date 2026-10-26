@@ -161,3 +161,8 @@ textarea.draft { font-family: var(--mono); font-size: 14px; line-height: 1.55; }
 .seg-btn.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
 .seg-btn.on .seg-pts { color: var(--on-accent); opacity: .85; }
 .seg-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* One save for every "your view" choice: stays at the bottom of the screen while the activities are in view. */
+.save-bar { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: 0 -4px 16px rgba(0,0,0,.08); }
+.save-bar.on { border-color: var(--accent); box-shadow: 0 -4px 16px rgba(0,0,0,.12), inset 4px 0 0 var(--accent); }
+.save-bar .msg { margin: 0; flex-basis: 100%; }

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { docType } from '@/lib/doctypes';
 import { ClaimGrid } from './claim-grid';
+import { DecisionsBar } from './decisions-bar';
 import { notFound } from 'next/navigation';
 import { activityList, LOW_CONFIDENCE, terms } from '@hs/core';
 import { requireMe } from '@/lib/auth';
@@ -8,7 +9,9 @@ import { getCase, type EvidenceRow } from '@/lib/cases';
 import { caseClient } from '@/lib/claimants';
 import { score, descriptorsFor, lawForCase } from '@/lib/score';
 import { UploadForm, ReviewForm } from '../../forms';
-import { evidenceAction, gapAction, decisionAction } from '../../actions';
+import { evidenceAction, gapAction } from '../../actions';
+
+const F = 'decisions'; // the one form that saves every "your view" choice (decisions-bar.tsx)
 import { CaseTabs } from './tabs';
 import { AssignBox } from './assign';
 
@@ -73,7 +76,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
           <div><span className="eyebrow">Limited capability for work</span><p><b className="big">{s.result.lcw.totalPoints}</b> points ({s.result.lcw.physicalPoints} physical, {s.result.lcw.mentalPoints} mental) · {s.result.lcw.byAssessment ? 'meets 15' : 'below 15'}</p></div>
           <div><span className="eyebrow">LCWRA</span><p>{s.result.lcwra.descriptors.length ? `Schedule 7: ${s.result.lcwra.descriptors.map(d => d.id).join(', ')}` : 'No Schedule 7 descriptor chosen'}</p></div>
         </>)}
-        <p className="soft small full">Worked from the descriptors you choose below. Your assessment, not a prediction of the decision.</p>
+        <p className="soft small full">Worked from your view of what the evidence supports, chosen below. Not a prediction of the decision.</p>
       </section>
 
       <div className="grid-2">
@@ -96,6 +99,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
         </section>
       </div>
 
+      <div className="stack-lg">
       <section className="stack">
         <details className="panel" open={!Object.keys(data.claimed).length}>
           <summary><h2 className="h2" style={{ display: 'inline' }}>What the claimant is claiming</h2> <span className="soft small">{Object.keys(data.claimed).length ? `${Object.keys(data.claimed).length} activities recorded` : 'from their claim form'}</span></summary>
@@ -119,20 +123,18 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
                       <form action={gapAction} className="inline"><input type="hidden" name="caseId" value={id} /><input type="hidden" name="gapId" value={x.id} /><input type="hidden" name="status" value="dismissed" /><button className="btn btn-small btn-quiet">Not relevant</button></form>
                     </li>))}</ul></div>}
                 </div>
-                <form action={decisionAction} className="stack decision">
-                  <input type="hidden" name="caseId" value={id} /><input type="hidden" name="benefit" value={cs.benefit} /><input type="hidden" name="activity" value={a.key} />
-                  <fieldset><legend className="eyebrow">Your decision</legend>
-                    <label className="opt"><input type="radio" name="letter" value="" defaultChecked={!chosen} /> <span>Not decided</span></label>
+                <div className="stack decision">
+                  <fieldset><legend className="eyebrow">Descriptor the evidence supports (your view)</legend>
+                    <label className="opt"><input type="radio" form={F} name={`letter:${a.key}`} value="" defaultChecked={!chosen} /> <span>Not decided</span></label>
                     {options.map(o => (
-                      <label key={o.id} className="opt"><input type="radio" name="letter" value={o.id} defaultChecked={chosen === o.id} />
+                      <label key={o.id} className="opt"><input type="radio" form={F} name={`letter:${a.key}`} value={o.id} defaultChecked={chosen === o.id} />
                         <span><b className="mono">{o.id}</b> {o.text}</span>{a.key.startsWith('sch7:') ? null : <span className="mono pts">{o.points}</span>}</label>
                     ))}
                   </fieldset>
                   {a.key.startsWith('pip:') && <label className="field small-field">Days a week this applies
-                    <input type="number" name="days" min={0} max={7} step={0.5} defaultValue={dec?.days_per_week ?? ''} />
+                    <input type="number" form={F} name={`days:${a.key}`} min={0} max={7} step={0.5} defaultValue={dec?.days_per_week != null ? Number(dec.days_per_week) : ''} />
                     <span className="hint">Over 3.5 days a week means over half the days (reg 7).</span></label>}
-                  <div><button className="btn" type="submit">Save decision</button></div>
-                </form>
+                </div>
               </div>
             </details>
           );
@@ -151,21 +153,21 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
                 <div key={k} className="stack">
                 {ev.length ? <ol className="plain stack">{ev.map(evidenceItem)}</ol> : <p className="soft small">No evidence linked yet.</p>}
                 {g.map(x => <p key={x.id} className="gap"><span>{x.gap}</span></p>)}
-                <form action={decisionAction} className="stack decision">
-                  <input type="hidden" name="caseId" value={id} /><input type="hidden" name="benefit" value={cs.benefit} /><input type="hidden" name="activity" value={k} />
+                <div className="stack decision">
                   <fieldset><legend className="eyebrow">{k === 'sch8:4' ? 'Schedule 8 paragraph 4 (LCW)' : 'Schedule 9 paragraph 4 (LCWRA)'}</legend>
-                    <label className="opt"><input type="radio" name="letter" value="" defaultChecked={!cur} /> <span>Not decided</span></label>
-                    <label className="opt"><input type="radio" name="letter" value="applies" defaultChecked={cur === 'applies'} /> <span>Applies</span></label>
-                    <label className="opt"><input type="radio" name="letter" value="not_applies" defaultChecked={cur === 'not_applies'} /> <span>Does not apply</span></label>
+                    <label className="opt"><input type="radio" form={F} name={`letter:${k}`} value="" defaultChecked={!cur} /> <span>Not decided</span></label>
+                    <label className="opt"><input type="radio" form={F} name={`letter:${k}`} value="applies" defaultChecked={cur === 'applies'} /> <span>Applies</span></label>
+                    <label className="opt"><input type="radio" form={F} name={`letter:${k}`} value="not_applies" defaultChecked={cur === 'not_applies'} /> <span>Does not apply</span></label>
                   </fieldset>
-                  <div><button className="btn" type="submit">Save</button></div>
-                </form>
+                </div>
                 </div>
               );
             })}
           </div>
         </section>
       )}
+      <DecisionsBar caseId={id} benefit={cs.benefit} />
+      </div>
     </div>
   );
 }

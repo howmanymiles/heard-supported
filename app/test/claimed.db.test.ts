@@ -42,3 +42,20 @@ test('only real descriptors are accepted, and only for your own agency', { skip 
   const w = await cases.createCase(me, null, 'uc-wca', null);
   assert.equal(await cases.saveClaimed(me, w, 'uc-wca', { 'sch6:1': 'a' }), 1);
 });
+
+test('your view: every activity saved in one go, only changes written, one audit entry', { skip }, async () => {
+  const id = await cases.createCase(me, null, 'pip', null);
+  const n = await cases.saveDecisions(me, id, 'pip', [
+    { activity: 'pip:1', letter: 'e', days: 7 }, { activity: 'pip:4', letter: 'd', days: null }, { activity: 'pip:2', letter: '', days: null }]);
+  assert.equal(n, 2);
+  assert.equal(await cases.saveDecisions(me, id, 'pip', [{ activity: 'pip:1', letter: 'e', days: 7 }, { activity: 'pip:4', letter: 'd', days: null }]), 0);
+  assert.equal(await cases.saveDecisions(me, id, 'pip', [{ activity: 'pip:1', letter: 'e', days: 7 }, { activity: 'pip:4', letter: '', days: null }]), 1);
+  const c = await cases.getCase(me, id);
+  assert.equal(c!.decisions.find((d: any) => d.activity === 'pip:1')!.satisfied[0].letter, 'e');
+  assert.deepEqual(c!.decisions.find((d: any) => d.activity === 'pip:4')!.satisfied, []);
+  assert.equal(c!.log.filter((l: any) => /Your view saved/.test(l.action)).length, 2);
+  await assert.rejects(cases.saveDecisions(me, id, 'pip', [{ activity: 'pip:1', letter: 'z', days: null }]), /Choose one of the descriptors/);
+  await assert.rejects(cases.saveDecisions(other, id, 'pip', [{ activity: 'pip:1', letter: 'a', days: null }]), /Case not found/);
+  const w = await cases.createCase(me, null, 'uc-wca', null);
+  assert.equal(await cases.saveDecisions(me, w, 'uc-wca', [{ activity: 'sch8:4', letter: 'applies', days: null }, { activity: 'sch7:1', letter: '1', days: null }]), 2);
+});

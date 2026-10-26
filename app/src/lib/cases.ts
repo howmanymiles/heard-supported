@@ -212,6 +212,43 @@ export async function saveClaimed(me: Me, caseId: string, benefit: Benefit, entr
   return rows.length;
 }
 
+export type DecisionEntry = { activity: string; letter: string; days: number | null };
+
+/**
+ * Every "your view" choice on the case page, saved at once. Only activities whose choice
+ * changed are written, and one audit entry lists them.
+ */
+export async function saveDecisions(me: Me, caseId: string, benefit: Benefit, entries: DecisionEntry[]) {
+  const acts = activityList(benefit);
+  const rows: Array<{ activity: string; label: string; satisfied: unknown[]; days: number | null }> = [];
+  for (const { activity, letter, days } of entries) {
+    if (benefit === 'uc-wca' && RISK_KEYS[activity]) {
+      if (letter && letter !== 'applies' && letter !== 'not_applies') throw new Error('Choose whether it applies.');
+      rows.push({ activity, label: RISK_KEYS[activity], satisfied: letter ? [letter] : [], days: null });
+      continue;
+    }
+    const act = acts.find(a => a.key === activity);
+    if (!act) throw new Error('Unknown activity.');
+    if (letter && !descriptorsFor(activity, benefit).some(d => String(d.id) === letter)) throw new Error(`Choose one of the descriptors for ${act.label}.`);
+    if (days !== null && (!Number.isFinite(days) || days < 0 || days > 7)) throw new Error(`Days a week for ${act.label} must be between 0 and 7.`);
+    const d = activity.startsWith('pip:') ? days : null;
+    const satisfied = !letter ? [] : activity.startsWith('sch7:') ? [letter] : [{ letter, ...(d !== null ? { daysPercent: Math.round((d / 7) * 100) } : {}) }];
+    rows.push({ activity, label: act.label, satisfied, days: d });
+  }
+  return asAgency(me.agencyId, async c => {
+    if (!(await c.query('select 1 from cases where id = $1', [caseId])).rowCount) throw new Error('Case not found.');
+    const cur = new Map((await c.query<{ activity: string; satisfied: unknown; days_per_week: string | number | null }>('select activity, satisfied, days_per_week from decisions where case_id = $1', [caseId])).rows
+      .map(r => [r.activity, JSON.stringify(r.satisfied ?? []) + '|' + (r.days_per_week === null ? '' : Number(r.days_per_week))]));
+    const changed = rows.filter(r => (cur.get(r.activity) ?? '[]|') !== JSON.stringify(r.satisfied) + '|' + (r.days ?? ''));
+    for (const r of changed)
+      await c.query(`insert into decisions (case_id, agency_id, activity, satisfied, days_per_week, updated_by) values ($1, $2, $3, $4, $5, $6)
+        on conflict (case_id, activity) do update set satisfied = excluded.satisfied, days_per_week = excluded.days_per_week, updated_by = excluded.updated_by, updated_at = now()`,
+        [caseId, me.agencyId, r.activity, JSON.stringify(r.satisfied), r.days, me.userId]);
+    if (changed.length) await audit(c, me.agencyId, me.userId, caseId, `Your view saved for ${changed.length} activit${changed.length === 1 ? 'y' : 'ies'}: ${changed.map(r => r.label).join('; ')}`.slice(0, 500));
+    return changed.length;
+  });
+}
+
 export async function saveDecision(me: Me, caseId: string, benefit: Benefit, activity: string, letter: string, daysPerWeek: number | null) {
   if (benefit === 'uc-wca' && RISK_KEYS[activity]) {
     if (letter && letter !== 'applies' && letter !== 'not_applies') throw new Error('Choose whether it applies.');
