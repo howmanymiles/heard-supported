@@ -273,3 +273,15 @@ export async function saveDecision(me: Me, caseId: string, benefit: Benefit, act
     await audit(c, me.agencyId, me.userId, caseId, letter ? `Descriptor ${letter} chosen for ${act.label}` : `Descriptor cleared for ${act.label}`);
   });
 }
+
+/** The History tab: the case's full activity log and the counts behind its stats. */
+export async function getCaseHistory(me: Me, id: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  return asAgency(me.agencyId, async c => {
+    if (!(await c.query('select 1 from cases where id = $1', [id])).rowCount) return null;
+    const runs = (await c.query<{ n: number; last: Date | null }>('select count(*)::int as n, max(created_at) as last from extraction_runs where case_id = $1', [id])).rows[0];
+    const log = (await c.query<{ action: string; at: Date; name: string | null }>(`select a.action, a.at, u.name from audit a left join users u on u.id = a.user_id
+      where a.case_id = $1 and a.kind = 'change' order by a.at desc limit 500`, [id])).rows;
+    return { checks: runs.n, lastCheck: runs.last, log };
+  });
+}

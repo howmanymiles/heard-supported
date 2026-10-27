@@ -25,7 +25,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
   const me = await requireMe();
   const data = await getCase(me, id);
   if (!data) notFound();
-  const { case: cs, evidence, gaps, decisions, lastRun, log } = data;
+  const { case: cs, evidence, gaps, decisions, lastRun } = data;
   if (cs.anonymised_at) return (
     <div className="stack-lg">
       <div className="head"><h1>Case {cs.ref}</h1></div>
@@ -79,7 +79,6 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
         <p className="soft small full">Worked from your view of what the evidence supports, chosen below. Not a prediction of the decision.</p>
       </section>
 
-      <div className="grid-2">
         <section className="panel stack">
           <h2 className="eyebrow">Documents</h2>
           {docs.length ? <ul className="plain">{docs.map(d => (
@@ -93,11 +92,6 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
           {lastRun && <p className="soft small">Last review: {lastRun.verified} cited suggestions; {lastRun.rejected} dropped because their quotes could not be found on the page; {lastRun.identifiers_removed} identifiers removed before the AI saw the text. Model: {lastRun.model}.</p>}
           <p className="soft small">Lines read with confidence below {Math.round(LOW_CONFIDENCE * 100)}% are flagged for you to check against the original.</p>
         </section>
-        <section className="panel stack">
-          <h2 className="eyebrow">Activity log</h2>
-          <ul className="log">{log.map((l, i) => <li key={i}><span className="mono soft">{new Date(l.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span> <b>{l.name ?? 'System'}</b> · {l.action}</li>)}</ul>
-        </section>
-      </div>
 
       <div className="stack-lg">
       <section className="stack">
