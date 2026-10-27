@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireMe } from '@/lib/auth';
 import { findCases, listUsers } from '@/lib/casework';
+import { myWork } from '@/lib/mywork';
 import { loadSyntheticAction } from './actions';
 import synthetic from '@/data/synthetic.json';
 import { nextDeadline, terms, type NextDeadline } from '@hs/core';
@@ -28,11 +29,26 @@ export default async function Caseload({ searchParams }: { searchParams: Promise
   const cases = (await findCases(me, { mine: view === 'mine', closed: view === 'closed', adviser: view === 'all' ? sp.adviser : undefined, stage: sp.stage, benefit: sp.benefit, q: sp.q }))
     .map(c => ({ ...c, next: nextDeadline({ benefit: c.benefit, decisionDate: c.decision_date, mrRequestDate: c.mr_request_date, mrNoticeDate: c.mr_notice_date, appealSentDate: c.appeal_sent_date }, today) }))
     .sort((a, b) => (a.next ? a.next.status === 'in_time' ? a.next.daysLeft : -1 : 1e6) - (b.next ? b.next.status === 'in_time' ? b.next.daysLeft : -1 : 1e6));
+  const w = await myWork(me, today, SOON);
+  const money = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`;
   const soon = cases.filter(c => c.next && (c.next.status !== 'in_time' || c.next.daysLeft <= SOON));
   const tests = synthetic as Array<{ id: string; title: string; benefit: string }>;
   return (
     <div className="stack-lg">
       <div className="head"><h1>Cases</h1><p className="soft">Your agency’s cases.</p></div>
+
+      <section className="stat-grid stat-grid-5" aria-label="Your work">
+        <Link href="/?view=mine" className="panel stat stat-link"><span className="eyebrow">My open cases</span><p className="stat-value">{w.open}</p>
+          <p className="soft small">{Object.entries(w.byStage).map(([k, n]) => `${n} ${(STAGE[k] ?? k).toLowerCase()}`).join(' · ') || 'none open'}</p></Link>
+        <div className={w.late || w.dueSoon ? 'panel stat stat-alert' : 'panel stat'}><span className="eyebrow">Deadlines</span><p className="stat-value">{w.dueSoon} due within {SOON} days</p>
+          <p className="soft small">{w.late ? `${w.late} late or out of time` : 'none late'}</p></div>
+        <div className="panel stat"><span className="eyebrow">Waiting for you</span><p className="stat-value">{w.toCheck} suggestion{w.toCheck === 1 ? '' : 's'} to check</p>
+          <p className="soft small">across {w.casesToCheck} case{w.casesToCheck === 1 ? '' : 's'}</p></div>
+        <div className="panel stat"><span className="eyebrow">My results, last 12 months</span><p className="stat-value">{w.results.decided ? `${w.results.overturned} of ${w.results.decided} overturned` : 'none yet'}</p>
+          <p className="soft small">{w.results.decided ? `${w.results.rate}% · ` : ''}{w.money.valued ? `${money(w.money.total)} a year more for clients` : 'reconsiderations and appeals decided'}</p></div>
+        <div className="panel stat"><span className="eyebrow">Claim checks this month</span><p className="stat-value">{w.checksThisMonth}</p>
+          <p className="soft small">checks you’ve run since the 1st</p></div>
+      </section>
 
       {soon.length > 0 && (
         <section className="msg msg-error" role="status" aria-label="Deadlines">

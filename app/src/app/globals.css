@@ -178,3 +178,7 @@ textarea.draft { font-family: var(--mono); font-size: 14px; line-height: 1.55; }
 .stat { display: flex; flex-direction: column; gap: 4px; }
 .stat p { margin: 0; }
 .stat-value { font-size: 18px; font-weight: 700; line-height: 1.3; }
+.stat-link { text-decoration: none; color: inherit; }
+.stat-link:hover { border-color: var(--accent); }
+.stat-alert { border-left: 4px solid var(--warn-fg); background: var(--warn-bg); }
+.stat-grid-5 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }

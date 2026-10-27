@@ -41,7 +41,7 @@ export async function issueResultsFor(me: Me, caseId: string): Promise<IssueRow[
 }
 
 /** Cases with a reconsideration or appeal result dated in the period, and their issue results. */
-export async function outcomeData(me: Me, from: string, to: string, officeId: string | null = null): Promise<{ rows: OutcomeRow[]; issues: IssueRow[] }> {
+export async function outcomeData(me: Me, from: string, to: string, officeId: string | null = null, adviserId: string | null = null): Promise<{ rows: OutcomeRow[]; issues: IssueRow[] }> {
   return asAgency(me.agencyId, async c => {
     const rows = (await c.query(`
       select c.id, c.ref, c.external_ref, k.name as client, o.name as office, c.benefit, u.name as adviser,
@@ -49,8 +49,8 @@ export async function outcomeData(me: Me, from: string, to: string, officeId: st
         to_char(c.appeal_sent_date, 'YYYY-MM-DD') as appeal_sent_date, c.appeal_outcome, to_char(c.appeal_outcome_date, 'YYYY-MM-DD') as appeal_outcome_date,
         c.award_before, c.award_after, c.uc_lcwra_rate, c.lcw_legacy
       from cases c left join users u on u.id = c.adviser_id left join claimants k on k.id = c.claimant_id left join offices o on o.id = c.office_id
-      where ($3::uuid is null or c.office_id = $3) and ((c.mr_outcome is not null and c.mr_outcome_date between $1 and $2) or (c.appeal_outcome is not null and c.appeal_outcome_date between $1 and $2))
-      order by coalesce(c.appeal_outcome_date, c.mr_outcome_date) desc`, [from, to, officeId])).rows as OutcomeRow[];
+      where ($3::uuid is null or c.office_id = $3) and ($4::uuid is null or c.adviser_id = $4) and ((c.mr_outcome is not null and c.mr_outcome_date between $1 and $2) or (c.appeal_outcome is not null and c.appeal_outcome_date between $1 and $2))
+      order by coalesce(c.appeal_outcome_date, c.mr_outcome_date) desc`, [from, to, officeId, adviserId])).rows as OutcomeRow[];
     const issues = rows.length ? (await c.query('select case_id, issue_key, label, result, stage from issue_results where case_id = any($1)', [rows.map(r => r.id)])).rows as IssueRow[] : [];
     return { rows, issues };
   });
